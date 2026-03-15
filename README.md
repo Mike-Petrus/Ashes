@@ -15,7 +15,7 @@ Preview Systems
 Adapter Layer
 Presentation Layer
 
-```
+
 
 ### Simulation Layer
 The **core gameplay logic**.  
@@ -218,7 +218,7 @@ The battle system is being built in **incremental phases** to keep the architect
 
 ---
 
-# Phase 1 — ATB Simulation (Current Phase)
+# Phase 1 — ATB Simulation
 
 Goal:
 
@@ -399,7 +399,7 @@ Pause battle time during execution
 
 ---
 
-# Phase 3 — Ability System & Effect Pipeline (Planned)
+# Phase 3 — Ability System & Effect Pipeline (Current Phase)
 
 Phase 3 will introduce the **ability resolution architecture**.
 
@@ -568,5 +568,4 @@ Once the simulation foundation is complete, the remaining layers (preview, adapt
 
 Mike Petrus  
 Computer Science — Game Systems / Rendering Focus
-```
 
