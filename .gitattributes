@@ -1,0 +1,4 @@
+*.cs text diff=csharp
+*.unity merge=unityyamlmerge
+*.prefab merge=unityyamlmerge
+*.asset merge=unityyamlmerge
