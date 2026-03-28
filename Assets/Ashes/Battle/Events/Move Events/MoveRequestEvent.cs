@@ -1,4 +1,4 @@
-public struct MoveRequestEvent
+public class MoveRequestEvent : IBattleEvent
 {
     public ActorId ActorId;
     public SimVector3 Start;

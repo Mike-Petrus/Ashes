@@ -2,10 +2,10 @@ using System.Collections.Generic;
 
 public class BattleActionQueue
 {
-    private EventBus events;
+    private BattleEventBus events;
     private Queue<BattleCommand> queue = new();
 
-    public BattleActionQueue(EventBus eventBus)
+    public BattleActionQueue(BattleEventBus eventBus)
     {
         events = eventBus;
         events.Subscribe<CommandBuiltEvent>(OnCommandBuilt);

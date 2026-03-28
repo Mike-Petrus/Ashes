@@ -1,9 +1,9 @@
 public class CombatSystem
 {
-    public EventBus events;
+    public BattleEventBus events;
     public ActorRegistry actors;
 
-    public CombatSystem(EventBus eventBus, ActorRegistry actorRegistry)
+    public CombatSystem(BattleEventBus eventBus, ActorRegistry actorRegistry)
     {
         events = eventBus;
         actors = actorRegistry;

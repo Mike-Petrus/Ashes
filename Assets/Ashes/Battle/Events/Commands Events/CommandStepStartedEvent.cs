@@ -1,4 +1,4 @@
-public struct CommandStepStartedEvent
+public class CommandStepStartedEvent : IBattleEvent
 {
     public CommandStep Step;
 

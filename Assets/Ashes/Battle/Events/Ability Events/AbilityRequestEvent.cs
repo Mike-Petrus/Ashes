@@ -1,4 +1,4 @@
-public struct AbilityRequestEvent
+public class AbilityRequestEvent : IBattleEvent
 {
     public ActorId ActorId;
     public Ability Ability;

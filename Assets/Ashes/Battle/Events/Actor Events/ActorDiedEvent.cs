@@ -1,4 +1,4 @@
-public struct ActorDiedEvent
+public class ActorDiedEvent : IBattleEvent
 {
     public ActorId ActorId;
 

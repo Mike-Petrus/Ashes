@@ -1,4 +1,4 @@
-public struct DamageRequestEvent
+public class DamageRequestEvent : IBattleEvent
 {
     public ActorId SourceId;
     public ActorId TargetId;

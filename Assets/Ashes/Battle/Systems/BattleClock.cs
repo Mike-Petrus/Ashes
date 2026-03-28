@@ -1,11 +1,11 @@
 public class BattleClock : IBattleSystem
 {
-    private EventBus events;
+    private BattleEventBus events;
 
     public bool IsRunning = true;
     public float TimeScale = 1f;
 
-    public BattleClock(EventBus eventBus)
+    public BattleClock(BattleEventBus eventBus)
     {
         events = eventBus;
     }

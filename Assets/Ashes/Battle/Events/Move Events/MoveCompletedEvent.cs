@@ -1,4 +1,4 @@
-public struct MoveCompletedEvent
+public class MoveCompletedEvent : IBattleEvent
 {
     public ActorId ActorId;
 

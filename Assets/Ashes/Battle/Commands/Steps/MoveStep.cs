@@ -1,6 +1,6 @@
 public class MoveStep : CommandStep
 {
-    private EventBus events;
+    private BattleEventBus events;
 
     private ActorId actorId;
     private SimVector3 start;

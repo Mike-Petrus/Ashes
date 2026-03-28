@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class BattleTestBootstrapper : MonoBehaviour
 {
-    EventBus eventBus;
+    BattleEventBus eventBus;
     BattleSimulation simulation;
 
     BattleDebugSystem debugSystem;
@@ -10,7 +10,7 @@ public class BattleTestBootstrapper : MonoBehaviour
 
     void Start()
     {
-        eventBus = new EventBus();
+        eventBus = new BattleEventBus();
         simulation = new BattleSimulation(eventBus);
 
         debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);

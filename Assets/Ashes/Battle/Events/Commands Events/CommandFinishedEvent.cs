@@ -1,4 +1,4 @@
-public struct CommandFinishedEvent
+public class CommandFinishedEvent : IBattleEvent
 {
     public BattleCommand Command;
 

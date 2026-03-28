@@ -1,6 +1,6 @@
 public class AbilityStep : CommandStep
 {
-    private EventBus events;
+    private BattleEventBus events;
     private ActorId actorId;
     private Ability ability;
     private ActorId targetId;

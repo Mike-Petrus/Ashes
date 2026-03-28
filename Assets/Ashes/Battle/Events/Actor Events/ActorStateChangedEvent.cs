@@ -1,4 +1,4 @@
-public struct ActorStateChangedEvent
+public class ActorStateChangedEvent : IBattleEvent
 {
     public ActorId ActorId;
     public ActorState State;

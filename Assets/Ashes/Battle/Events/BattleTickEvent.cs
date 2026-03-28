@@ -1,4 +1,4 @@
-public struct BattleTickEvent
+public class BattleTickEvent : IBattleEvent
 {
     public float DeltaTime;
 

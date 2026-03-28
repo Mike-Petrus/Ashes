@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 public class BattleSimulation
 {
-    public EventBus Events { get; }
+    public BattleEventBus Events { get; }
     public BattleClock Clock { get; }
     public ATBSystem ATB { get; }
 
@@ -20,7 +20,7 @@ public class BattleSimulation
 
     private readonly List<IBattleSystem> systems = new();
 
-    public BattleSimulation(EventBus eventBus)
+    public BattleSimulation(BattleEventBus eventBus)
     {
         Events = eventBus;
 
@@ -65,6 +65,8 @@ public class BattleSimulation
         {
             system.Update(deltaTime);
         }
+
+        Events.ProcessEvents();
 
         TryStartNextCommand();
         TryResumeClock();

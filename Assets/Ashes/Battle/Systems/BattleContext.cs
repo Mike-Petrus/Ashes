@@ -1,6 +1,6 @@
 public class BattleContext
 {
-    public EventBus Events;
+    public BattleEventBus Events;
 
     public ActorRegistry Actors;
 

@@ -1,9 +1,9 @@
 public class AbilitySystem
 {
-    private EventBus events;
+    private BattleEventBus events;
     private ActorStateSystem actorStates;
 
-    public AbilitySystem(EventBus eventBus, ActorStateSystem states)
+    public AbilitySystem(BattleEventBus eventBus, ActorStateSystem states)
     {
         events = eventBus;
         actorStates = states;

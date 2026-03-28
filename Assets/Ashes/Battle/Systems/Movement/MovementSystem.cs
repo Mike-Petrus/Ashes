@@ -3,7 +3,7 @@ using System.Linq;
 
 public class MovementSystem : IBattleSystem
 {
-    private EventBus events;
+    private BattleEventBus events;
     private ActorStateSystem actorStates;
     private ActorRegistry actors;
 
@@ -17,7 +17,7 @@ public class MovementSystem : IBattleSystem
 
     private const float MoveDuration = 1.0f; // Global battle speed
 
-    public MovementSystem(EventBus eventBus, ActorStateSystem states, ActorRegistry actorRegistry)
+    public MovementSystem(BattleEventBus eventBus, ActorStateSystem states, ActorRegistry actorRegistry)
     {
         events = eventBus;
         actorStates = states;

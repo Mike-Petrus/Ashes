@@ -1,4 +1,4 @@
-public struct ActorMovedEvent
+public class ActorMovedEvent : IBattleEvent
 {
     public ActorId ActorId;
     public SimVector3 Position;

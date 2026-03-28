@@ -1,4 +1,4 @@
-public struct ATBChangedEvent
+public class ATBChangedEvent : IBattleEvent
 {
     public ActorId ActorId;
     public float ActorATB;

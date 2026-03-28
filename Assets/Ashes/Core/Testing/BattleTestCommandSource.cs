@@ -1,10 +1,10 @@
 public class BattleTestCommandSource
 {
-    private EventBus events;
+    private BattleEventBus events;
     private BattleCommandBuilder builder;
     private CommandValidator validator;
 
-    public BattleTestCommandSource(EventBus eventBus)
+    public BattleTestCommandSource(BattleEventBus eventBus)
     {
         events = eventBus;
         builder = new BattleCommandBuilder();

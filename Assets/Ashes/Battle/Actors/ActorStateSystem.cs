@@ -1,9 +1,9 @@
 public class ActorStateSystem
 {
-    private EventBus events;
+    private BattleEventBus events;
     private ActorRegistry actors;
 
-    public ActorStateSystem(EventBus eventBus, ActorRegistry actorRegistry)
+    public ActorStateSystem(BattleEventBus eventBus, ActorRegistry actorRegistry)
     {
         events = eventBus;
         actors = actorRegistry;

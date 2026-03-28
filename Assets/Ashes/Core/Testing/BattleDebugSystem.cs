@@ -5,7 +5,7 @@ public class BattleDebugSystem
     private float lastLogTime;
     private ActorRegistry actors;
 
-    public BattleDebugSystem(EventBus events, ActorRegistry actorRegistry)
+    public BattleDebugSystem(BattleEventBus events, ActorRegistry actorRegistry)
     {
         actors = actorRegistry;
 

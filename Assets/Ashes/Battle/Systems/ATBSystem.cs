@@ -1,9 +1,9 @@
 public class ATBSystem
 {
-    private EventBus events;
+    private BattleEventBus events;
     private ActorRegistry actors;
 
-    public ATBSystem(EventBus eventBus, ActorRegistry actorList)
+    public ATBSystem(BattleEventBus eventBus, ActorRegistry actorList)
     {
         events = eventBus;
         actors = actorList;
