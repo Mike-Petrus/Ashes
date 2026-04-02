@@ -57,12 +57,27 @@ public class BattleDebugSystem
 
     private void OnMoveCompleted(MoveCompletedEvent e)
     {
-        Debug.Log($"[MOVE] {actors.GetActor(e.ActorId).Name} finished moving");
+        Debug.Log($"[MOVE] {actors.GetActor(e.ActorId).Name} finished moving (arrived: {actors.GetActor(e.ActorId).Position})");
     }
 
     private void OnAbilityCompleted(AbilityCompletedEvent e)
     {
-        Debug.Log($"[ABILITY] {actors.GetActor(e.ActorId).Name} cast {e.Ability.Name} on {actors.GetActor(e.TargetId).Name}");
+        string targetDescription;
+
+        // Check if the ability was targeted at a specific actor
+        if (e.TargetInfo.TargetActor.HasValue)
+        {
+            var targetActor = actors.GetActor(e.TargetInfo.TargetActor.Value);
+            // Fallback just in case the actor died and was removed from the registry before completion
+            targetDescription = targetActor != null ? targetActor.Name : "Unknown/Dead Actor";
+        }
+        else
+        {
+            // It was targeted at a point on the ground!
+            targetDescription = $"Position {e.TargetInfo.TargetPosition}";
+        }
+
+        Debug.Log($"[ABILITY] {actors.GetActor(e.ActorId).Name} cast {e.Ability.Name} on {targetDescription}");
     }
 
     private void OnDamageApplied(DamageAppliedEvent e)

@@ -2,11 +2,13 @@ public class AbilitySystem
 {
     private BattleEventBus events;
     private ActorStateSystem actorStates;
+    private TargetingSystem targeting;
 
-    public AbilitySystem(BattleEventBus eventBus, ActorStateSystem states)
+    public AbilitySystem(BattleEventBus eventBus, ActorStateSystem states, TargetingSystem targetingSystem)
     {
         events = eventBus;
         actorStates = states;
+        targeting = targetingSystem;
 
         events.Subscribe<AbilityRequestEvent>(OnAbilityRequest);
     }
@@ -17,7 +19,7 @@ public class AbilitySystem
 
         // AbilityStartedEvent -> animations
 
-        AbilityContext ctx = new AbilityContext(e.ActorId, e.TargetId, events);
+        AbilityContext ctx = new AbilityContext(e.ActorId, e.TargetInfo, events, targeting);
 
         e.Ability.Execute(ctx);
 
@@ -29,6 +31,6 @@ public class AbilitySystem
         // Right now this fires immediately
         // TODO: Eventually we want AbilityStarted event -> Animation/FX -> AbilityResolvedEvent
         // This will fix the debug logging issues as well
-        events.Publish(new AbilityCompletedEvent(e.ActorId, e.Ability, e.TargetId));
+        events.Publish(new AbilityCompletedEvent(e.ActorId, e.Ability, e.TargetInfo));
     }
 }

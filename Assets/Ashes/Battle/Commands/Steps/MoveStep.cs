@@ -1,7 +1,5 @@
 public class MoveStep : CommandStep
 {
-    private BattleEventBus events;
-
     private ActorId actorId;
     private SimVector3 start;
     private SimVector3 destination;
@@ -14,12 +12,12 @@ public class MoveStep : CommandStep
 
     public override void Start(BattleContext ctx)
     {
-        events = ctx.Events;
+        base.Start(ctx);
 
         start = ctx.Actors.GetActor(actorId).Position;
 
-        events.Subscribe<MoveCompletedEvent>(OnMoveCompleted);
-        events.Publish(new MoveRequestEvent(actorId, start, destination));
+        context.Events.Subscribe<MoveCompletedEvent>(OnMoveCompleted);
+        context.Events.Publish(new MoveRequestEvent(actorId, start, destination));
     }
 
     private void OnMoveCompleted(MoveCompletedEvent e)
@@ -29,14 +27,14 @@ public class MoveStep : CommandStep
             return;
         }
 
-        events.Unsubscribe<MoveCompletedEvent>(OnMoveCompleted);
+        context.Events.Unsubscribe<MoveCompletedEvent>(OnMoveCompleted);
 
         IsFinished = true;
     }
 
-    public override void Cancel(BattleContext ctx)
+    public override void Cancel()
     {
-        events?.Unsubscribe<MoveCompletedEvent>(OnMoveCompleted);
-        base.Cancel(ctx);
+        context.Events.Unsubscribe<MoveCompletedEvent>(OnMoveCompleted);
+        base.Cancel();
     }
 }

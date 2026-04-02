@@ -1,6 +1,5 @@
 public class BattleActor
 {
-    // TODO: replace raw ActorId with strongly typed ActorID struct
     public ActorId Id;
     public string Name;
 
@@ -11,17 +10,19 @@ public class BattleActor
     public float MaxATB = 100;
 
     public SimVector3 Position;
+    public float Radius = 1.0f;
 
     public ActorState State = ActorState.Idle;
 
     public bool IsReady => ATB >= MaxATB;
     public bool IsAlive => State != ActorState.Dead;
 
-    public BattleActor(ActorId id, string name, float speed, SimVector3 position)
+    public BattleActor(ActorId id, string name, float speed, SimVector3 position, float radius = 1.0f)
     {
         Id = id;
         Name = name;
         Speed = speed;
         Position = position;
+        Radius = radius;
     }
 }

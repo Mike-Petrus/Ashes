@@ -1,39 +1,79 @@
 public class AbilityStep : CommandStep
 {
-    private BattleEventBus events;
-    private ActorId actorId;
+    private ActorId sourceId;
     private Ability ability;
-    private ActorId targetId;
+    private TargetInfo targetInfo;
 
-    public AbilityStep(ActorId actor, Ability ability, ActorId target)
+    public AbilityStep(ActorId sourceId, Ability ability, TargetInfo targetInfo)
     {
-        this.actorId = actor;
+        this.sourceId = sourceId;
         this.ability = ability;
-        this.targetId = target;
+        this.targetInfo = targetInfo;
     }
 
     public override void Start(BattleContext ctx)
     {
-        events = ctx.Events;
+        base.Start(ctx);
 
-        ctx.Events.Subscribe<AbilityCompletedEvent>(OnAbilityCompleted);
-        ctx.Events.Publish(new AbilityRequestEvent(actorId, ability, targetId));
+        // LATE VALIDATION : occurs at execution rather than command input
+        bool isValid = ValidateTarget();
+
+        if (!isValid)
+        {
+            MutateToWaitStep();
+            IsFinished = true;
+            return;
+        }
+
+        context.Events.Subscribe<AbilityCompletedEvent>(OnAbilityCompleted);
+        context.Events.Publish(new AbilityRequestEvent(sourceId, ability, targetInfo));
     }
 
     private void OnAbilityCompleted(AbilityCompletedEvent e)
     {
-        if (e.ActorId != actorId)
+        if (e.ActorId != sourceId)
         {
             return;
         }
 
-        events.Unsubscribe<AbilityCompletedEvent>(OnAbilityCompleted);
+        context.Events.Unsubscribe<AbilityCompletedEvent>(OnAbilityCompleted);
         IsFinished = true;
     }
 
-    public override void Cancel(BattleContext ctx)
+    public override void Cancel()
     {
-        ctx.Events.Unsubscribe<AbilityCompletedEvent>(OnAbilityCompleted);
-        base.Cancel(ctx);
+        context.Events.Unsubscribe<AbilityCompletedEvent>(OnAbilityCompleted);
+        base.Cancel();
+    }
+
+    private bool ValidateTarget()
+    {
+        if (targetInfo.Mode == TargetingMode.PointAoE)
+        {
+            return true;
+        }
+
+        // 1. If actor-targeted ability then check that actor is still alive
+        if (targetInfo.TargetActor.HasValue)
+        {
+            var targetActor = context.Actors.GetActor(targetInfo.TargetActor.Value);
+
+            // TODO: check ability.CanTargetDead e.g. Resurrection
+            if (targetActor == null || !targetActor.IsAlive)
+            {
+                return false;
+            }
+        }
+
+        // 2. Ask RangeSystem if target is currently in range
+        return context.Range.IsActorInRange(sourceId, ability, targetInfo);
+    }
+
+    private void MutateToWaitStep()
+    {
+        // Give Actor ATB refund
+        context.Events.Publish(new ATBChangeRequestEvent(sourceId, ability.RefundPercent, false));
+
+        // TODO: May need to also publish something like AbilityFizzleEvent or CommandMutateEvent
     }
 }

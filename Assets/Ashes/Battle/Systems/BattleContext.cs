@@ -10,6 +10,8 @@ public class BattleContext
 
     public AbilitySystem Abilities;
 
+    public RangeSystem Range;
+
     public CombatSystem Combat;
 
     public BattleClock Clock;
