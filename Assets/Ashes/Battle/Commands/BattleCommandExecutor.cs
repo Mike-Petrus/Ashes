@@ -69,7 +69,7 @@ public class BattleCommandExecutor : IBattleSystem
             return;
         }
 
-        currentStep?.Update(context, deltaTime);     
+        currentStep?.Update(deltaTime);     
 
 
         if (currentStep != null && currentStep.IsFinished)

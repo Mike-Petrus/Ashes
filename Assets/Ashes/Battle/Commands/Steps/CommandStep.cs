@@ -2,11 +2,16 @@ public abstract class CommandStep
 {
     public bool IsFinished { get; protected set; }
 
-    public virtual void Start(BattleContext ctx) { }
+    protected BattleContext context;
 
-    public virtual void Update(BattleContext ctx, float deltaTime) { }
+    public virtual void Start(BattleContext ctx)
+    {
+        context = ctx;
+    }
 
-    public virtual void Cancel(BattleContext ctx)
+    public virtual void Update(float deltaTime) { }
+
+    public virtual void Cancel()
     {
         IsFinished = true;
     }

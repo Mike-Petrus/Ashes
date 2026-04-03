@@ -1,75 +1,109 @@
 using System.Collections.Generic;
+using System.Linq;
 
 public class BattleSimulation
 {
-    public BattleEventBus Events { get; }
-    public BattleClock Clock { get; }
-    public ATBSystem ATB { get; }
+    public BattleArena Arena { get; private set;}
 
+    public BattleEventBus Events { get; }
+    
     public ActorRegistry Actors { get; }
     public ActorStateSystem ActorStates { get; }
 
+    public BattleClock Clock { get; }
+    public ATBSystem ATB { get; }
+
     public BattleActionQueue ActionQueue { get; }
-    public BattleCommandExecutor CommandExecutor { get; }
 
     public MovementSystem MovementSystem { get; }
+    public PositionSystem PositionSystem { get; }
+
+    public RangeSystem RangeSystem { get; }
+    public TargetingSystem TargetingSystem { get; }
+
     public AbilitySystem AbilitySystem { get; }
-    public CombatSystem CombatSystem { get; }
+    public StatusEffectSystem StatusEffectSystem { get; }
+    public EffectPipeline EffectPipeline { get; }
 
-    public BattleContext CommandContext { get; }
-
-    private readonly List<IBattleSystem> systems = new();
+    public BattleContext BattleContext { get; }
+    public BattleCommandExecutor CommandExecutor { get; }
 
     public BattleSimulation(BattleEventBus eventBus)
     {
         Events = eventBus;
 
         Actors = new ActorRegistry();
-
-        ATB = new ATBSystem(Events, Actors);
-        Clock = new BattleClock(Events);
-
         ActorStates = new ActorStateSystem(Events, Actors);
+
+        Clock = new BattleClock(Events);
+        ATB = new ATBSystem(Events, Actors, Clock);
 
         ActionQueue = new BattleActionQueue(Events);
 
         MovementSystem = new MovementSystem(Events, ActorStates, Actors);
-        AbilitySystem = new AbilitySystem(Events, ActorStates);
-        CombatSystem = new CombatSystem(Events, Actors);
+        PositionSystem = new PositionSystem(Actors);
 
-        CommandContext = new BattleContext
+        RangeSystem = new RangeSystem(Actors);
+        TargetingSystem = new TargetingSystem(Actors, PositionSystem);
+
+        AbilitySystem = new AbilitySystem(Events, ActorStates, TargetingSystem);
+        StatusEffectSystem = new StatusEffectSystem(Events, Actors, Clock);
+        EffectPipeline = new EffectPipeline(Events, Actors);
+
+        BattleContext = new BattleContext
         {
             Events = Events,
             Actors = Actors,
             ActorStates = ActorStates,
             Movement = MovementSystem,
             Abilities = AbilitySystem,
-            Combat = CombatSystem,
+            Range = RangeSystem,
+            Effects = EffectPipeline,
             Clock = Clock
         };
 
-        CommandExecutor = new BattleCommandExecutor(CommandContext);
-
-        systems.Add(Clock);
-        systems.Add(MovementSystem);
-        systems.Add(CommandExecutor);
+        CommandExecutor = new BattleCommandExecutor(BattleContext);
     }
 
     public void Update(float deltaTime)
     {
-        // Later we can have Update Groups of List<IBattleSystem>
-        // PreUpdate: ATB, Clock
-        // Simulation: Movement, Abilities, Effects
-        // PostUpdate: CommandExecutor
-        foreach (var system in systems)
-        {
-            system.Update(deltaTime);
-        }
+        // Phase 1: TIME & CONTINUIOUS SIMULATION
+        // These only process if Clock.IsRunning = true inside their own Update methods
+        Clock.Update(deltaTime);
+        StatusEffectSystem.Update(deltaTime);   // Effect ticks and expiration
+        ATB.Update(deltaTime);            // ATB bars fill up
 
+        // Phase 2: PHYSICAL WORLD
+        // Actors physicall move
+        MovementSystem.Update(deltaTime);
+        PositionSystem.Update(deltaTime);
+
+        // Phase 3: COMMAND MANAGEMENT
+        // The actieve step updates (e.g. AbilityStep animating)
+        CommandExecutor.Update(deltaTime);
+
+        // Phase 4: EVENT RESOLUTION
+        // Flush the event queue - Any damage, deaths, or UI request that happened
+        // in Phases 1-3 are processed
         Events.ProcessEvents();
 
+        // Phase 5: QUEUE & STATE MANAGEMENT
+        // check if we need to start another command in the queue or unpause the clock
         TryStartNextCommand();
         TryResumeClock();
+    }
+
+    // Called after actors are registered by boostrapper
+    // TODO: Implement a PartySystem and EnemySpawner to register actors
+    public void InitializeBattle(SimVector3 centerPoint)
+    {
+        // Calculate Arena size
+        int totalActors = Actors.GetAllActors().Count();
+        Arena = new BattleArena(centerPoint, totalActors);
+
+        // Spawn and position actors in the arena
+        // Later this should be handled by using Party formation and some Spawning system
+        SetupInitialPositions();
     }
 
     private void TryStartNextCommand()
@@ -111,5 +145,26 @@ public class BattleSimulation
         }
 
         Clock.Resume();
+    }
+
+    private void SetupInitialPositions()
+    {
+        // Example logic: Put actors with ID 1 & 2 (Party) on the left, others (Enemies) on the right
+        foreach (var actor in Actors.GetAllActors())
+        {
+            if (actor.Id.Value <= 2) 
+            {
+                // Place party members on the left side of the arena
+                actor.Position = new SimVector3(Arena.Center.x - 5f, 0, Arena.Center.z + (actor.Id.Value * 2f));
+            }
+            else
+            {
+                // Place enemies on the right side
+                actor.Position = new SimVector3(Arena.Center.x + 5f, 0, Arena.Center.z + (actor.Id.Value * 2f));
+            }
+
+            // Immediately reserve their starting space so they don't overlap
+            PositionSystem.ReserveSpace(actor.Id, actor.Position);
+        }
     }
 }

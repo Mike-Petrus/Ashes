@@ -6,10 +6,10 @@ public class BasicAttackAbility : Ability
     {
         Name = "Attack";
         Range = 2f;
-    }
+        Radius = 0f;
+        Mode = TargetingMode.SingleTarget;
+        Alignment = TargetAlignment.Everyone;
 
-    public override void Execute(AbilityContext context)
-    {
-        context.Events.Publish(new DamageRequestEvent(context.SourceId, context.TargetId, Damage));
+        Effects.Add(new DamageEffect(10));
     }
 }

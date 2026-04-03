@@ -19,15 +19,18 @@ public class BattleTestCommandSource
     private void OnActorReady(ActorReadyEvent e)
     {
         ActorId actor = e.ActorId;
-
         builder.BeginCommand(actor);
 
-        builder.AddStep(new MoveStep(actor, new SimVector3(2, 0, 0)));
+        SimVector3 destination = new SimVector3(actor.Value * 2f, 0, 5f);
+        builder.AddStep(new MoveStep(actor, destination));
 
-        // Simple test target (self for now)
-        ActorId target = actor;
+        ActorId targetId = actor.Value <= 2 ? new ActorId(3) : new ActorId(1);
+        TargetInfo targetInfo = TargetInfo.ForActor(targetId);
 
-        builder.AddStep(new AbilityStep(actor, new BasicAttackAbility(), target));
+        // Assign the Ability based on who is acting!
+        Ability abilityToCast = (actor.Value == 3) ? new PoisonDartAbility() : new BasicAttackAbility();
+
+        builder.AddStep(new AbilityStep(actor, abilityToCast, targetInfo));
 
         BattleCommand command = builder.Build();
         

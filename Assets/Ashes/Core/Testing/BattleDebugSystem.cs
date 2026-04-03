@@ -10,17 +10,16 @@ public class BattleDebugSystem
         actors = actorRegistry;
 
         events.Subscribe<ActorReadyEvent>(OnActorReady);
-
         events.Subscribe<CommandStartedEvent>(OnCommandStarted);
         events.Subscribe<CommandStepStartedEvent>(OnStepStarted);
         events.Subscribe<CommandFinishedEvent>(OnCommandFinished);
-
         events.Subscribe<ActorMovedEvent>(OnActorMoved);
         events.Subscribe<MoveCompletedEvent>(OnMoveCompleted);
-
         events.Subscribe<AbilityCompletedEvent>(OnAbilityCompleted);
-
         events.Subscribe<DamageAppliedEvent>(OnDamageApplied);
+        events.Subscribe<StatusAppliedEvent>(OnStatusApplied);
+        events.Subscribe<StatusExpiredEvent>(OnStatusExpired);
+        events.Subscribe<EffectTickRequestEvent>(OnEffectTickRequest);
     }
 
     private void OnActorReady(ActorReadyEvent e)
@@ -57,12 +56,27 @@ public class BattleDebugSystem
 
     private void OnMoveCompleted(MoveCompletedEvent e)
     {
-        Debug.Log($"[MOVE] {actors.GetActor(e.ActorId).Name} finished moving");
+        Debug.Log($"[MOVE] {actors.GetActor(e.ActorId).Name} finished moving (arrived: {actors.GetActor(e.ActorId).Position})");
     }
 
     private void OnAbilityCompleted(AbilityCompletedEvent e)
     {
-        Debug.Log($"[ABILITY] {actors.GetActor(e.ActorId).Name} cast {e.Ability.Name} on {actors.GetActor(e.TargetId).Name}");
+        string targetDescription;
+
+        // Check if the ability was targeted at a specific actor
+        if (e.TargetInfo.TargetActor.HasValue)
+        {
+            var targetActor = actors.GetActor(e.TargetInfo.TargetActor.Value);
+            // Fallback just in case the actor died and was removed from the registry before completion
+            targetDescription = targetActor != null ? targetActor.Name : "Unknown/Dead Actor";
+        }
+        else
+        {
+            // It was targeted at a point on the ground!
+            targetDescription = $"Position {e.TargetInfo.TargetPosition}";
+        }
+
+        Debug.Log($"[ABILITY] {actors.GetActor(e.ActorId).Name} cast {e.Ability.Name} on {targetDescription}");
     }
 
     private void OnDamageApplied(DamageAppliedEvent e)
@@ -71,5 +85,20 @@ public class BattleDebugSystem
         var target = actors.GetActor(e.TargetId);
 
         Debug.Log($"[DAMAGE] {source.Name} dealt {e.Amount} to {target.Name}");
+    }
+    
+    private void OnStatusApplied(StatusAppliedEvent e)
+    {
+        Debug.Log($"[STATUS] {actors.GetActor(e.TargetId).Name} was afflicted with {e.StatusName}!");
+    }
+
+    private void OnStatusExpired(StatusExpiredEvent e)
+    {
+        Debug.Log($"[STATUS] {e.StatusName} wore off from {actors.GetActor(e.TargetId).Name}.");
+    }
+
+    private void OnEffectTickRequest(EffectTickRequestEvent e)
+    {
+        Debug.Log($"[TICK] {e.StatusName} ticked on {actors.GetActor(e.Context.TargetId).Name}!");
     }
 }
