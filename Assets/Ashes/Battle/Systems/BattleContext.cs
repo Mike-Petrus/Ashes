@@ -12,7 +12,7 @@ public class BattleContext
 
     public RangeSystem Range;
 
-    public CombatSystem Combat;
+    public EffectPipeline Effects;
 
     public BattleClock Clock;
 }

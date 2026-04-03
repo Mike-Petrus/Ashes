@@ -4,6 +4,9 @@ public class BattleClock : IBattleSystem
 
     public bool IsRunning = true;
     public float TimeScale = 1f;
+    private float battleDelta;
+
+    public float BattleDelta => battleDelta;
 
     public BattleClock(BattleEventBus eventBus)
     {
@@ -17,9 +20,7 @@ public class BattleClock : IBattleSystem
             return;
         }
 
-        float battleDelta = deltaTime * TimeScale;
-
-        events.Publish(new BattleTickEvent(battleDelta));
+        battleDelta = deltaTime * TimeScale;
     }
 
     public void Pause()

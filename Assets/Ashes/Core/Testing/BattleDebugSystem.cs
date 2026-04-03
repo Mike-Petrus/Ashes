@@ -10,17 +10,16 @@ public class BattleDebugSystem
         actors = actorRegistry;
 
         events.Subscribe<ActorReadyEvent>(OnActorReady);
-
         events.Subscribe<CommandStartedEvent>(OnCommandStarted);
         events.Subscribe<CommandStepStartedEvent>(OnStepStarted);
         events.Subscribe<CommandFinishedEvent>(OnCommandFinished);
-
         events.Subscribe<ActorMovedEvent>(OnActorMoved);
         events.Subscribe<MoveCompletedEvent>(OnMoveCompleted);
-
         events.Subscribe<AbilityCompletedEvent>(OnAbilityCompleted);
-
         events.Subscribe<DamageAppliedEvent>(OnDamageApplied);
+        events.Subscribe<StatusAppliedEvent>(OnStatusApplied);
+        events.Subscribe<StatusExpiredEvent>(OnStatusExpired);
+        events.Subscribe<EffectTickRequestEvent>(OnEffectTickRequest);
     }
 
     private void OnActorReady(ActorReadyEvent e)
@@ -86,5 +85,20 @@ public class BattleDebugSystem
         var target = actors.GetActor(e.TargetId);
 
         Debug.Log($"[DAMAGE] {source.Name} dealt {e.Amount} to {target.Name}");
+    }
+    
+    private void OnStatusApplied(StatusAppliedEvent e)
+    {
+        Debug.Log($"[STATUS] {actors.GetActor(e.TargetId).Name} was afflicted with {e.StatusName}!");
+    }
+
+    private void OnStatusExpired(StatusExpiredEvent e)
+    {
+        Debug.Log($"[STATUS] {e.StatusName} wore off from {actors.GetActor(e.TargetId).Name}.");
+    }
+
+    private void OnEffectTickRequest(EffectTickRequestEvent e)
+    {
+        Debug.Log($"[TICK] {e.StatusName} ticked on {actors.GetActor(e.Context.TargetId).Name}!");
     }
 }

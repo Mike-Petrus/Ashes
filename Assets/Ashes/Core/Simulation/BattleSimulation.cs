@@ -3,53 +3,54 @@ using System.Linq;
 
 public class BattleSimulation
 {
-    public BattleEventBus Events { get; }
-    public BattleClock Clock { get; }
-    public ATBSystem ATB { get; }
-
     public BattleArena Arena { get; private set;}
 
+    public BattleEventBus Events { get; }
+    
     public ActorRegistry Actors { get; }
     public ActorStateSystem ActorStates { get; }
 
+    public BattleClock Clock { get; }
+    public ATBSystem ATB { get; }
+
     public BattleActionQueue ActionQueue { get; }
-    public BattleCommandExecutor CommandExecutor { get; }
 
     public MovementSystem MovementSystem { get; }
-    public AbilitySystem AbilitySystem { get; }
-   
-    public CombatSystem CombatSystem { get; }
     public PositionSystem PositionSystem { get; }
+
     public RangeSystem RangeSystem { get; }
     public TargetingSystem TargetingSystem { get; }
 
-    public BattleContext CommandContext { get; }
+    public AbilitySystem AbilitySystem { get; }
+    public StatusEffectSystem StatusEffectSystem { get; }
+    public EffectPipeline EffectPipeline { get; }
 
-    private readonly List<IBattleSystem> systems = new();
+    public BattleContext BattleContext { get; }
+    public BattleCommandExecutor CommandExecutor { get; }
 
     public BattleSimulation(BattleEventBus eventBus)
     {
         Events = eventBus;
 
         Actors = new ActorRegistry();
-
-        ATB = new ATBSystem(Events, Actors);
-        Clock = new BattleClock(Events);
-
         ActorStates = new ActorStateSystem(Events, Actors);
+
+        Clock = new BattleClock(Events);
+        ATB = new ATBSystem(Events, Actors, Clock);
 
         ActionQueue = new BattleActionQueue(Events);
 
+        MovementSystem = new MovementSystem(Events, ActorStates, Actors);
         PositionSystem = new PositionSystem(Actors);
+
         RangeSystem = new RangeSystem(Actors);
         TargetingSystem = new TargetingSystem(Actors, PositionSystem);
 
-        MovementSystem = new MovementSystem(Events, ActorStates, Actors);
         AbilitySystem = new AbilitySystem(Events, ActorStates, TargetingSystem);
+        StatusEffectSystem = new StatusEffectSystem(Events, Actors, Clock);
+        EffectPipeline = new EffectPipeline(Events, Actors);
 
-        CombatSystem = new CombatSystem(Events, Actors);
-
-        CommandContext = new BattleContext
+        BattleContext = new BattleContext
         {
             Events = Events,
             Actors = Actors,
@@ -57,30 +58,37 @@ public class BattleSimulation
             Movement = MovementSystem,
             Abilities = AbilitySystem,
             Range = RangeSystem,
-            Combat = CombatSystem,
+            Effects = EffectPipeline,
             Clock = Clock
         };
 
-        CommandExecutor = new BattleCommandExecutor(CommandContext);
-
-        systems.Add(Clock);
-        systems.Add(MovementSystem);
-        systems.Add(CommandExecutor);
+        CommandExecutor = new BattleCommandExecutor(BattleContext);
     }
 
     public void Update(float deltaTime)
     {
-        // Later we can have Update Groups of List<IBattleSystem>
-        // PreUpdate: ATB, Clock
-        // Simulation: Movement, Abilities, Effects
-        // PostUpdate: CommandExecutor
-        foreach (var system in systems)
-        {
-            system.Update(deltaTime);
-        }
+        // Phase 1: TIME & CONTINUIOUS SIMULATION
+        // These only process if Clock.IsRunning = true inside their own Update methods
+        Clock.Update(deltaTime);
+        StatusEffectSystem.Update(deltaTime);   // Effect ticks and expiration
+        ATB.Update(deltaTime);            // ATB bars fill up
 
+        // Phase 2: PHYSICAL WORLD
+        // Actors physicall move
+        MovementSystem.Update(deltaTime);
+        PositionSystem.Update(deltaTime);
+
+        // Phase 3: COMMAND MANAGEMENT
+        // The actieve step updates (e.g. AbilityStep animating)
+        CommandExecutor.Update(deltaTime);
+
+        // Phase 4: EVENT RESOLUTION
+        // Flush the event queue - Any damage, deaths, or UI request that happened
+        // in Phases 1-3 are processed
         Events.ProcessEvents();
 
+        // Phase 5: QUEUE & STATE MANAGEMENT
+        // check if we need to start another command in the queue or unpause the clock
         TryStartNextCommand();
         TryResumeClock();
     }

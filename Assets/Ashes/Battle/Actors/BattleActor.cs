@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 public class BattleActor
 {
     public ActorId Id;
@@ -13,6 +15,7 @@ public class BattleActor
     public float Radius = 1.0f;
 
     public ActorState State = ActorState.Idle;
+    public List<ActiveStatus> ActiveStatuses { get; } = new List<ActiveStatus>();
 
     public bool IsReady => ATB >= MaxATB;
     public bool IsAlive => State != ActorState.Dead;
