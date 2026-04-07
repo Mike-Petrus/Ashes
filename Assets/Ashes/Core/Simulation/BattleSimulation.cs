@@ -46,7 +46,7 @@ public class BattleSimulation
         RangeSystem = new RangeSystem(Actors);
         TargetingSystem = new TargetingSystem(Actors, PositionSystem);
 
-        AbilitySystem = new AbilitySystem(Events, ActorStates, TargetingSystem);
+        AbilitySystem = new AbilitySystem(Events, Actors, ActorStates, TargetingSystem);
         StatusEffectSystem = new StatusEffectSystem(Events, Actors, Clock);
         EffectPipeline = new EffectPipeline(Events, Actors);
 

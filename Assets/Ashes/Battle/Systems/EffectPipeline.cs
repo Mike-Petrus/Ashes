@@ -53,6 +53,10 @@ public class EffectPipeline : IBattleSystem
             {
                 ApplyDamage(damage, context, target);
             }
+            else if (effect is HealEffect heal)
+            {
+                ApplyHeal(heal, context, target);
+            }
             else if (effect is ApplyStatusEffect status)
             {
                 ApplyStatus(status, context, target);
@@ -67,7 +71,7 @@ public class EffectPipeline : IBattleSystem
         int finalDamage = Math.Max(0, damageEffect.BaseDamage);         // ensure we dont heal  the target
 
         // 2. Apply it to the actor
-        target.Health -= finalDamage;
+        target.CurrentHP -= finalDamage;
 
         // 3. Write to the ledger so subsequent effets know what hapened
         context.FinalDamageDealt = finalDamage;
@@ -76,10 +80,24 @@ public class EffectPipeline : IBattleSystem
         events.Publish(new DamageAppliedEvent(context.SourceId, context.TargetId, finalDamage));
 
         // 5. Death check
-        if (target.Health <= 0)
+        if (target.CurrentHP <= 0)
         {
             events.Publish(new ActorDiedEvent(context.TargetId));
         }
+    }
+
+    private void ApplyHeal(HealEffect healEffect, EffectContext context, BattleActor target)
+    {
+        // 1. Any heal bonuses applied here
+        int finalHeal = Math.Max(0, healEffect.BaseHeal);
+
+        // 2. Apply it
+        target.CurrentHP += finalHeal;
+
+        // Any reason that healing would need to be in ledger? Can always add it later
+        // context.FinalHealingAmount = finalHeal;
+
+        events.Publish(new HealAppliedEvent(context.SourceId, context.TargetId, finalHeal));
     }
 
     private void ApplyStatus(ApplyStatusEffect statusEffect, EffectContext context, BattleActor target)
