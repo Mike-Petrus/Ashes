@@ -1,10 +1,10 @@
-public class DamageRequestEvent : IBattleEvent
+public class HealAppliedEvent : IBattleEvent
 {
     public ActorId SourceId;
     public ActorId TargetId;
-    public float Amount;
+    public int Amount;
 
-    public DamageRequestEvent(ActorId sourceId, ActorId targetId, float amount)
+    public HealAppliedEvent(ActorId sourceId, ActorId targetId, int amount)
     {
         SourceId = sourceId;
         TargetId = targetId;

@@ -3,7 +3,10 @@ using System.Collections.Generic;
 public abstract class Ability
 {
     public string Name { get; protected set; }
-    public List<Effect> Effects { get; protected set; } = new List<Effect>();
+    public string Category { get; protected set; }
+
+    public List<Effect> Effects { get; protected set; } = new();
+    public List<AbilityRequirement> Requirements { get; protected set; } = new();
 
     // Spatial Rules
     public float Range { get; protected set; }
@@ -19,10 +22,16 @@ public abstract class Ability
 
     public virtual void Execute(AbilityContext context)
     {
-        // 1. Ask the Targeting System who is in the attack zone
+        // 1. Pay the Ability Cost
+        foreach (var req in Requirements)
+        {
+            req.ConsumeRequirement(context);
+        }
+        
+        // 2. Ask the Targeting System who is in the attack zone
         var targets = context.Targeting.GetAffectedTargets(context.SourceId, context.TargetInfo, this);
 
-        // 2. Fire the events for the EffectPipeline
+        // 3. Fire the events for the EffectPipeline
         foreach (var targetId in targets)
         {
             var effectContext = new EffectContext(context.SourceId, targetId);

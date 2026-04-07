@@ -2,9 +2,9 @@ public class DamageAppliedEvent : IBattleEvent
 {
     public ActorId SourceId;
     public ActorId TargetId;
-    public float Amount;
+    public int Amount;
 
-    public DamageAppliedEvent(ActorId sourceId, ActorId targetId, float amount)
+    public DamageAppliedEvent(ActorId sourceId, ActorId targetId, int amount)
     {
         SourceId = sourceId;
         TargetId = targetId;

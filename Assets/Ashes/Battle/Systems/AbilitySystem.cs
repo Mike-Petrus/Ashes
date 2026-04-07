@@ -1,12 +1,14 @@
 public class AbilitySystem
 {
     private BattleEventBus events;
+    private ActorRegistry actors;
     private ActorStateSystem actorStates;
     private TargetingSystem targeting;
 
-    public AbilitySystem(BattleEventBus eventBus, ActorStateSystem states, TargetingSystem targetingSystem)
+    public AbilitySystem(BattleEventBus eventBus, ActorRegistry actorRegistry, ActorStateSystem states, TargetingSystem targetingSystem)
     {
         events = eventBus;
+        actors = actorRegistry;
         actorStates = states;
         targeting = targetingSystem;
 
@@ -19,7 +21,7 @@ public class AbilitySystem
 
         // AbilityStartedEvent -> animations
 
-        AbilityContext ctx = new AbilityContext(e.ActorId, e.TargetInfo, events, targeting);
+        AbilityContext ctx = new AbilityContext(e.ActorId, e.TargetInfo, events, actors, targeting);
 
         e.Ability.Execute(ctx);
 
