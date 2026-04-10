@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 public class AbilitySet
 {
-    public Dictionary<string, List<Ability>> AvailableAbilities { get; private set; }
+    public Dictionary<string, List<Ability>> AvailableAbilities { get; private set; } = new();
 
     public void UnlockAbility(Ability ability)
     {

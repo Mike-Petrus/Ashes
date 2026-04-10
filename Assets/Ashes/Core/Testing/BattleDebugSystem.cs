@@ -20,6 +20,7 @@ public class BattleDebugSystem
         events.Subscribe<StatusAppliedEvent>(OnStatusApplied);
         events.Subscribe<StatusExpiredEvent>(OnStatusExpired);
         events.Subscribe<EffectTickRequestEvent>(OnEffectTickRequest);
+        events.Subscribe<ResourceConsumedEvent>(OnResourceConsumed);
     }
 
     private void OnActorReady(ActorReadyEvent e)
@@ -100,5 +101,11 @@ public class BattleDebugSystem
     private void OnEffectTickRequest(EffectTickRequestEvent e)
     {
         Debug.Log($"[TICK] {e.StatusName} ticked on {actors.GetActor(e.Context.TargetId).Name}!");
+    }
+
+    private void OnResourceConsumed(ResourceConsumedEvent e)
+    {
+        var actor = actors.GetActor(e.ActorId);
+        Debug.Log($"[RESOURCE] {actor.Name} spent {e.Amount} {e.Resource}");
     }
 }

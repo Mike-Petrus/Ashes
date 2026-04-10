@@ -5,6 +5,7 @@ public class BasicAttackAbility : Ability
     public BasicAttackAbility()
     {
         Name = "Attack";
+        Category = "Weapon Skill";
         Range = 2f;
         Radius = 0f;
         Mode = TargetingMode.SingleTarget;
