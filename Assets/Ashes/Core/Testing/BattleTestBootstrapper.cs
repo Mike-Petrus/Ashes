@@ -1,52 +1,94 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class BattleTestBootstrapper : MonoBehaviour
 {
     BattleEventBus eventBus;
     BattleSimulation simulation;
-
     BattleDebugSystem debugSystem;
-    BattleTestCommandSource commandSource;
+
+    // Make these class-level so our event handler can use them!
+    PlayerTurnController controller;
+    ActorId paladinId;
 
     void Start()
     {
-        // 1. Create core battle systems
-        eventBus = new BattleEventBus();
-        simulation = new BattleSimulation(eventBus);
-
-        debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
-        commandSource = new BattleTestCommandSource(eventBus);
-
-        // 2. Register Actors
-        SetupBattle();
-
-        // 3. Initialize 
-        // Create some random battle spot in range [-40, 40]
-        float x = Random.Range(-40.0f, 40.0f);
-        float z = Random.Range(-40.0f, 40.0f);
-        SimVector3 arenaCenter = new SimVector3(x, 0f, z);
-
-        // Move to Debug system if we have an event triggered
-        Debug.Log($"Arena center placed at {x} , {z}");
-
-        simulation.InitializeBattle(arenaCenter);
-
-        // May eventually need some BattleStartedEvent to trigger UI
+        RunPaladinTest();
     }
 
     void Update()
     {
-        simulation.Update(Time.deltaTime);
+        if (simulation != null)
+        {
+            simulation.Update(Time.deltaTime);
+        }
     }
 
-    void SetupBattle()
+    public void RunPaladinTest()
     {
-        // TODO: In the future this data will be handled by other systems, e.g.
-        // 1. GlobalGameState.ActiveParty
-        // 2. EncounterSystem.GetCurrentEncouter()
+        eventBus = new BattleEventBus();
+        simulation = new BattleSimulation(eventBus);
+        debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
 
-        simulation.Actors.RegisterActor(new BattleActor(new ActorId(1), "Knight", 10, SimVector3.Zero));
-        simulation.Actors.RegisterActor(new BattleActor(new ActorId(2), "Mage", 12, SimVector3.Zero));
-        simulation.Actors.RegisterActor(new BattleActor(new ActorId(3), "Goblin", 15, SimVector3.Zero));
+        // 1. Create the Paladin
+        var paladinTemplate = new ClassTemplate 
+        { 
+            ClassName = "Paladin", 
+            BaseStats = new CoreAttributes { Strength = 15, Aether = 15, Vitality = 20, Agility = 10, Speed = 10, MoveDistance = 10 } 
+        };
+        var paladinStats = new CharacterStats(paladinTemplate.BaseStats);
+        
+        paladinId = new ActorId(1); // Store it to check against later!
+        var paladin = new BattleActor(paladinId, "Cecil", paladinStats, new SimVector3(0, 0, 0));
+        
+        paladin.Abilities.UnlockAbility(new SacrificeAbility());
+        paladin.Abilities.UnlockAbility(new HolyFireAbility()); 
+
+        // 2. Create the Goblin (Target)
+        var goblinStats = new CharacterStats(new CoreAttributes {  Strength = 10, Aether = 10, Vitality = 10, Agility = 5, Speed = 8, MoveDistance = 10 });
+        var goblin = new BattleActor(new ActorId(2), "Goblin", goblinStats, new SimVector3(5, 0, 0));
+
+        // 3. Register Actors and Start Battle
+        simulation.Actors.RegisterActor(paladin);
+        simulation.Actors.RegisterActor(goblin);
+        simulation.InitializeBattle(new SimVector3(0,0,0));
+
+        // 4. Initialize the Input Controller
+        var party = new List<BattleActor> { paladin };
+        var builder = new BattleCommandBuilder();
+        controller = new PlayerTurnController(simulation, builder, party);
+
+        // 5. SUBSCRIBE TO THE EVENT!
+        eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
+    }
+
+    // This fires the moment an ATB bar hits 100!
+    private void OnActorReady(ActorReadyEvent e)
+    {
+        // Is it the Paladin's turn?
+        if (e.ActorId.Value == paladinId.Value)
+        {
+            Debug.Log("--- EXECUTING SIMULATED D-PAD MACRO ---");
+
+            // Wake the controller up from Idle!
+            controller.BeginPartySelection();
+
+            // Execute the inputs instantly
+            controller.ProcessInput(InputButton.Confirm); // Selects Paladin -> RootMenu Phase 1
+            
+            controller.ProcessInput(InputButton.Down); // Hovers White Magic
+            controller.ProcessInput(InputButton.Down); // Hovers Wrath
+            controller.ProcessInput(InputButton.Confirm); // Enters Wrath Menu
+            
+            controller.ProcessInput(InputButton.Confirm); // Selects Holy Fire -> TargetingActor
+            
+            controller.InjectTestActor(new ActorId(2)); // Inject Goblin
+            controller.ProcessInput(InputButton.Confirm); // Locks in AbilityStep -> Phase 2 Menu
+            
+            controller.ProcessInput(InputButton.Confirm); // Selects Move -> TargetingMove
+            
+            controller.InjectTestPosition(new SimVector3(2, 0, 0));
+            controller.ProcessInput(InputButton.Confirm); // Locks in MoveStep -> SUBMITS COMMAND!
+        }
     }
 }

@@ -2,6 +2,8 @@ public class BattleCommandBuilder
 {
     private BattleCommand currentCommand;
 
+    public int Size => currentCommand != null ? currentCommand.Steps.Count : 0;
+
     public void BeginCommand(ActorId actorId)
     {
         currentCommand = new BattleCommand(actorId);
@@ -16,7 +18,10 @@ public class BattleCommandBuilder
         currentCommand.AddStep(step);
     }
 
-    // TODO: CancelStep -> ensure we can properly flow backwards through commands
+    public void UndoLastStep()
+    {
+        currentCommand.RemoveLastStep();
+    }
 
     public BattleCommand Build()
     {

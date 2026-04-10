@@ -17,4 +17,12 @@ public class BattleCommand
     {
         steps.Add(step);
     }
+
+    public void RemoveLastStep()
+    {
+        if (steps.Count > 0)
+        {
+            steps.RemoveAt(steps.Count - 1);
+        }
+    }
 }
