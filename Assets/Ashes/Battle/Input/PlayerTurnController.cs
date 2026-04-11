@@ -25,6 +25,11 @@ public class PlayerTurnController
     private List<string> currentMenuOptions = new();
     private List<Ability> currentSubMenuOptions = new();
 
+    public IReadOnlyList<string> CurrentMenuOptions => currentMenuOptions;
+    public IReadOnlyList<Ability> CurrentSubMenuOptions => currentSubMenuOptions;
+    public int MenuIndex => menuIndex;
+    public int SubMenuIndex => subMenuIndex;
+
 
     public PlayerTurnController(BattleSimulation battleSimulation, BattleCommandBuilder commandBuilder, List<BattleActor> Party)
     {
@@ -359,7 +364,7 @@ public class PlayerTurnController
     private void BuildAbilityMenu(string category)
     {
         var actor = simulation.Actors.GetActor(ActiveActorId.Value);
-        currentSubMenuOptions = actor.Abilities.AvailableAbilities[category];
+        currentSubMenuOptions.AddRange(actor.Abilities.AvailableAbilities[category]);
 
         subMenuIndex = 0;
     }

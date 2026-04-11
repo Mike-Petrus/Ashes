@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 public class BattleTestBootstrapper : MonoBehaviour
 {
+    [Header("Presentation Layer")]
+    public BattleInputManager inputManager;
+    
+    public ActorStatusUI paladinStatusUI;
+    public BattleMenuUI battleMenuUI;
+
     BattleEventBus eventBus;
     BattleSimulation simulation;
     BattleDebugSystem debugSystem;
@@ -58,7 +64,12 @@ public class BattleTestBootstrapper : MonoBehaviour
         var builder = new BattleCommandBuilder();
         controller = new PlayerTurnController(simulation, builder, party);
 
-        // 5. SUBSCRIBE TO THE EVENT!
+        // 5. Wire up the Presentation Layer
+        if (inputManager != null) inputManager.Initialize(controller);
+        if (paladinStatusUI != null) paladinStatusUI.Initialize(paladin, eventBus);
+        if (battleMenuUI != null) battleMenuUI.Initialize(controller);
+
+        // 6. SUBSCRIBE TO THE EVENT!
         eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
     }
 
@@ -68,27 +79,27 @@ public class BattleTestBootstrapper : MonoBehaviour
         // Is it the Paladin's turn?
         if (e.ActorId.Value == paladinId.Value)
         {
-            Debug.Log("--- EXECUTING SIMULATED D-PAD MACRO ---");
+            // Debug.Log("--- EXECUTING SIMULATED D-PAD MACRO ---");
 
             // Wake the controller up from Idle!
             controller.BeginPartySelection();
 
             // Execute the inputs instantly
-            controller.ProcessInput(InputButton.Confirm); // Selects Paladin -> RootMenu Phase 1
+            // controller.ProcessInput(InputButton.Confirm); // Selects Paladin -> RootMenu Phase 1
             
-            controller.ProcessInput(InputButton.Down); // Hovers White Magic
-            controller.ProcessInput(InputButton.Down); // Hovers Wrath
-            controller.ProcessInput(InputButton.Confirm); // Enters Wrath Menu
+            // controller.ProcessInput(InputButton.Down); // Hovers White Magic
+            // controller.ProcessInput(InputButton.Down); // Hovers Wrath
+            // controller.ProcessInput(InputButton.Confirm); // Enters Wrath Menu
             
-            controller.ProcessInput(InputButton.Confirm); // Selects Holy Fire -> TargetingActor
+            // controller.ProcessInput(InputButton.Confirm); // Selects Holy Fire -> TargetingActor
             
             controller.InjectTestActor(new ActorId(2)); // Inject Goblin
-            controller.ProcessInput(InputButton.Confirm); // Locks in AbilityStep -> Phase 2 Menu
+            // controller.ProcessInput(InputButton.Confirm); // Locks in AbilityStep -> Phase 2 Menu
             
-            controller.ProcessInput(InputButton.Confirm); // Selects Move -> TargetingMove
+            // controller.ProcessInput(InputButton.Confirm); // Selects Move -> TargetingMove
             
             controller.InjectTestPosition(new SimVector3(2, 0, 0));
-            controller.ProcessInput(InputButton.Confirm); // Locks in MoveStep -> SUBMITS COMMAND!
+            // controller.ProcessInput(InputButton.Confirm); // Locks in MoveStep -> SUBMITS COMMAND!
         }
     }
 }
