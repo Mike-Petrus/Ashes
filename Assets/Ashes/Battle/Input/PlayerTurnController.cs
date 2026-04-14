@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+// TODO: Move move/targeting validation to their own functions
+// TODO: Create Error events for player feedback
+
 public class PlayerTurnController
 {
     private BattleSimulation simulation;
@@ -11,9 +14,11 @@ public class PlayerTurnController
     public List<ActorId> PartyActorIds { get; private set; } = new();
     public ActorId? ActiveActorId { get; private set; }
 
-    // ONLY FOR TESTING --- REMOVE LATER
-    private SimVector3 injectedTestPosition;
-    private ActorId injectedTestActor;
+    private SimVector3 currentCursorPosition;
+    private float cursorSpeed = 8f;
+
+    private List<ActorId> currentAvailableTargets = new();
+    private int currentTargetIndex = 0;
 
     private bool pursuitEnabled = false;
 
@@ -142,11 +147,11 @@ public class PlayerTurnController
             if (selection == "Attack")
             {
                 selectedAbility = new BasicAttackAbility();
-                CurrentState = InputState.TargetingActor;
+                BeginTargetingActor();
             }
             else if (selection == "Move")
             {
-                CurrentState = InputState.TargetingMove;
+                BeginTargetingMove();
             }
             else
             {
@@ -182,11 +187,11 @@ public class PlayerTurnController
             if (selection == "Attack")
             {
                 selectedAbility = new BasicAttackAbility();
-                CurrentState = InputState.TargetingActor;
+                BeginTargetingActor();
             }
             else if (selection == "Move")
             {
-                CurrentState = InputState.TargetingMove;
+                BeginTargetingMove();
             }
             else if (selection == "Wait")
             {
@@ -240,7 +245,7 @@ public class PlayerTurnController
             {
                 selectedAbility = selected;
                 PreviousStates.Add(CurrentState);
-                CurrentState = InputState.TargetingActor;
+                BeginTargetingActor();
             }
             else
             {
@@ -257,22 +262,72 @@ public class PlayerTurnController
 
     private void HandleTargetingActorInput(InputButton button)
     {
-        // Use RangeSystem to validate target
-
-        // System doesn't know if targeting was initiated by
-        // Ability menu or Item menu, so use the State list
-
-        if (button == InputButton.Cancel)
+        // TODO: Consolidate D-Pad inputs
+        if (button == InputButton.Left)
         {
+            currentTargetIndex--;
+            if (currentTargetIndex < 0) currentTargetIndex = currentAvailableTargets.Count - 1;
+
+            UpdateActorCursorVisuals();
+        }
+        else if (button == InputButton.Right)
+        {
+            currentTargetIndex++;
+            if (currentTargetIndex >= currentAvailableTargets.Count) currentTargetIndex = 0;
+
+            UpdateActorCursorVisuals();
+        }
+        else if (button == InputButton.Cancel)
+        {
+            // Hide the cursor
+            simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+
             CurrentState = PreviousStates.Last();
             PreviousStates.RemoveAt(PreviousStates.Count - 1);
         }
         else if (button == InputButton.Confirm)
         {
-            // If target is not valid give error, then break
+            if (currentAvailableTargets.Count == 0)
+            {
+                return;
+            }
 
-            // TEMP: We use an target injected by the BattleTestBootstrapper
-            var targetInfo = TargetInfo.ForActor(injectedTestActor, selectedAbility.Mode);
+            ActorId selectedTargetId = currentAvailableTargets[currentTargetIndex];
+
+            var targetInfo = TargetInfo.ForActor(selectedTargetId, selectedAbility.Mode);
+
+            // TODO: Move validation to its own function
+            // 1. Determine the origin point
+            var activeActor = simulation.Actors.GetActor(ActiveActorId.Value);
+            SimVector3 originPosition = activeActor.Position;
+
+            if (builder.Size > 0)
+            {
+                var previousStep = builder.LastStepAdded();
+
+                if (previousStep is MoveStep moveStep)
+                {
+                    originPosition = moveStep.Destination;
+                }
+
+                if (!simulation.RangeSystem.IsInRange(originPosition, activeActor.Radius, selectedAbility, targetInfo))
+                {
+                    // Error: Target is out of range
+                    return;
+                }
+            }
+            else
+            {
+                if (!simulation.RangeSystem.IsActorInRange(ActiveActorId.Value, selectedAbility, targetInfo))
+                {
+                    // Error: Target is out of range
+                    return;
+                }
+            }
+
+            // Validation Passed. Hide the cursor and draft the step
+            simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+
             builder.AddStep(new AbilityStep(ActiveActorId.Value, selectedAbility, targetInfo));
 
             // Assume for now that all BattleCommands can only be 2 steps
@@ -292,17 +347,46 @@ public class PlayerTurnController
 
     private void HandleTargetingMoveInput(InputButton button)
     {
-        // Use PositionSystem to validate move target
-
         if (button ==InputButton.Cancel)
         {
+            simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
             CurrentState = PreviousStates.Last();
             PreviousStates.RemoveAt(PreviousStates.Count - 1);
         }
         else if (button == InputButton.Confirm)
         {
-            // TEMP: We use a position injected from the BattleTestBootStrapper
-            builder.AddStep(new MoveStep(ActiveActorId.Value, injectedTestPosition));
+            // TODO: Move validation to it's own function
+            // 1. Validate Distance
+            var activeActor = simulation.Actors.GetActor(ActiveActorId.Value);
+            float moveDistance = SimVector3.Distance(activeActor.Position, currentCursorPosition);
+
+            if (moveDistance > activeActor.Stats.MoveDistance)
+            {
+                // Error: Target position is too far
+                return;
+            }
+
+            // 2. Validate Path Availability
+            var path = simulation.Pathfinder.FindPath(activeActor.Position, currentCursorPosition, activeActor.Radius);
+
+            if (path == null || path.Count == 0)
+            {
+                // Error: No path found!
+                return;
+            }
+
+            // 3. Validate Spatial Collision
+            if (simulation.PositionSystem.IsSpaceOccupied(currentCursorPosition, activeActor.Radius, ActiveActorId.Value))
+            {
+                // Error: Space is occupied
+                return;
+            }
+
+            // Validation Passed
+            simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+
+            // 4. Draft the step (NO RESERVATION YET)
+            builder.AddStep(new MoveStep(ActiveActorId.Value, currentCursorPosition));
 
             if (builder.Size >= 2)
             {
@@ -377,6 +461,76 @@ public class PlayerTurnController
         // and build menu from available items in inventory
     }
 
+    private void SubmitCommand()
+    {   
+        var activeActor = simulation.Actors.GetActor(ActiveActorId.Value);
+
+        // 1. Final Position Validation
+        foreach (var step in builder.Steps)
+        {
+            if (step is MoveStep moveStep)
+            {
+                if (simulation.PositionSystem.IsSpaceOccupied(moveStep.Destination, activeActor.Radius, ActiveActorId.Value))
+                {
+                    // Error: Destination taken while deciding
+                    return;
+                }
+
+                // Reserve the space
+                simulation.PositionSystem.ReserveSpace(ActiveActorId.Value, moveStep.Destination);
+            }
+        }
+
+        // 2. Build and queue
+        var command = builder.Build();
+        simulation.ActionQueue.Enqueue(command);
+
+        // 3. Clean up controller
+        ActiveActorId = null;
+        selectedAbility = null;
+
+        currentMenuOptions.Clear();
+        currentSubMenuOptions.Clear();
+        PreviousStates.Clear();
+
+        menuIndex = 0;
+        subMenuIndex = 0;
+
+        // 4. Return to Idle
+        // TODO: Consider returning to PartySelection and 
+        // handling menuIndex check (e.g. is another actor ready?)
+        CurrentState = InputState.Idle;
+    }
+
+    private void BeginTargetingActor()
+    {
+        CurrentState = InputState.TargetingActor;
+
+        // 1. Gather all valid targets
+        // In the future TargetingSystem can filter this based on the Ability
+        currentAvailableTargets.Clear();
+
+        foreach (var actorId in simulation.Actors.GetAliveActorIds())
+        {
+            currentAvailableTargets.Add(actorId);
+        }
+
+        currentTargetIndex = 0;
+
+        // 2. Snap the cursor to the first target
+        UpdateActorCursorVisuals();
+    }
+
+    private void BeginTargetingMove()
+    {
+        CurrentState = InputState.TargetingMove;
+
+        var activeActor = simulation.Actors.GetActor(ActiveActorId.Value);
+        currentCursorPosition = activeActor.Position;
+
+        simulation.Events.Publish(new CursorMovedEvent(currentCursorPosition, true, true, null));
+    }
+
     private void MoveCursor(int direction, ref int indexChanged, int listSize)
     {
         // TODO: Refine and allow to handle left/right in two dimensional array layout
@@ -398,44 +552,55 @@ public class PlayerTurnController
         }
     }
 
-    private void SubmitCommand()
-    {   // Not sure if we need validation here
-        // Ideally all steps should be validated during input and again before execution
-        // So validating here would probably be redundant unless edge cases pop up later
+    public void ProcessAnalogInput(float x, float y, float deltaTime)
+    {
+        if (CurrentState == InputState.TargetingMove)
+        {
+            // 1. Update the virtual position 
+            currentCursorPosition.x += x * cursorSpeed * deltaTime;
+            currentCursorPosition.z += y * cursorSpeed * deltaTime;
 
+            var activeActor = simulation.Actors.GetActor(ActiveActorId.Value);
 
-        // 1. Build and queue
-        var command = builder.Build();
-        simulation.ActionQueue.Enqueue(command);
+            // 2. Get the path
+            var path = simulation.Pathfinder.FindPath(activeActor.Position, currentCursorPosition, activeActor.Radius);
 
-        // 2. Clean up controller
-        ActiveActorId = null;
-        // Builder should be cleaned automatically after build
-        selectedAbility = null;
+            // 3. Validation
+            bool isValid = true;
+            float pathDistance = 0f;
 
-        currentMenuOptions.Clear();
-        currentSubMenuOptions.Clear();
-        PreviousStates.Clear();
+            for (int i = 0; i < path.Count - 1; i++)
+            {
+                pathDistance += SimVector3.Distance(path[i], path[i+1]);
+            }
 
-        menuIndex = 0;
-        subMenuIndex = 0;
+            if (pathDistance > activeActor.Stats.MoveDistance || path.Count == 0)
+            {
+                isValid = false;
+            }
+            if (simulation.PositionSystem.IsSpaceOccupied(currentCursorPosition, activeActor.Radius, ActiveActorId.Value))
+            {
+                isValid = false;
+            }
 
-        // 3. Return to Idle
-        // TODO: Consider returning to PartySelection and 
-        // handling menuIndex check (e.g. is another actor ready?)
-        CurrentState = InputState.Idle;
+            // 4. Broadcast
+            simulation.Events.Publish(new CursorMovedEvent(currentCursorPosition, true, isValid, path));
+        }
     }
 
-    // TEMP FOR TESTING ---------
-    public void InjectTestActor(ActorId testActor)
+    private void UpdateActorCursorVisuals()
     {
-        injectedTestActor = testActor;
-    }
+        if (currentAvailableTargets.Count == 0)
+        {
+            return;
+        }
 
-    // TEMP FOR TESTING ---------
-    public void InjectTestPosition(SimVector3 testPosition)
-    {
-        injectedTestPosition = testPosition;
+        var targetActor = simulation.Actors.GetActor(currentAvailableTargets[currentTargetIndex]);
+
+        // Broadcast to Unity (Position, IsVisible, IsValid)
+        // For now assume valid, but we can add RangeSystem check later
+        // to turn cursor red
+        simulation.Events.Publish(new CursorMovedEvent(targetActor.Position, true, true));
     }
 
     // TEMP FOR TESTING ---------

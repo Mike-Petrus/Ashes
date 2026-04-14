@@ -4,11 +4,10 @@ using System.Linq;
 public class MovementSystem : IBattleSystem
 {
     private BattleEventBus events;
+    private IPathfinder pathfinder;
     private ActorStateSystem actorStates;
     private ActorRegistry actors;
 
-    // TODO: Change to Dictionary<Id, MovementState>
-    // Will need to refactor other methods to get Actor for ActorRegistry using Id
     private Dictionary<ActorId, MovementState> activeMoves = new();
 
     // TODO: After NavMesh path is generated, introduce MovementPath
@@ -17,9 +16,10 @@ public class MovementSystem : IBattleSystem
 
     private const float MoveDuration = 1.0f; // Global battle speed
 
-    public MovementSystem(BattleEventBus eventBus, ActorStateSystem states, ActorRegistry actorRegistry)
+    public MovementSystem(BattleEventBus eventBus, IPathfinder paths, ActorStateSystem states, ActorRegistry actorRegistry)
     {
         events = eventBus;
+        pathfinder = paths;
         actorStates = states;
         actors = actorRegistry;
 
@@ -28,11 +28,19 @@ public class MovementSystem : IBattleSystem
 
     private void OnMoveRequest(MoveRequestEvent e)
     {
+        var actor = actors.GetActor(e.ActorId);
+        var path = pathfinder.FindPath(e.Start, e.Destination, actor.Radius);
+
+        if (path == null || path.Count < 2)
+        {
+            path = new List<SimVector3> {e.Start, e.Destination };
+        }
+
         var moveState = new MovementState
         {
             ActorId = e.ActorId,
-            Start = e.Start,
-            Destination = e.Destination,
+            Waypoints = path,
+            CurrentIndex = 0,
             Progress = 0f
         };
 
@@ -48,30 +56,44 @@ public class MovementSystem : IBattleSystem
             var actorId = pair.Key;
             var moveState = pair.Value;
 
-            moveState.Progress += deltaTime / MoveDuration;
+            SimVector3 startNode = moveState.Waypoints[moveState.CurrentIndex];
+            SimVector3 endNode = moveState.Waypoints[moveState.CurrentIndex + 1];
 
-            float t = moveState.Progress;
-
-            if (t > 1f)
+            float segmentDistance = SimVector3.Distance(startNode, endNode);
+            if (segmentDistance == 0)
             {
-                t = 1f;
+                segmentDistance = 0.01f;
             }
 
-            SimVector3 position = moveState.Start + (moveState.Destination - moveState.Start) * t;
-
-            var actor = actors.GetActor(actorId);
-            actor.Position = position;
-
-            events.Publish(new ActorMovedEvent(actorId, position));
+            float moveSpeed = 1f;
+            moveState.Progress += (deltaTime * moveSpeed) / segmentDistance;
 
             if (moveState.Progress >= 1f)
             {
-                activeMoves.Remove(actorId);
+                moveState.Progress = 0f;
+                moveState.CurrentIndex++;
 
-                actorStates.SetState(actorId, ActorState.Idle);
+                if (moveState.CurrentIndex >= moveState.Waypoints.Count - 1)
+                {
+                    var finalPos = moveState.Waypoints.Last();
+                    actors.GetActor(actorId).Position = finalPos;
+                    events.Publish(new ActorMovedEvent(actorId, finalPos));
 
-                events.Publish(new MoveCompletedEvent(actorId));
+                    activeMoves.Remove(actorId);
+                    actorStates.SetState(actorId, ActorState.Idle);
+                    events.Publish(new MoveCompletedEvent(actorId));
+                    continue;
+                }
+
+                // Update start/end nodes for next segment calculation
+                startNode = moveState.Waypoints[moveState.CurrentIndex];
+                endNode = moveState.Waypoints[moveState.CurrentIndex + 1];
             }
+
+            // Lerp between the current node and next node
+            SimVector3 position = startNode + (endNode - startNode) * moveState.Progress;
+            actors.GetActor(actorId).Position = position;
+            events.Publish(new ActorMovedEvent(actorId, position));
         }
     }
 }
