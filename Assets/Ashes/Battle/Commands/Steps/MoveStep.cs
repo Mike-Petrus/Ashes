@@ -4,6 +4,8 @@ public class MoveStep : CommandStep
     private SimVector3 start;
     private SimVector3 destination;
 
+    public SimVector3 Destination => destination;
+
     public MoveStep(ActorId actorId, SimVector3 destination)
     {
         this.actorId = actorId;

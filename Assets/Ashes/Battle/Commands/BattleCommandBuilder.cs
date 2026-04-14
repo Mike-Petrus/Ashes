@@ -1,8 +1,11 @@
+using System.Collections.Generic;
+
 public class BattleCommandBuilder
 {
     private BattleCommand currentCommand;
 
     public int Size => currentCommand != null ? currentCommand.Steps.Count : 0;
+    public IReadOnlyList<CommandStep> Steps => currentCommand.Steps;
 
     public void BeginCommand(ActorId actorId)
     {
@@ -38,5 +41,10 @@ public class BattleCommandBuilder
     public void Cancel()
     {
         currentCommand = null;
+    }
+
+    public CommandStep LastStepAdded()
+    {
+        return currentCommand.LastStep();
     }
 }

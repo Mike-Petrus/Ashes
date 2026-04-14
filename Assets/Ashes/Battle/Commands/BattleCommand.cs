@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 public class BattleCommand
 {
@@ -24,5 +25,15 @@ public class BattleCommand
         {
             steps.RemoveAt(steps.Count - 1);
         }
+    }
+
+    public CommandStep LastStep()
+    {
+        if (steps.Count > 0)
+        {
+            return steps.Last();
+        }
+
+        return null;
     }
 }

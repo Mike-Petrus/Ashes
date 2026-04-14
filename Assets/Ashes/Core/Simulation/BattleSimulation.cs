@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 
 public class BattleSimulation
@@ -6,6 +5,7 @@ public class BattleSimulation
     public BattleArena Arena { get; private set;}
 
     public BattleEventBus Events { get; }
+    public IPathfinder Pathfinder { get; }
     
     public ActorRegistry Actors { get; }
     public ActorStateSystem ActorStates { get; }
@@ -28,9 +28,10 @@ public class BattleSimulation
     public BattleContext BattleContext { get; }
     public BattleCommandExecutor CommandExecutor { get; }
 
-    public BattleSimulation(BattleEventBus eventBus)
+    public BattleSimulation(BattleEventBus eventBus, IPathfinder pathfinder)
     {
         Events = eventBus;
+        Pathfinder = pathfinder;
 
         Actors = new ActorRegistry();
         ActorStates = new ActorStateSystem(Events, Actors);
@@ -40,7 +41,7 @@ public class BattleSimulation
 
         ActionQueue = new BattleActionQueue(Events);
 
-        MovementSystem = new MovementSystem(Events, ActorStates, Actors);
+        MovementSystem = new MovementSystem(Events, Pathfinder, ActorStates, Actors);
         PositionSystem = new PositionSystem(Actors);
 
         RangeSystem = new RangeSystem(Actors);
@@ -100,10 +101,6 @@ public class BattleSimulation
         // Calculate Arena size
         int totalActors = Actors.GetAllActors().Count();
         Arena = new BattleArena(centerPoint, totalActors);
-
-        // Spawn and position actors in the arena
-        // Later this should be handled by using Party formation and some Spawning system
-        SetupInitialPositions();
     }
 
     private void TryStartNextCommand()
@@ -145,26 +142,5 @@ public class BattleSimulation
         }
 
         Clock.Resume();
-    }
-
-    private void SetupInitialPositions()
-    {
-        // Example logic: Put actors with ID 1 & 2 (Party) on the left, others (Enemies) on the right
-        foreach (var actor in Actors.GetAllActors())
-        {
-            if (actor.Id.Value <= 2) 
-            {
-                // Place party members on the left side of the arena
-                actor.Position = new SimVector3(Arena.Center.x - 5f, 0, Arena.Center.z + (actor.Id.Value * 2f));
-            }
-            else
-            {
-                // Place enemies on the right side
-                actor.Position = new SimVector3(Arena.Center.x + 5f, 0, Arena.Center.z + (actor.Id.Value * 2f));
-            }
-
-            // Immediately reserve their starting space so they don't overlap
-            PositionSystem.ReserveSpace(actor.Id, actor.Position);
-        }
     }
 }
