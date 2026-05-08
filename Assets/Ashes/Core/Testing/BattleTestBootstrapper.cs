@@ -101,10 +101,8 @@ public class BattleTestBootstrapper : MonoBehaviour
         // Is it the Paladin's turn?
         if (e.ActorId.Value == paladinId.Value)
         {
-            // Debug.Log("--- EXECUTING SIMULATED D-PAD MACRO ---");
-
             // Wake the controller up from Idle!
-            controller.BeginPartySelection();
+            controller.ChangeState(new PartySelectionState());
 
             // Execute the inputs instantly
             // controller.ProcessInput(InputButton.Confirm); // Selects Paladin -> RootMenu Phase 1
