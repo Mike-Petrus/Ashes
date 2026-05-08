@@ -27,39 +27,22 @@ public class BattleMenuUI : MonoBehaviour
         for (int i = 0; i < PoolSize; i++)
         {
             TextMeshProUGUI newText = Instantiate(OptionTextPrefab, MenuPanel.transform);
-            {
-                newText.gameObject.SetActive(false);
-                optionTexts.Add(newText);
-            }
+            newText.gameObject.SetActive(false);
+            optionTexts.Add(newText);
         }
     }
 
     void Update()
     {
-        if (controller == null)
+        if (controller == null || controller.CurrentState == null)
         {
             return;
         }
 
-        bool isRootMenu = (controller.CurrentState == InputState.RootMenuPhase1 || controller.CurrentState == InputState.RootMenuPhase2);
-        bool isSubMenu = (controller.CurrentState == InputState.AbilitySelectionMenu || controller.CurrentState == InputState.ItemSelectionMenu);
-
-        if (isRootMenu)
+        if (controller.CurrentState is IMenuState menuState)
         {
             MenuPanel.SetActive(true);
-            DrawMenuOptions(controller.CurrentMenuOptions, controller.MenuIndex);
-        }
-        else if (isSubMenu)
-        {
-            List<string> subMenuOptions = new();
-
-            foreach (var ability in controller.CurrentSubMenuOptions)
-            {
-                subMenuOptions.Add(ability.Name);
-            }
-
-            MenuPanel.SetActive(true);
-            DrawMenuOptions(subMenuOptions, controller.SubMenuIndex);
+            DrawMenuOptions(menuState.MenuOptions, menuState.CurrentIndex);
         }
         else
         {

@@ -13,7 +13,7 @@ public class BattleInputManager : MonoBehaviour
 
     public void Update()
     {
-        if (controller == null || controller.CurrentState == InputState.Idle)
+        if (controller == null || controller.CurrentState is IdleState)
         {
             return;
         }
