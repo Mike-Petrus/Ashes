@@ -1,16 +1,39 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class BattleInputManager : MonoBehaviour
 {
     private PlayerTurnController controller;
+    private BattleControls inputControls;
 
     // The Bootstrapper will inject the controller
     public void Initialize(PlayerTurnController controller)
     {
         this.controller = controller;
+
+        // 1. Instantiate the auto-generated input map
+        inputControls = new BattleControls();
+
+        // 2. Subscribe to the C# events!
+        // "performed" fires exactly once when the button is successfully fully pressed.
+        inputControls.Battle.Confirm.performed += ctx => SendInput(InputButton.Confirm);
+        inputControls.Battle.Cancel.performed += ctx => SendInput(InputButton.Cancel);
+        inputControls.Battle.Pursuit.performed += ctx => SendInput(InputButton.Pursuit);
+        
+        inputControls.Battle.Up.performed += ctx => SendInput(InputButton.Up);
+        inputControls.Battle.Down.performed += ctx => SendInput(InputButton.Down);
+        inputControls.Battle.Left.performed += ctx => SendInput(InputButton.Left);
+        inputControls.Battle.Right.performed += ctx => SendInput(InputButton.Right);
+
+        // 3. Turn the inputs on
+        inputControls.Enable();
     }
 
+    private void SendInput(InputButton button)
+    {
+        controller.ProcessInput(button);
+    }
+
+    // We only use Update for reading the continuous analog float values
     public void Update()
     {
         if (controller == null || controller.CurrentState is IdleState)
@@ -18,59 +41,24 @@ public class BattleInputManager : MonoBehaviour
             return;
         }
 
-        // Only process input if we are in a menu state
-        // TODO: Not sure how I feel about this. Idle may need to act as a "free state"
-        // instead of a "blocking state". Will have to see how it feels in testing later
+        // Read the live Vector2 value from the IKJL/Joystick binding
+        Vector2 analogInput = inputControls.Battle.CursorMove.ReadValue<Vector2>();
 
-        var keyboard = Keyboard.current;
+        // Only process if the stick is actually being moved
+        if (analogInput.sqrMagnitude > 0.01f)
+        {
+            // Note: X is horizontal, Y is vertical in 2D UI space. 
+            // Our controller maps Y to the Z axis in 3D space!
+            controller.ProcessAnalogInput(analogInput.x, analogInput.y, Time.deltaTime);
+        }
+    }
 
-        // ==========================================
-        // 1. CONTINUOUS MOVEMENT (Free-Aim Cursor)
-        // Uses I, J, K, L to simulate an analog stick
-        // =========================================
-        // TODO: Set up proper input profiles and analog stick input
-        float x = 0f;
-        float y = 0f;
-
-        // Use .isPressed for continuous sliding
-        if (keyboard.lKey.isPressed) x += 1f;
-        if (keyboard.jKey.isPressed) x -= 1f;
-        if (keyboard.iKey.isPressed) y += 1f;
-        if (keyboard.kKey.isPressed) y -= 1f;
-
-        if (Mathf.Abs(x) > 0.01f || Mathf.Abs(y) > 0.01f)
+    private void OnDestroy()
+    {
+        if (inputControls != null)
         {
-            // Pass it to the backend exactly like an analog stick!
-            controller.ProcessAnalogInput(x, y, Time.deltaTime);
-        }
-
-        if (keyboard.spaceKey.wasPressedThisFrame)
-        {
-            controller.ProcessInput(InputButton.Confirm);
-        }
-        else if (keyboard.escapeKey.wasPressedThisFrame)
-        {
-            controller.ProcessInput(InputButton.Cancel);
-        }
-        else if (keyboard.upArrowKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame)
-        {
-            controller.ProcessInput(InputButton.Up);
-        }
-        else if (keyboard.downArrowKey.wasPressedThisFrame || keyboard.sKey.wasPressedThisFrame)
-        {
-            controller.ProcessInput(InputButton.Down);
-        }
-        else if (keyboard.leftArrowKey.wasPressedThisFrame || keyboard.aKey.wasPressedThisFrame)
-        {
-            controller.ProcessInput(InputButton.Left);
-        }
-        else if (keyboard.rightArrowKey.wasPressedThisFrame || keyboard.dKey.wasPressedThisFrame)
-        {
-            controller.ProcessInput(InputButton.Right);
-        }
-        else if (keyboard.pKey.wasPressedThisFrame)
-        {
-            controller.ProcessInput(InputButton.Pursuit);
+            inputControls.Disable();
+            inputControls.Dispose();
         }
     }
 }
