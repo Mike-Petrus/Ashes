@@ -29,7 +29,7 @@ public class TargetingMoveState : IInputState
             case InputButton.Confirm:
                 if (!isTargetingValidSpace)
                 {
-                    // TODO: Publish currentErrorMessage to UI
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent(currentErrorMessage));
                     // Play error sound
                     return;
                 }
@@ -91,6 +91,9 @@ public class TargetingMoveState : IInputState
     {
         isTargetingValidSpace = true;
         currentErrorMessage = "";
+
+        // TODO: Display correct error message. E.g. An occupied space never displays the error message
+        // because it fails the path check first
 
         // 1. Calculate NavMeshPath
         currentPath = context.Simulation.Pathfinder.FindPath(activeActor.Position, context.CurrentCursorPosition, activeActor.Radius);

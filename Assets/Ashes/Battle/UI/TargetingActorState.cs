@@ -99,7 +99,7 @@ public class TargetingActorState : IInputState
 
                 if (!isTargetingValidActor)
                 {
-                    // TODO: publish currentErrorMessage toUI (e.g. out of range)
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent(currentErrorMessage));
                     // Play error sound
                     return;
                 }
