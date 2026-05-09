@@ -123,7 +123,8 @@ public class AbilitySelectionState : IInputState, IMenuState
                 }
                 else
                 {
-                    // error message/sound
+                    // TODO: Make message more specific depending on which requirements are not met
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Ability not available!"));
                 }
                 break;
 

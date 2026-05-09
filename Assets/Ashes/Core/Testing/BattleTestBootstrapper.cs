@@ -7,6 +7,7 @@ public class BattleTestBootstrapper : MonoBehaviour
     public BattleInputManager inputManager;
     public ActorStatusUI paladinStatusUI;
     public BattleMenuUI battleMenuUI;
+    public BattleFeedbackUI battleFeedbackUI;
 
     [Header("Simulation Adapters")]
     public NavMeshPathfinder navMeshPathfinder;
@@ -90,6 +91,7 @@ public class BattleTestBootstrapper : MonoBehaviour
         if (inputManager != null) inputManager.Initialize(controller);
         if (paladinStatusUI != null) paladinStatusUI.Initialize(paladin, eventBus);
         if (battleMenuUI != null) battleMenuUI.Initialize(controller);
+        if (battleFeedbackUI != null) battleFeedbackUI.Initialize(simulation);
 
         // 6. SUBSCRIBE TO THE EVENT!
         eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
