@@ -21,6 +21,8 @@ public class BattleDebugSystem
         events.Subscribe<StatusExpiredEvent>(OnStatusExpired);
         events.Subscribe<EffectTickRequestEvent>(OnEffectTickRequest);
         events.Subscribe<ResourceConsumedEvent>(OnResourceConsumed);
+        events.Subscribe<ActorRegisteredEvent>(OnActorRegistered);
+        events.Subscribe<ActorRemovedEvent>(OnActorRemoved);
     }
 
     private void OnActorReady(ActorReadyEvent e)
@@ -107,5 +109,15 @@ public class BattleDebugSystem
     {
         var actor = actors.GetActor(e.ActorId);
         Debug.Log($"[RESOURCE] {actor.Name} spent {e.Amount} {e.Resource}");
+    }
+
+    private void OnActorRegistered(ActorRegisteredEvent e)
+    {
+        Debug.Log($"[SPAWN] {e.Actor.Name} (ID: {e.Actor.Id.Value}) entered the battle as {e.Actor.Faction}.");
+    }
+
+    private void OnActorRemoved(ActorRemovedEvent e)
+    {
+        Debug.Log($"[DESPAWN] Actor ID {e.ActorId.Value} was removed from the battle.");
     }
 }
