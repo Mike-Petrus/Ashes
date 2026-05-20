@@ -3,6 +3,7 @@ using System.Collections.Generic;
 public class ActorRegistry
 {
     private readonly Dictionary<ActorId, BattleActor> actors = new();
+    private BattleEventBus events;
 
     public int Count => actors.Count;
 
@@ -11,6 +12,11 @@ public class ActorRegistry
     // TODO: publish events ActorRegisteredEvent, ActorRemoved event
     // For systems like targeting and UI when Actor dies or new Actor joins battle
 
+    public ActorRegistry(BattleEventBus eventBus)
+    {
+        events = eventBus;
+    }
+
     public void RegisterActor(BattleActor actor)
     {
         if (actors.ContainsKey(actor.Id))
@@ -18,11 +24,20 @@ public class ActorRegistry
             throw new System.Exception($"Actor with ID {actor.Id} already registered.");
         }
         actors[actor.Id] = actor;
+
+        // Broadcast that a new actor has entered the battle!
+        events.Publish(new ActorRegisteredEvent(actor));
     }
 
     public void RemoveActor(ActorId id)
     {
-        actors.Remove(id);
+        if (actors.ContainsKey(id))
+        {
+            actors.Remove(id);
+            
+            // Broadcast that an actor was completely removed (e.g. escaped, banished)
+            events.Publish(new ActorRemovedEvent(id));
+        }
     }
 
     public BattleActor GetActor(ActorId id)

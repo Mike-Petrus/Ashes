@@ -33,7 +33,7 @@ public class BattleSimulation
         Events = eventBus;
         Pathfinder = pathfinder;
 
-        Actors = new ActorRegistry();
+        Actors = new ActorRegistry(Events);
         ActorStates = new ActorStateSystem(Events, Actors);
 
         Clock = new BattleClock(Events);
@@ -96,11 +96,9 @@ public class BattleSimulation
 
     // Called after actors are registered by boostrapper
     // TODO: Implement a PartySystem and EnemySpawner to register actors
-    public void InitializeBattle(SimVector3 centerPoint)
+    public void InitializeBattle(BattleArena arena)
     {
-        // Calculate Arena size
-        int totalActors = Actors.GetAllActors().Count();
-        Arena = new BattleArena(centerPoint, totalActors);
+        Arena = arena;
     }
 
     private void TryStartNextCommand()
