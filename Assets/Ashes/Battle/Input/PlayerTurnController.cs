@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 // TODO: Move move/targeting validation to their own functions
 // TODO: Create Error events for player feedback
@@ -8,6 +9,7 @@ public class PlayerTurnController
     // --- CORE DEPENDENCIES ---
     public BattleSimulation Simulation { get; private set; }
     public BattleCommandBuilder Builder { get; private set; }
+    public PartyManager Party { get; private set; }
     
     // --- STATE MANAGEMENT ---
     public IInputState CurrentState { get; private set; }
@@ -21,6 +23,7 @@ public class PlayerTurnController
     public float CursorSpeed { get; set; } = 8f;
 
     public Ability SelectedAbility { get; set; }
+    public string SelectedItemId { get; set; }
     
     // --- MENU DATA ---
     public List<string> CurrentMenuOptions { get; } = new();
@@ -28,14 +31,16 @@ public class PlayerTurnController
     // Global toggle
     public bool PursuitEnabled { get; set; } = false;
 
-    public PlayerTurnController(BattleSimulation battleSimulation, BattleCommandBuilder commandBuilder, List<BattleActor> Party)
+    public PlayerTurnController(BattleSimulation battleSimulation, BattleCommandBuilder commandBuilder, PartyManager partyManager)
     {
         Simulation = battleSimulation;
         Builder = commandBuilder;
+        Party = partyManager;
 
-        // TODO: Implement party system
-        // For now we manually pass a list of actors
-        foreach (var actor in Party)
+        // Ask the runtime registry who the party members are
+        var partyActors = Simulation.Actors.GetAllActors().Where(a => a.Faction == ActorFaction.Party).ToList();
+
+        foreach (var actor in partyActors)
         {
             PartyActorIds.Add(actor.Id);
         }

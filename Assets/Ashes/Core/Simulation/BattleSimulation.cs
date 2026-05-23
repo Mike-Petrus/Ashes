@@ -1,5 +1,3 @@
-using System.Linq;
-
 public class BattleSimulation
 {
     public BattleArena Arena { get; private set;}
@@ -28,7 +26,7 @@ public class BattleSimulation
     public BattleContext BattleContext { get; }
     public BattleCommandExecutor CommandExecutor { get; }
 
-    public BattleSimulation(BattleEventBus eventBus, IPathfinder pathfinder)
+    public BattleSimulation(BattleEventBus eventBus, SharedInventory inventory, IPathfinder pathfinder)
     {
         Events = eventBus;
         Pathfinder = pathfinder;
@@ -47,7 +45,7 @@ public class BattleSimulation
         RangeSystem = new RangeSystem(Actors);
         TargetingSystem = new TargetingSystem(Actors, PositionSystem);
 
-        AbilitySystem = new AbilitySystem(Events, Actors, ActorStates, TargetingSystem);
+        AbilitySystem = new AbilitySystem(Events, Actors, ActorStates, inventory, TargetingSystem);
         StatusEffectSystem = new StatusEffectSystem(Events, Actors, Clock);
         EffectPipeline = new EffectPipeline(Events, Actors);
 
@@ -58,6 +56,7 @@ public class BattleSimulation
             ActorStates = ActorStates,
             Movement = MovementSystem,
             Abilities = AbilitySystem,
+            Inventory = inventory,
             Range = RangeSystem,
             Effects = EffectPipeline,
             Clock = Clock

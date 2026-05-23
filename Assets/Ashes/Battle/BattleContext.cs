@@ -10,6 +10,8 @@ public class BattleContext
 
     public AbilitySystem Abilities;
 
+    public SharedInventory Inventory;
+
     public RangeSystem Range;
 
     public EffectPipeline Effects;

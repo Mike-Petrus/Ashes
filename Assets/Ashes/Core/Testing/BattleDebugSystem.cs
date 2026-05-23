@@ -17,6 +17,7 @@ public class BattleDebugSystem
         events.Subscribe<MoveCompletedEvent>(OnMoveCompleted);
         events.Subscribe<AbilityCompletedEvent>(OnAbilityCompleted);
         events.Subscribe<DamageAppliedEvent>(OnDamageApplied);
+        events.Subscribe<HealAppliedEvent>(OnHealApplied);
         events.Subscribe<StatusAppliedEvent>(OnStatusApplied);
         events.Subscribe<StatusExpiredEvent>(OnStatusExpired);
         events.Subscribe<EffectTickRequestEvent>(OnEffectTickRequest);
@@ -88,6 +89,14 @@ public class BattleDebugSystem
         var target = actors.GetActor(e.TargetId);
 
         Debug.Log($"[DAMAGE] {source.Name} dealt {e.Amount} to {target.Name}");
+    }
+
+        private void OnHealApplied(HealAppliedEvent e)
+    {
+        var source = actors.GetActor(e.SourceId);
+        var target = actors.GetActor(e.TargetId);
+
+        Debug.Log($"[Heal] {source.Name} healed {target.Name} for {e.Amount}");
     }
     
     private void OnStatusApplied(StatusAppliedEvent e)

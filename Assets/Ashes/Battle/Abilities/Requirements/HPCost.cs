@@ -7,9 +7,9 @@ public class HPCost : AbilityRequirement
         cost = hpCost;
     }
 
-    public override bool MeetsRequirement(ActorId casterId, ActorRegistry actors)
+    public override bool MeetsRequirement(ActorId casterId, BattleContext context)
     {
-        var caster = actors.GetActor(casterId);
+        var caster = context.Actors.GetActor(casterId);
         return caster != null && caster.CurrentHP >= cost;
     }
 

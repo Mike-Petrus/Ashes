@@ -2,5 +2,6 @@ public enum ResourceType
 {
     HP,
     MP,
-    ATB
+    ATB,
+    Item
 }

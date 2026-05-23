@@ -5,14 +5,16 @@ public class AbilityContext
 
     public BattleEventBus Events;
     public ActorRegistry Actors;
+    public SharedInventory Inventory;
     public TargetingSystem Targeting;
 
-    public AbilityContext(ActorId sourceId, TargetInfo targetInfo, BattleEventBus eventBus, ActorRegistry actorRegistry, TargetingSystem targetingSystem)
+    public AbilityContext(ActorId sourceId, TargetInfo targetInfo, BattleEventBus eventBus, ActorRegistry actorRegistry, SharedInventory inventory, TargetingSystem targetingSystem)
     {
         SourceId = sourceId;
         TargetInfo = targetInfo;
         Events = eventBus;
         Actors = actorRegistry;
+        Inventory = inventory;
         Targeting = targetingSystem;
     }
 }
