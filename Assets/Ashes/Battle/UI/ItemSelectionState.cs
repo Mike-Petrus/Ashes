@@ -1,52 +1,57 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-public class AbilitySelectionState : IInputState, IMenuState
+public class ItemSelectionState : IInputState, IMenuState
 {
-    private string category;
-    private List<Ability> subMenuOptions = new();
+    // Cache a list of KVP (ItemId, Quantity)
+    private List<KeyValuePair<string, int>> inventorySnapshot = new();
 
     private int currentIndex = 0;
-    private int columns = 3; // Define our grid size. TODO: Decide final size later
+    private int columns = 3; // TODO: Decide final grid size
 
     // --- IMenuState ---
     public IReadOnlyList<string> MenuOptions
     {
         get
         {
-            List<string> names = new();
-            foreach (var ability in subMenuOptions)
+            List<string> displayNames = new();
+            foreach (var kvp in inventorySnapshot)
             {
-                names.Add(ability.Name);
+                // TODO: When we build the ItemDatabase, we will look up the real name here.
+                // For now, we just print the ID and the Quantity.
+                displayNames.Add($"{kvp.Key} x{kvp.Value}");
             }
-            return names;
+            return displayNames;
         }
     }
     public int CurrentIndex => currentIndex;
 
-    public AbilitySelectionState(string abilityCategory)
-    {
-        category = abilityCategory;
-    }
-
     public void Enter(PlayerTurnController context)
     {
-        var actor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
-        subMenuOptions.AddRange(actor.Abilities.AvailableAbilities[category]);
-        
-        currentIndex = subMenuOptions.IndexOf(context.SelectedAbility ?? subMenuOptions[0]);
+        // 1. Get the current consumables from the PartyManager
+        var consumables = context.Party.Inventory.GetConsumables();
+        inventorySnapshot = consumables.ToList();
 
-        if (currentIndex < 0)
+        // 2. Safely clamp the cursor
+        if (!string.IsNullOrEmpty(context.SelectedItemId))
+        {
+            int foundIndex = inventorySnapshot.FindIndex(kvp => kvp.Key == context.SelectedItemId);
+            if (foundIndex >= 0)
+            {
+                currentIndex = foundIndex;
+            }
+        }
+
+        if (currentIndex >= inventorySnapshot.Count)
         {
             currentIndex = 0;
         }
-
-        // Tell UI to draw the 2D grid
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
     {
-        int listSize = subMenuOptions.Count;
+        int listSize = inventorySnapshot.Count;
 
         if (listSize == 0)
         {
@@ -103,11 +108,27 @@ public class AbilitySelectionState : IInputState, IMenuState
                 break;
 
             case InputButton.Confirm:
-                Ability selected = subMenuOptions[currentIndex];
+                string selectedItemId = inventorySnapshot[currentIndex].Key;
+                
+                // TODO: Fetch real Item from ItemDatabase. 
+                // Hardcoded dummy data for now!
+                Item itemData = new Item(
+                    selectedItemId, 
+                    "Potion",
+                    "Restores 50 HP", 
+                    ItemType.Consumable, 
+                    20f,
+                    0f, 
+                    TargetingMode.SingleTarget, 
+                    TargetAlignment.Everyone, 
+                    new List<Effect> { new HealEffect(50) }
+                );
 
-                // Check requirements here
+                Ability useItemAbility = new UseItemAbility(itemData);
+
+                // Validation
                 bool canCast = true;
-                foreach (var req in selected.Requirements)
+                foreach (var req in useItemAbility.Requirements)
                 {
                     if (!req.MeetsRequirement(context.ActiveActorId.Value, context.Simulation.BattleContext))
                     {
@@ -118,22 +139,24 @@ public class AbilitySelectionState : IInputState, IMenuState
 
                 if (canCast)
                 {
-                    context.SelectedAbility = selected;
+                    // Remember the item for Cursor Memory
+                    context.SelectedItemId = selectedItemId; 
+                    context.SelectedAbility = useItemAbility;
                     context.ChangeState(new TargetingActorState());
                 }
                 else
                 {
-                    // TODO: Make message more specific depending on which requirements are not met
-                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Ability not available!"));
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Not enough items!"));
                 }
                 break;
 
             case InputButton.Cancel:
                 context.RevertToPreviousState();
                 break;
-        }
+        }        
     }
 
     public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
-    public void Exit(PlayerTurnController context) { /* close UI */ }
+
+    public void Exit(PlayerTurnController context) { }
 }

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 public class SharedInventory
 {
-    // ItemId : Quanitty
+    // ItemId : Quantity
     private Dictionary<string, int> consumableItems = new();
 
     // TODO: Add Dictionaries for equipment, key items, etc.

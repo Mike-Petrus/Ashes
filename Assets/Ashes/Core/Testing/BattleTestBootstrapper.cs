@@ -40,33 +40,36 @@ public class BattleTestBootstrapper : MonoBehaviour
     public void RunEncounterTest()
     {
         eventBus = new BattleEventBus();
-        simulation = new BattleSimulation(eventBus, navMeshPathfinder);
+        
+        // 1. CREATE PERSISTENT PARTY FIRST (So we have an inventory to inject!)
+        PartyManager globalPartyManager = new PartyManager();
+        var cecilStats = new CharacterStats(new CoreAttributes { Strength = 15, Aether = 15, Vitality = 20, Agility = 10, Speed = 10, MoveDistance = 10 });
+        globalPartyManager.AddMemberToParty(new PartyMemberData("Paladin_01", "Cecil", cecilStats));
+        
+        // Give Cecil 5 Potions to test the ItemSelectionState
+        globalPartyManager.Inventory.AddItem("Potion", 5);
+
+        // 2. INITIALIZE SIMULATION (Injecting the inventory!)
+        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder);
         debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
 
-        // 1. SUBSCRIBE TO THE REGISTRATION EVENT FIRST!
+        // 3. SUBSCRIBE TO REGISTRATION EVENT
         eventBus.Subscribe<ActorRegisteredEvent>(OnActorRegistered);
 
         var cursorViewObj = Instantiate(CursorViewPrefab);
         cursorViewObj.name = "View_Cursor";
         cursorViewObj.GetComponent<CursorView>().Initialize(eventBus);
 
-        // 2. CREATE PERSISTENT PARTY
-        PartyManager globalPartyManager = new PartyManager();
-        var cecilStats = new CharacterStats(new CoreAttributes { Strength = 15, Aether = 15, Vitality = 20, Agility = 10, Speed = 10, MoveDistance = 10 });
-        globalPartyManager.AddMemberToParty(new PartyMemberData("Paladin_01", "Cecil", cecilStats));
-        globalPartyManager.Inventory.AddItem("Potion", 5);
-
-        // 3. CREATE ENCOUNTER DATA
+        // 4. CREATE ENCOUNTER DATA
         EncounterData testEncounter = new EncounterData();
         testEncounter.EnemyIds.Add("Goblin_01");
         testEncounter.EnemyIds.Add("Goblin_01");
         testEncounter.EnemyIds.Add("Goblin_01");
 
-        // 4. SIMULATE OVERWORLD COLLISION
+        // 5. SIMULATE OVERWORLD COLLISION & RUN SPAWNER
         SimVector3 fakePlayerPos = new SimVector3(0, 0, -4f); 
         SimVector3 fakePlayerFacingDir = new SimVector3(0, 0, 1f); 
 
-        // 5. RUN SPAWNER (This fires OnActorRegistered for everyone automatically!)
         IMapValidator mapValidator = new UnityNavMeshValidator();
         IEnemyDatabase mockDB = new MockEnemyDatabase();
         EncounterSpawner spawner = new EncounterSpawner();
@@ -75,13 +78,9 @@ public class BattleTestBootstrapper : MonoBehaviour
 
         // 6. INITIALIZE CONTROLLER & UI
         var builder = new BattleCommandBuilder();
-        
-        // Grab only the player-controlled actors for the controller!
-        List<BattleActor> activePartyActors = simulation.Actors.GetAllActors()
-            .Where(a => a.Faction == ActorFaction.Party)
-            .ToList();
 
-        controller = new PlayerTurnController(simulation, builder, activePartyActors); 
+        // Controller now takes the PartyManager and handles roster lookups internally
+        controller = new PlayerTurnController(simulation, builder, globalPartyManager); 
 
         if (inputManager != null) inputManager.Initialize(controller);
         if (battleMenuUI != null) battleMenuUI.Initialize(controller);

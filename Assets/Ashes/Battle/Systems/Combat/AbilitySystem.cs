@@ -3,13 +3,15 @@ public class AbilitySystem
     private BattleEventBus events;
     private ActorRegistry actors;
     private ActorStateSystem actorStates;
+    private SharedInventory inventory;
     private TargetingSystem targeting;
 
-    public AbilitySystem(BattleEventBus eventBus, ActorRegistry actorRegistry, ActorStateSystem states, TargetingSystem targetingSystem)
+    public AbilitySystem(BattleEventBus eventBus, ActorRegistry actorRegistry, ActorStateSystem states, SharedInventory sharedInventory, TargetingSystem targetingSystem)
     {
         events = eventBus;
         actors = actorRegistry;
         actorStates = states;
+        inventory = sharedInventory;
         targeting = targetingSystem;
 
         events.Subscribe<AbilityRequestEvent>(OnAbilityRequest);
@@ -21,7 +23,7 @@ public class AbilitySystem
 
         // AbilityStartedEvent -> animations
 
-        AbilityContext ctx = new AbilityContext(e.ActorId, e.TargetInfo, events, actors, targeting);
+        AbilityContext ctx = new AbilityContext(e.ActorId, e.TargetInfo, events, actors, inventory, targeting);
 
         e.Ability.Execute(ctx);
 

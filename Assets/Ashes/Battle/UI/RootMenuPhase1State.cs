@@ -95,7 +95,7 @@ public class RootMenuPhase1State : IInputState, IMenuState
                 break;
 
             case "Items":
-                //context.ChangeState(new ItemSelectionState());
+                context.ChangeState(new ItemSelectionState());
 
                 break;
 
