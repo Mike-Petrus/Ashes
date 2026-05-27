@@ -16,6 +16,7 @@ public class CursorView : MonoBehaviour
 
     public void Initialize(BattleEventBus eventBus)
     {
+        // TODO: toggle/clear renderer at start
         pathLineRenderer = GetComponent<LineRenderer>();
 
         CursorVisuals.SetActive(false);

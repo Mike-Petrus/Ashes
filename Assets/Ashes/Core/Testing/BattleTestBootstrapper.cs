@@ -77,10 +77,14 @@ public class BattleTestBootstrapper : MonoBehaviour
         spawner.SetupEncounter(fakePlayerPos, fakePlayerFacingDir, globalPartyManager, mockDB, testEncounter, simulation, mapValidator);
 
         // 6. INITIALIZE CONTROLLER & UI
-        var builder = new BattleCommandBuilder();
+        var playerBuilder = new BattleCommandBuilder();
 
         // Controller now takes the PartyManager and handles roster lookups internally
-        controller = new PlayerTurnController(simulation, builder, globalPartyManager); 
+        controller = new PlayerTurnController(simulation, playerBuilder, globalPartyManager); 
+
+        // Dedicated builder and controller for the Enemy AI!
+        var enemyBuilder = new BattleCommandBuilder();
+        EnemyTurnController enemyAI = new EnemyTurnController(simulation, enemyBuilder);
 
         if (inputManager != null) inputManager.Initialize(controller);
         if (battleMenuUI != null) battleMenuUI.Initialize(controller);

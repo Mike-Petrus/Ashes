@@ -87,13 +87,6 @@ public class BattleCommandExecutor : IBattleSystem
     private void FinishCommand()
     {
         context.Events.Publish(new CommandFinishedEvent(currentCommand));
-
-        // TODO: Decide if this is the best place for this
-        // Probably defer to ATB system with a ATBResetEvent
-        // or just have it subscribe to CommandFinishedEvent
-        // Should be fine in general, but may change with future edge cases
-        context.Actors.GetActor(currentCommand.ActorId).ATB = 0;
-        context.Events.Publish(new ATBChangedEvent(currentCommand.ActorId, 0f));
         
         currentCommand = null;
         currentStep = null;
