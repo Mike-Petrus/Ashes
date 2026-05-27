@@ -16,6 +16,7 @@ public class BattleDebugSystem
         events.Subscribe<ActorMovedEvent>(OnActorMoved);
         events.Subscribe<MoveCompletedEvent>(OnMoveCompleted);
         events.Subscribe<AbilityCompletedEvent>(OnAbilityCompleted);
+        events.Subscribe<ATBRequestCompletedEvent>(OnATBRequestCompleted);
         events.Subscribe<DamageAppliedEvent>(OnDamageApplied);
         events.Subscribe<HealAppliedEvent>(OnHealApplied);
         events.Subscribe<StatusAppliedEvent>(OnStatusApplied);
@@ -81,6 +82,13 @@ public class BattleDebugSystem
         }
 
         Debug.Log($"[ABILITY] {actors.GetActor(e.ActorId).Name} cast {e.Ability.Name} on {targetDescription}");
+    }
+
+    private void OnATBRequestCompleted(ATBRequestCompletedEvent e)
+    {
+        string isNegative = e.IsNegative? "reduced" : "refunded";
+
+        Debug.Log($"[ATB] {actors.GetActor(e.ActorId).Name} ATB {isNegative} {e.RefundPercent}");
     }
 
     private void OnDamageApplied(DamageAppliedEvent e)

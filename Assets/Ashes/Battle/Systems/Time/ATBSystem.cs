@@ -13,6 +13,7 @@ public class ATBSystem : IBattleSystem
         clock = battleClock;
 
         events.Subscribe<ATBChangeRequestEvent>(OnATBChangeRequest);
+        events.Subscribe<CommandStartedEvent>(OnCommandStarted);
     }
     
     public void Update(float deltaTime)
@@ -42,7 +43,20 @@ public class ATBSystem : IBattleSystem
         }
     }
 
-    void OnATBChangeRequest(ATBChangeRequestEvent request)
+    private void OnCommandStarted(CommandStartedEvent e)
+    {
+        var actor = actors.GetActor(e.Command.ActorId);
+
+        if (actor == null || !actor.IsAlive)
+        {
+            return;
+        }
+
+        actor.ATB = 0f;
+        events.Publish(new ATBChangedEvent(actor.Id, actor.ATB));
+    }
+
+    private void OnATBChangeRequest(ATBChangeRequestEvent request)
     {
         var modifiedActor = actors.GetActor(request.ActorId);
 
@@ -61,5 +75,11 @@ public class ATBSystem : IBattleSystem
         {
             modifiedActor.ATB = Math.Min(modifiedActor.MaxATB, modifiedActor.ATB + ATBChangeValue);
         }
+
+        // 1. Force the UI to update immediately while the clock is paused!
+        events.Publish(new ATBChangedEvent(request.ActorId, modifiedActor.ATB));
+
+        // 2. Tell the WaitStep that the transaction is finished
+        events.Publish(new ATBRequestCompletedEvent(request.ActorId, request.RequestPercent, request.IsNegative));
     }
 }

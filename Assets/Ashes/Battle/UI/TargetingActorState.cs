@@ -10,8 +10,12 @@ public class TargetingActorState : IInputState
     private bool isTargetingValidActor = true;
     private string currentErrorMessage = "";
 
+    // Cached context for event listening
+    private PlayerTurnController currentContext;
+
     public void Enter(PlayerTurnController context)
     {
+        currentContext = context;
         currentAvailableTargets.Clear();
 
         // TODO: The RangeSystem should filter this list!
@@ -49,6 +53,9 @@ public class TargetingActorState : IInputState
         // Initial Validate/Visuals
         ValidateCurrentTarget(context);
         UpdateCursorVisuals(context);
+
+        // Listen for actors moving while targeting
+        context.Simulation.Events.Subscribe<ActorMovedEvent>(OnActorMoved);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -189,10 +196,27 @@ public class TargetingActorState : IInputState
         context.Simulation.Events.Publish(new CursorMovedEvent(targetActor.Position, true, isTargetingValidActor));
     }
 
+    private void OnActorMoved(ActorMovedEvent e)
+    {
+        if (currentContext == null || !savedTargetId.HasValue)
+        {
+            return;
+        }
+
+        if (e.ActorId == savedTargetId.Value || e.ActorId == currentContext.ActiveActorId.Value)
+        {
+            ValidateCurrentTarget(currentContext);
+            UpdateCursorVisuals(currentContext);
+        }
+    }
+
     public void Exit(PlayerTurnController context)
     {
+        context.Simulation.Events.Unsubscribe<ActorMovedEvent>(OnActorMoved);
         context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
         // Do NOT clear CurrentAvailableTargets here so that if we come back,
         // the memory index doesn't temporarily throw an out of bounds error
+
+        currentContext = null;
     }
 }
