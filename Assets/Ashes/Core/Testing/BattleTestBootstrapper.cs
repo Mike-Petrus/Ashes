@@ -1,6 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
 
 public class BattleTestBootstrapper : MonoBehaviour
 {
@@ -55,6 +53,7 @@ public class BattleTestBootstrapper : MonoBehaviour
 
         // 3. SUBSCRIBE TO REGISTRATION EVENT
         eventBus.Subscribe<ActorRegisteredEvent>(OnActorRegistered);
+        eventBus.Subscribe<BattleEndedEvent>(OnBattleEnded);
 
         var cursorViewObj = Instantiate(CursorViewPrefab);
         cursorViewObj.name = "View_Cursor";
@@ -101,6 +100,26 @@ public class BattleTestBootstrapper : MonoBehaviour
         {
             controller.ChangeState(new PartySelectionState());
         }
+    }
+
+    private void OnBattleEnded(BattleEndedEvent e)
+    {
+        if (e.BattleWon)
+        {
+            Debug.Log("VICTORY! All enemies defeated!");
+
+            foreach (var item in e.Loot)
+            {
+                Debug.Log($"Loot Obtained: {item.Key} x{item.Value}");
+                simulation.BattleContext.Inventory.AddItem(item.Key, item.Value);
+            }
+        }
+        else
+        {
+            Debug.Log("DEFEAT! The party has been wiped out.");
+        }
+
+        controller.ChangeState(new IdleState(), false);
     }
 
     private void OnActorRegistered(ActorRegisteredEvent e)
