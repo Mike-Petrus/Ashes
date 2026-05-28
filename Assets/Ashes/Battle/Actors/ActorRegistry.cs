@@ -83,6 +83,17 @@ public class ActorRegistry
         }
     }
 
+    public IEnumerable<BattleActor> GetAliveActorsByFaction(ActorFaction faction)
+    {
+        foreach (var actor in actors.Values)
+        {
+            if (actor.IsAlive && actor.Faction == faction)
+            {
+                yield return actor;
+            }
+        }
+    }
+
     public bool Contains(ActorId id)
     {
         return actors.ContainsKey(id);

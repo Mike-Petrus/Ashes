@@ -25,6 +25,7 @@ public class BattleSimulation
 
     public BattleContext BattleContext { get; }
     public BattleCommandExecutor CommandExecutor { get; }
+    public BattleObserverSystem BattleObserver { get; }
 
     public BattleSimulation(BattleEventBus eventBus, SharedInventory inventory, IPathfinder pathfinder)
     {
@@ -63,6 +64,7 @@ public class BattleSimulation
         };
 
         CommandExecutor = new BattleCommandExecutor(BattleContext);
+        BattleObserver = new BattleObserverSystem(BattleContext);
     }
 
     public void Update(float deltaTime)
