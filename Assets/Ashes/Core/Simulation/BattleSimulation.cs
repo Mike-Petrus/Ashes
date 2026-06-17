@@ -27,6 +27,8 @@ public class BattleSimulation
     public BattleCommandExecutor CommandExecutor { get; }
     public BattleObserverSystem BattleObserver { get; }
 
+    private bool isBattleOver = false;
+
     public BattleSimulation(BattleEventBus eventBus, SharedInventory inventory, IPathfinder pathfinder)
     {
         Events = eventBus;
@@ -65,10 +67,21 @@ public class BattleSimulation
 
         CommandExecutor = new BattleCommandExecutor(BattleContext);
         BattleObserver = new BattleObserverSystem(BattleContext);
+
+        Events.Subscribe<BattleEndedEvent>(OnBattleEnded);
     }
 
     public void Update(float deltaTime)
     {
+        if (isBattleOver)
+        {
+            // Allow Commands and animations to finish for final attack
+            // but do not tick the clock or status effects
+            CommandExecutor.Update(deltaTime);
+            Events.ProcessEvents();
+            return;
+        }
+
         // Phase 1: TIME & CONTINUIOUS SIMULATION
         // These only process if Clock.IsRunning = true inside their own Update methods
         Clock.Update(deltaTime);
@@ -130,6 +143,11 @@ public class BattleSimulation
 
     private void TryResumeClock()
     {
+        if (isBattleOver)
+        {
+            return;
+        }
+        
         if (CommandExecutor.IsExecuting)
         {
             return;
@@ -141,5 +159,13 @@ public class BattleSimulation
         }
 
         Clock.Resume();
+    }
+
+    private void OnBattleEnded(BattleEndedEvent e)
+    {
+        isBattleOver = true;
+
+        // TODO: check win/loss and trigger loot collection,
+        // battle end sequence, transition to proper game state/game mode
     }
 }
