@@ -11,6 +11,8 @@ public class BattleTestBootstrapper : MonoBehaviour
     [Header("Simulation Adapters")]
     public NavMeshPathfinder navMeshPathfinder;
 
+    public LayerMask obstacleLayer;
+
     [Header("Prefabs")]
     public GameObject ActorViewPrefab;
     public GameObject CursorViewPrefab;
@@ -47,8 +49,11 @@ public class BattleTestBootstrapper : MonoBehaviour
         // Give Cecil 5 Potions to test the ItemSelectionState
         globalPartyManager.Inventory.AddItem("Potion", 5);
 
+        // Create losChecker
+        ILineOfSightChecker losChecker = new UnityLineOfSightAdapter(obstacleLayer);
+
         // 2. INITIALIZE SIMULATION (Injecting the inventory!)
-        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder);
+        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder, losChecker);
         debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
 
         // 3. SUBSCRIBE TO REGISTRATION EVENT
