@@ -11,7 +11,7 @@ public class CometAbility : Ability
         RequiresLoS = true;
         RefundPercent = 0.25f;
 
-        Requirements.Add(new MPCost(25));
+        Requirements.Add(new MPCost(30));
         Effects.Add(new DamageEffect(60));
     }
 }
