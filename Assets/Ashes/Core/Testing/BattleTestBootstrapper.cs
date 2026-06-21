@@ -141,7 +141,12 @@ public class BattleTestBootstrapper : MonoBehaviour
             {
                 paladinId = e.Actor.Id;
                 e.Actor.Abilities.UnlockAbility(new SacrificeAbility());
-                e.Actor.Abilities.UnlockAbility(new HolyFireAbility()); 
+                e.Actor.Abilities.UnlockAbility(new HolyFireAbility());
+
+                // AoE Test Abilities
+                e.Actor.Abilities.UnlockAbility(new HolyNovaAbility());
+                e.Actor.Abilities.UnlockAbility(new CometAbility());
+                 
                 if (paladinStatusUI != null) paladinStatusUI.Initialize(e.Actor, eventBus);
             }
         }

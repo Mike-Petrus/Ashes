@@ -60,6 +60,9 @@ public class TargetingActorState : IInputState
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
     {
+        // TODO: Ignore targeting input for TargetingMode.Self
+        // or creating a separate TargetingSelfState
+
         int listSize = currentAvailableTargets.Count;
         
         if (listSize == 0)
@@ -139,6 +142,17 @@ public class TargetingActorState : IInputState
                 // TODO: Should probably be able to toggle here as long as in Phase 1
                 // context.PursuitEnabled = !context.PursuitEnabled;
                 break;
+
+            case InputButton.TargetSnap:
+                // Only toggle if the spell allows free aiming
+                if (context.SelectedAbility.Mode == TargetingMode.Self || context.SelectedAbility.Mode == TargetingMode.ActorAoE)
+                {
+                    // Play error sound
+                    return;
+                }
+
+                context.ChangeState(new TargetingFreeAimState(), false);
+                break;
         }
     }
 
@@ -191,9 +205,10 @@ public class TargetingActorState : IInputState
         }
 
         var targetActor = context.Simulation.Actors.GetActor(currentAvailableTargets[currentTargetIndex]);
+        var ability = context.SelectedAbility;
 
         // Pass the boolean into the event so the cursor changes color
-        context.Simulation.Events.Publish(new CursorMovedEvent(targetActor.Position, true, isTargetingValidActor));
+        context.Simulation.Events.Publish(new CursorMovedEvent(targetActor.Position, true, isTargetingValidActor, ability.Mode, ability.Radius, ability.Angle));
     }
 
     private void OnActorMoved(ActorMovedEvent e)
