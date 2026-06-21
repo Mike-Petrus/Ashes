@@ -11,6 +11,8 @@ public class BattleTestBootstrapper : MonoBehaviour
     [Header("Simulation Adapters")]
     public NavMeshPathfinder navMeshPathfinder;
 
+    public LayerMask obstacleLayer;
+
     [Header("Prefabs")]
     public GameObject ActorViewPrefab;
     public GameObject CursorViewPrefab;
@@ -47,8 +49,11 @@ public class BattleTestBootstrapper : MonoBehaviour
         // Give Cecil 5 Potions to test the ItemSelectionState
         globalPartyManager.Inventory.AddItem("Potion", 5);
 
+        // Create losChecker
+        ILineOfSightChecker losChecker = new UnityLineOfSightAdapter(obstacleLayer);
+
         // 2. INITIALIZE SIMULATION (Injecting the inventory!)
-        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder);
+        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder, losChecker);
         debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
 
         // 3. SUBSCRIBE TO REGISTRATION EVENT
@@ -136,7 +141,12 @@ public class BattleTestBootstrapper : MonoBehaviour
             {
                 paladinId = e.Actor.Id;
                 e.Actor.Abilities.UnlockAbility(new SacrificeAbility());
-                e.Actor.Abilities.UnlockAbility(new HolyFireAbility()); 
+                e.Actor.Abilities.UnlockAbility(new HolyFireAbility());
+
+                // AoE Test Abilities
+                e.Actor.Abilities.UnlockAbility(new HolyNovaAbility());
+                e.Actor.Abilities.UnlockAbility(new CometAbility());
+                 
                 if (paladinStatusUI != null) paladinStatusUI.Initialize(e.Actor, eventBus);
             }
         }

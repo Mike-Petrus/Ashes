@@ -1,14 +1,17 @@
+using System;
 using System.Collections.Generic;
 
 public class TargetingSystem
 {
     private ActorRegistry actors;
     private PositionSystem positions;
+    private ILineOfSightChecker losChecker;
 
-    public TargetingSystem(ActorRegistry actorRegistry, PositionSystem positionSystem)
+    public TargetingSystem(ActorRegistry actorRegistry, PositionSystem positionSystem, ILineOfSightChecker lineOfSightChecker)
     {
         actors = actorRegistry;
         positions = positionSystem;
+        losChecker = lineOfSightChecker;
     }
 
     // TODO: Return valid targets when previewSystem requests them
@@ -65,8 +68,18 @@ public class TargetingSystem
 
     private List<ActorId> GetPointAoETargets(ActorId sourceId, TargetInfo targetInfo, Ability ability)
     {
-        // TODO: This DOES need alignment check. Probably fine doing it this way
-        return FilterByAlignment(sourceId, positions.GetActorsInRadius(targetInfo.TargetPosition, ability.Radius), ability.Alignment);
+        var caughtActors = positions.GetActorsInRadius(targetInfo.TargetPosition, ability.Radius);
+
+        if (ability.RequiresLoS)
+        {
+            caughtActors.RemoveAll(id =>
+            {
+                var target = actors.GetActor(id);
+                return !losChecker.HasLineOfSight(targetInfo.TargetPosition, target.Position);
+            });
+        }
+
+        return FilterByAlignment(sourceId, caughtActors, ability.Alignment);
     }
 
     private List<ActorId> GetActorAoETargets(ActorId sourceId, TargetInfo targetInfo, Ability ability)
@@ -105,12 +118,80 @@ public class TargetingSystem
         // 2. Get Target position (either from targetInfo.TargetPosition OR targetActor.Position)
         // 3. Calculate forward vector.
         // 4. Do Dot-Product checks against all actors in Range.
-        return new List<ActorId>(); 
+
+        List<ActorId> hitTargets = new();
+        var sourceActor = actors.GetActor(sourceId);
+
+        // 1. Determine source vector
+        SimVector3 targetPos = targetInfo.TargetActor.HasValue ? actors.GetActor(targetInfo.TargetActor.Value).Position : targetInfo.TargetPosition;
+        SimVector3 forwardDir = (targetPos - sourceActor.Position).Normalized();
+
+        double angleThreshold = Math.Cos((ability.Angle / 2f) * (Math.PI / 180f));
+
+        // 2. Evaluate all actors
+        foreach (var actor in actors.GetAllActors())
+        {
+            if (actor.Id == sourceId)
+            {
+                continue;
+            }
+
+            float distance = SimVector3.Distance(actor.Position, sourceActor.Position);
+
+            if (distance - actor.Radius <= ability.Radius)
+            {
+                SimVector3 normalizedDir = (actor.Position - sourceActor.Position).Normalized();
+                double dotProduct = SimVector3.DotProduct(forwardDir, normalizedDir);
+
+                if (dotProduct >= angleThreshold)
+                {
+                    if (!ability.RequiresLoS || losChecker.HasLineOfSight(sourceActor.Position, actor.Position))
+                    {
+                        hitTargets.Add(actor.Id);
+                    }
+                }
+            }
+        }
+
+        return FilterByAlignment(sourceId, hitTargets,ability.Alignment);
     }
 
     private List<ActorId> FilterByAlignment(ActorId sourceId, List<ActorId> actorIds, TargetAlignment alignment)
     {
-        // TODO: Alignment logic - check if actor is in player party or enemy 
-        return new List<ActorId>();
+        List<ActorId> filteredList = new();
+        var sourceActor = actors.GetActor(sourceId);
+
+        foreach (var id in actorIds)
+        {
+            var targetActor = actors.GetActor(id);
+            bool isAlly = sourceActor.Faction == targetActor.Faction;
+            bool isValid = false;
+
+            switch (alignment)
+            {
+                case TargetAlignment.Everyone:
+                    isValid = true;
+                    break;
+
+                case TargetAlignment.SelfOnly:
+                    isValid = id.Equals(sourceId);
+                    break;
+
+                case TargetAlignment.Ally:
+                    isValid = isAlly;
+                    break;
+
+                case TargetAlignment.Enemy:
+                    isValid = !isAlly;
+                    break;
+            }
+
+            if (isValid)
+            {
+                filteredList.Add(id);
+            }
+        }
+
+        return filteredList;
     }
 }

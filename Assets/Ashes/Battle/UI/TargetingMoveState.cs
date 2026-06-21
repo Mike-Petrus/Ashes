@@ -19,7 +19,7 @@ public class TargetingMoveState : IInputState
         ValidateCurrentPosition(context);
 
         // Tell the View to show the cursor
-        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isTargetingValidSpace, currentPath));
+        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isTargetingValidSpace, path: currentPath));
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -78,7 +78,7 @@ public class TargetingMoveState : IInputState
         ValidateCurrentPosition(context);
 
         // 3. Broadcast to Unity View
-        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isTargetingValidSpace, currentPath));
+        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isTargetingValidSpace, path: currentPath));
     }
 
     public void Exit(PlayerTurnController context)

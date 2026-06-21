@@ -29,7 +29,7 @@ public class BattleSimulation
 
     private bool isBattleOver = false;
 
-    public BattleSimulation(BattleEventBus eventBus, SharedInventory inventory, IPathfinder pathfinder)
+    public BattleSimulation(BattleEventBus eventBus, SharedInventory inventory, IPathfinder pathfinder, ILineOfSightChecker lineOfSightChecker)
     {
         Events = eventBus;
         Pathfinder = pathfinder;
@@ -46,7 +46,7 @@ public class BattleSimulation
         PositionSystem = new PositionSystem(Actors);
 
         RangeSystem = new RangeSystem(Actors);
-        TargetingSystem = new TargetingSystem(Actors, PositionSystem);
+        TargetingSystem = new TargetingSystem(Actors, PositionSystem, lineOfSightChecker);
 
         AbilitySystem = new AbilitySystem(Events, Actors, ActorStates, inventory, TargetingSystem);
         StatusEffectSystem = new StatusEffectSystem(Events, Actors, Clock);
@@ -147,7 +147,7 @@ public class BattleSimulation
         {
             return;
         }
-        
+
         if (CommandExecutor.IsExecuting)
         {
             return;

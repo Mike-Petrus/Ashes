@@ -6,5 +6,6 @@ public enum InputButton
     Up,
     Down,
     Left,
-    Right
+    Right,
+    TargetSnap
 }

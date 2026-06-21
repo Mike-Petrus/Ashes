@@ -12,6 +12,9 @@ public abstract class Ability
     public float Range { get; protected set; }
     public float Radius { get; protected set; } // 0 if not AoE
 
+    public float Angle { get; protected set; } // for cone angle
+    public bool RequiresLoS { get; protected set; } = true; 
+
     // Targeting Rules
     public TargetingMode Mode { get; protected set; }
     public TargetAlignment Alignment { get; protected set;}
