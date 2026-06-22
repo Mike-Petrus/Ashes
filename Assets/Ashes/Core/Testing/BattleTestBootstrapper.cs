@@ -146,6 +146,7 @@ public class BattleTestBootstrapper : MonoBehaviour
                 // AoE Test Abilities
                 e.Actor.Abilities.UnlockAbility(new HolyNovaAbility());
                 e.Actor.Abilities.UnlockAbility(new CometAbility());
+                e.Actor.Abilities.UnlockAbility(new DivineCleaveAbility());
                  
                 if (paladinStatusUI != null) paladinStatusUI.Initialize(e.Actor, eventBus);
             }

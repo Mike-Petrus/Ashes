@@ -111,6 +111,10 @@ public class CursorView : MonoBehaviour
             {
                 DrawAoECircle(finalPosition, e.Radius, currentColor);
             }
+            else if (e.Radius > 0 && e.Mode == TargetingMode.Directional)
+            {
+                DrawAoECone(finalPosition, Vector3.forward, e.Radius, e.Angle, currentColor);
+            }
             else
             {
                 aoeLineRenderer.positionCount = 0;
@@ -143,5 +147,46 @@ public class CursorView : MonoBehaviour
 
             aoeLineRenderer.SetPosition(i, point);
         }
+    }
+
+    private void DrawAoECone(Vector3 origin, Vector3 forwardDir, float radius, float angle, Color color)
+    {
+        int segments = 20;
+
+        // Need points for Origin, Arc Segments, and back to Origin
+        aoeLineRenderer.positionCount = segments + 2;
+
+        aoeLineRenderer.startColor = color;
+        aoeLineRenderer.endColor = color;
+
+        // Calculate the starting angle (half the total angle)
+        float startAngle = -angle / 2f;
+        float angleStep = angle / segments;
+
+        Vector3 raisedOrigin = origin + new Vector3(0, 0.05f, 0);
+        aoeLineRenderer.SetPosition(0, raisedOrigin);
+
+        // Draw the Arc
+        for (int i = 0; i <= segments; i++)
+        {
+           float currentAngle = startAngle + (i * angleStep);
+
+
+            // Rotate the forward vector by the current angle around the Y axis
+
+            Quaternion rotation = Quaternion.Euler(0, currentAngle, 0);
+
+            Vector3 direction = rotation * forwardDir;
+
+
+            Vector3 point = origin + (direction * radius);
+
+            point.y += 0.05f;
+
+
+            aoeLineRenderer.SetPosition(i + 1, point);
+
+        }
+        aoeLineRenderer.loop = true; 
     }
 }
