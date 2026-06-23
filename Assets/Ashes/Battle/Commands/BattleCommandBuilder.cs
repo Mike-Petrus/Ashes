@@ -38,7 +38,7 @@ public class BattleCommandBuilder
         return finished;
     }
 
-    public void Cancel()
+    public void Clear()
     {
         currentCommand = null;
     }

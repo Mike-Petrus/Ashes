@@ -86,10 +86,6 @@ public class BattleTestBootstrapper : MonoBehaviour
         // Controller now takes the PartyManager and handles roster lookups internally
         controller = new PlayerTurnController(simulation, playerBuilder, globalPartyManager); 
 
-        // Dedicated builder and controller for the Enemy AI!
-        var enemyBuilder = new BattleCommandBuilder();
-        EnemyTurnController enemyAI = new EnemyTurnController(simulation, enemyBuilder);
-
         if (inputManager != null) inputManager.Initialize(controller);
         if (battleMenuUI != null) battleMenuUI.Initialize(controller);
         if (battleFeedbackUI != null) battleFeedbackUI.Initialize(simulation);
@@ -146,6 +142,7 @@ public class BattleTestBootstrapper : MonoBehaviour
                 // AoE Test Abilities
                 e.Actor.Abilities.UnlockAbility(new HolyNovaAbility());
                 e.Actor.Abilities.UnlockAbility(new CometAbility());
+                e.Actor.Abilities.UnlockAbility(new DivineCleaveAbility());
                  
                 if (paladinStatusUI != null) paladinStatusUI.Initialize(e.Actor, eventBus);
             }
