@@ -27,6 +27,8 @@ public class BattleSimulation
     public BattleCommandExecutor CommandExecutor { get; }
     public BattleObserverSystem BattleObserver { get; }
 
+    public EnemyTurnController EnemyAI { get; }
+
     private bool isBattleOver = false;
 
     public BattleSimulation(BattleEventBus eventBus, SharedInventory inventory, IPathfinder pathfinder, ILineOfSightChecker lineOfSightChecker)
@@ -68,6 +70,10 @@ public class BattleSimulation
         CommandExecutor = new BattleCommandExecutor(BattleContext);
         BattleObserver = new BattleObserverSystem(BattleContext);
 
+        var enemyCommandBuilder = new BattleCommandBuilder();
+        IAIProcessor basicAI = new BasicAIProcessor();
+        EnemyAI = new EnemyTurnController(this, enemyCommandBuilder, basicAI);
+
         Events.Subscribe<BattleEndedEvent>(OnBattleEnded);
     }
 
@@ -101,6 +107,10 @@ public class BattleSimulation
         // Flush the event queue - Any damage, deaths, or UI request that happened
         // in Phases 1-3 are processed
         Events.ProcessEvents();
+
+        // AI PROCESSING
+        // Process AI queues now that ActorReadyEvents have been flushed
+        EnemyAI.Update(deltaTime);
 
         // Phase 5: QUEUE & STATE MANAGEMENT
         // check if we need to start another command in the queue or unpause the clock
