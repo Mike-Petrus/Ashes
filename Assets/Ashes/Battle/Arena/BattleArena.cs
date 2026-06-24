@@ -31,6 +31,15 @@ public class BattleArena
         Center = mapValidator.GetNearestValidPosition(rawCenter, Radius);
     }
 
+    // Custom Radius Constructor: currently ONLY FOR TESTING, but may be used later for some encounters
+    public BattleArena(SimVector3 rawCenter, SimVector3 playerCollisionDir, float customRadius, IMapValidator mapValidator)
+    {
+        Radius = customRadius;
+        PlayerFacingDir = new SimVector3(playerCollisionDir.x, 0, playerCollisionDir.z).Normalized();
+        DivisionAxis = new SimVector3(-PlayerFacingDir.z, 0, PlayerFacingDir.x).Normalized();
+        Center = mapValidator.GetNearestValidPosition(rawCenter, Radius);
+    }
+
     public bool IsInBounds(SimVector3 position)
     {
         return SimVector3.Distance(Center, position) <= Radius;
