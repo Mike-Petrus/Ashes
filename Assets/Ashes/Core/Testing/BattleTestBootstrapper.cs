@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class BattleTestBootstrapper : MonoBehaviour
 {
@@ -24,9 +25,19 @@ public class BattleTestBootstrapper : MonoBehaviour
     PlayerTurnController controller;
     ActorId paladinId;
 
+    [Header("Testing Tools")]
+    public BattleScenarioTester ScenarioTester;
+
     void Start()
     {
-        RunEncounterTest();
+        if (ScenarioTester != null && ScenarioTester.IsEnabled)
+        {
+            RunScenarioTest();
+        }
+        else
+        {
+            RunEncounterTest();
+        }
     }
 
     void Update()
@@ -35,6 +46,177 @@ public class BattleTestBootstrapper : MonoBehaviour
         {
             simulation.Update(Time.deltaTime);
         }
+    }
+
+    public void RunScenarioTest()
+    {
+        eventBus = new BattleEventBus();
+        
+        // 1. Create Persistent Party & Inventory from Sandbox Config
+        PartyManager globalPartyManager = new PartyManager();
+
+        foreach (var memberConfig in ScenarioTester.PartyMembers)
+        {
+            var attributes = new CoreAttributes
+            {
+                Strength = memberConfig.Strength,
+                Aether = memberConfig.Aether,
+                Vitality = memberConfig.Vitality,
+                Agility = memberConfig.Agility,
+                Speed = memberConfig.Speed,
+                MoveDistance = memberConfig.MoveDistance
+            };
+
+            var stats = new CharacterStats(attributes);
+            // MaxHP/MP are now calculated! Just top off the current pools.
+            stats.CurrentHP = stats.MaxHP;
+            stats.CurrentMP = stats.MaxMP;
+
+            globalPartyManager.AddMemberToParty(new PartyMemberData(memberConfig.CharacterName + "_ID", memberConfig.CharacterName, stats));
+        }
+
+        foreach (var itemConfig in ScenarioTester.InventoryItems)
+        {
+            globalPartyManager.Inventory.AddItem(itemConfig.ItemType.ToString(), itemConfig.Quantity);
+        }
+
+        ILineOfSightChecker losChecker = new UnityLineOfSightAdapter(obstacleLayer);
+        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder, losChecker);
+        debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
+
+        eventBus.Subscribe<ActorRegisteredEvent>(OnActorRegistered);
+        eventBus.Subscribe<BattleEndedEvent>(OnBattleEnded);
+
+        var cursorViewObj = Instantiate(CursorViewPrefab);
+        cursorViewObj.name = "View_Cursor";
+        cursorViewObj.GetComponent<CursorView>().Initialize(eventBus);
+
+        // 2. Setup Arena
+        int totalActors = ScenarioTester.PartyMembers.Count + ScenarioTester.Enemies.Count;
+        
+        Vector3 unityCenter = ScenarioTester.EncounterCenter != null ? ScenarioTester.EncounterCenter.position : Vector3.zero;
+        Vector3 unityForward = ScenarioTester.EncounterCenter != null ? ScenarioTester.EncounterCenter.forward : Vector3.forward;
+
+        SimVector3 simCenter = new SimVector3(unityCenter.x, unityCenter.y, unityCenter.z);
+        SimVector3 simForward = new SimVector3(unityForward.x, unityForward.y, unityForward.z);
+
+        IMapValidator mapValidator = new UnityNavMeshValidator();
+        BattleArena arena;
+
+        if (ScenarioTester.OverrideArenaRadius)
+        {
+            arena = new BattleArena(simCenter, simForward, ScenarioTester.CustomArenaRadius, mapValidator);
+        }
+        else
+        {
+            arena = new BattleArena(simCenter, simForward, totalActors, mapValidator);
+        }
+        
+        simulation.InitializeBattle(arena);
+
+        // 3. Spawn the Party!
+        int nextActorId = 1;
+        int[] formationOffsets = { 0, -1, 1, -2, 2 };
+        float partySpacing = 1.5f;
+        SimVector3 partyBaseLine = arena.GetPartyBaseLine();
+        var roster = globalPartyManager.ActiveRoster;
+
+        for (int i = 0; i < roster.Count; i++)
+        {
+            if (i >= formationOffsets.Length) break;
+
+            SimVector3 targetSpawn = partyBaseLine + (arena.DivisionAxis * formationOffsets[i] * partySpacing);
+            targetSpawn = mapValidator.GetNearestValidPosition(targetSpawn, 4f);
+
+            var actor = new BattleActor(new ActorId(nextActorId), roster[i].CharacterName, roster[i].BaseStats, targetSpawn, 1.0f, ActorFaction.Party);
+            actor.Stats.CurrentHP = roster[i].CurrentHP;
+            actor.Stats.CurrentMP = roster[i].CurrentMP;
+
+            simulation.Actors.RegisterActor(actor);
+            nextActorId++;
+        }
+
+        // 4. Spawn the Enemies!
+        nextActorId = 6;
+        IEnemyDatabase mockDB = new MockEnemyDatabase();
+        
+        // IMPORTANT: Seed the randomizer exactly the same as the Gizmo preview!
+        System.Random rand = new System.Random(ScenarioTester.RandomSeed);
+        Dictionary<string, int> enemySpawnCounts = new Dictionary<string, int>();
+
+        for (int i = 0; i < ScenarioTester.Enemies.Count; i++)
+        {
+            var config = ScenarioTester.Enemies[i];
+            EnemyTemplate template = mockDB.GetEnemy(config.EnemyId);
+            
+            if (template == null) continue; 
+
+            // Naming Logic
+            if (!enemySpawnCounts.ContainsKey(config.EnemyId)) enemySpawnCounts[config.EnemyId] = 0;
+            int currentCount = enemySpawnCounts[config.EnemyId]++;
+            
+            string actorName = template.DefaultName;
+            if (ScenarioTester.Enemies.Count > 1) 
+            {
+                actorName = $"{template.DefaultName} {(char)('A' + currentCount)}";
+            }
+
+            // Determine Position
+            SimVector3 spawnPos;
+            if (ScenarioTester.UseManualSpawnPoints && i < ScenarioTester.ManualSpawnPoints.Count && ScenarioTester.ManualSpawnPoints[i] != null)
+            {
+                Vector3 p = ScenarioTester.ManualSpawnPoints[i].position;
+                spawnPos = new SimVector3(p.x, p.y, p.z);
+            }
+            else
+            {
+                // This will perfectly replicate the sequence of NextDouble() calls from OnDrawGizmos
+                float randomForward = (float)rand.NextDouble() * (arena.Radius - 3f) + 1f;
+                float randomSide = (float)(rand.NextDouble() * 2.0 - 1.0) * (arena.Radius - 3f);
+                spawnPos = arena.Center + (arena.PlayerFacingDir * randomForward) + (arena.DivisionAxis * randomSide);
+                spawnPos = mapValidator.GetNearestValidPosition(spawnPos, 4f);
+            }
+
+            // Determine Stats cleanly via Attributes
+            CharacterStats enemyStats;
+            if (config.OverrideStats)
+            {
+                var customAttributes = new CoreAttributes
+                {
+                    Strength = template.BaseAttributes.Strength,
+                    Agility = template.BaseAttributes.Agility,
+                    Aether = config.Aether,
+                    Vitality = config.Vitality,
+                    Speed = config.Speed,
+                    MoveDistance = config.MoveDistance
+                };
+                enemyStats = new CharacterStats(customAttributes);
+            }
+            else
+            {
+                enemyStats = new CharacterStats(template.BaseAttributes);
+            }
+
+            enemyStats.CurrentHP = enemyStats.MaxHP;
+            enemyStats.CurrentMP = enemyStats.MaxMP;
+
+            // Register
+            var enemy = new BattleActor(new ActorId(nextActorId), actorName, enemyStats, spawnPos, template.Radius, ActorFaction.Enemy);
+            enemy.Abilities.UnlockAbility(new BasicAttackAbility()); 
+            simulation.Actors.RegisterActor(enemy);
+            nextActorId++;
+        }
+
+        // 5. Initialize Controller & UI
+        var playerBuilder = new BattleCommandBuilder();
+
+        controller = new PlayerTurnController(simulation, playerBuilder, globalPartyManager); 
+
+        if (inputManager != null) inputManager.Initialize(controller);
+        if (battleMenuUI != null) battleMenuUI.Initialize(controller);
+        if (battleFeedbackUI != null) battleFeedbackUI.Initialize(simulation);
+
+        eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
     }
 
     public void RunEncounterTest()
