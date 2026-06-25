@@ -9,29 +9,23 @@ public class PartyMemberConfig
 {
     public string CharacterName = "Cecil";
     
-    [Header("Core Attributes")]
-    public int Strength = 15;
-    public int Aether = 15;
-    public int Vitality = 20;
-    public int Agility = 10;
-    public int Speed = 10;
-    public int MoveDistance = 6;
+    [Tooltip("Drag a Class Template SO here")]
+    public ClassTemplateSO ClassPreset;
 }
-
-public enum SandboxItemType { Potion, Ether, PhoenixDown, Elixir }
 
 [Serializable]
 public class ItemConfig
 {
-    public SandboxItemType ItemType = SandboxItemType.Potion;
+    [Tooltip("Drag an Item Template SO here")]
+    public ItemTemplateSO ItemPreset;
     public int Quantity = 5;
 }
 
 [Serializable]
 public class EnemyScenarioConfig
 {
-    [Tooltip("The Enemy ID from MockEnemyDatabase (e.g., Goblin_01)")]
-    public string EnemyId = "Goblin_01";
+    [Tooltip("Drag an Enemy Template SO here")]
+    public EnemyTemplateSO EnemyPreset;
     
     [Header("Stat Overrides")]
     public bool OverrideStats = false;
@@ -60,11 +54,17 @@ public class BattleScenarioTester : MonoBehaviour
     public List<PartyMemberConfig> PartyMembers = new List<PartyMemberConfig>();
     public List<ItemConfig> InventoryItems = new List<ItemConfig>();
 
+    [Header("Encounter Blueprint")]
+    public bool UseEncounterBlueprint = false;
+    [Tooltip("If true, generates a random encounter based on this blueprint instead of the manual enemy list.")]
+    public EncounterBlueprintSO EncounterBlueprint;
+
     [Header("Enemy Setup")]
+    [Tooltip("These enemies will only spawn if UseEncounterBlueprint is FALSE.")]
     public List<EnemyScenarioConfig> Enemies = new List<EnemyScenarioConfig>();
 
-    [Header("Spawn Locations")]
-    [Tooltip("Seed used to generate random enemy spawns. Change this to generate a new layout.")]
+    [Header("Spawn Locations & Randomization")]
+    [Tooltip("Seed used to generate random enemy spawns. Right-click this script's header and select 'Generate New Random Seed' to shuffle!")]
     public int RandomSeed = 12345;
     [Tooltip("Check this box to automatically generate a new random seed.")]
     public bool GenerateNewSeed = false;
@@ -77,15 +77,24 @@ public class BattleScenarioTester : MonoBehaviour
     private readonly int[] formationOffsets = { 0, -1, 1, -2, 2 };
     private readonly float partySpacing = 1.5f;
 
-    // Unity Editor callback: Runs whenever a value is changed in the Inspector
+    // Restored OnValidate so the Inspector checkbox updates the Gizmos!
     private void OnValidate()
     {
         if (GenerateNewSeed)
         {
-            RandomSeed = UnityEngine.Random.Range(1, 999999);
-            GenerateNewSeed = false; // Uncheck it immediately like a button
+            RandomSeed = UnityEngine.Random.Range(10000, 999999);
+            GenerateNewSeed = false; 
         }
     }
+
+#if UNITY_EDITOR
+    [ContextMenu("Generate New Random Seed")]
+    private void GenerateNewSeedMenu()
+    {
+        RandomSeed = UnityEngine.Random.Range(10000, 999999);
+        UnityEditor.SceneView.RepaintAll();
+    }
+#endif
 
     public float GetArenaRadius(int totalActors)
     {
@@ -99,21 +108,41 @@ public class BattleScenarioTester : MonoBehaviour
 
         Vector3 center = EncounterCenter.position;
         Vector3 forward = EncounterCenter.forward;
-        Vector3 right = EncounterCenter.right;
+        Vector3 divisionAxis = new Vector3(-forward.z, 0, forward.x).normalized;
 
-        int totalActors = PartyMembers.Count + Enemies.Count;
+        // 1. Roll Random Seed to determine exact enemy count FIRST
+        System.Random previewRand = new System.Random(RandomSeed);
+        int previewEnemyCount = 0;
+
+        if (UseEncounterBlueprint && EncounterBlueprint != null)
+        {
+            EncounterData mockData = EncounterBlueprint.ToDomain(previewRand);
+            previewEnemyCount = mockData.EnemyIds.Count;
+        }
+        else
+        {
+            previewEnemyCount = Enemies.Count;
+        }
+
+        // Cap enemies to the amount of manual spawn points provided
+        if (UseManualSpawnPoints)
+        {
+            previewEnemyCount = Mathf.Min(previewEnemyCount, ManualSpawnPoints.Count);
+        }
+
+        // 2. Calculate Exact Arena Radius based on the RNG result
+        int totalActors = PartyMembers.Count + previewEnemyCount;
         float radius = GetArenaRadius(totalActors);
 
-        // 1. Draw Arena Boundary
+        // 3. Draw Arena Boundary
         Gizmos.color = Color.yellow;
         DrawWireCircle(center, radius, 36);
 
-        // 2. Draw Division Line
-        Vector3 divisionAxis = new Vector3(-forward.z, 0, forward.x).normalized;
+        // 4. Draw Division Line
         Gizmos.color = Color.red;
         Gizmos.DrawLine(center - divisionAxis * radius, center + divisionAxis * radius);
 
-        // 3. Draw Party Formation Preview
+        // 5. Draw Party Formation Preview
         Gizmos.color = Color.blue;
         Vector3 partyBaseLine = center - (forward * 2f); 
         
@@ -129,31 +158,37 @@ public class BattleScenarioTester : MonoBehaviour
             Gizmos.color = Color.blue;
         }
 
-        // 4. Draw Enemy Hemisphere (Threat Vector)
+        // 6. Draw Threat Vector
         Gizmos.color = Color.red;
         Gizmos.DrawLine(center, center + forward * (radius * 0.5f));
         
-        // 5. Draw Random OR Manual Spawns
-        System.Random previewRand = new System.Random(RandomSeed);
-
-        for (int i = 0; i < Enemies.Count; i++)
+        // 7. Draw Enemy Spawns (Perfectly isolated RNG!)
+        if (UseManualSpawnPoints)
         {
-            Vector3 spawnPos;
-            if (UseManualSpawnPoints && i < ManualSpawnPoints.Count && ManualSpawnPoints[i] != null)
+            for (int i = 0; i < ManualSpawnPoints.Count; i++)
             {
-                spawnPos = ManualSpawnPoints[i].position;
-                Gizmos.color = Color.magenta;
+                if (ManualSpawnPoints[i] != null)
+                {
+                    // Draw used points as magenta, unused as gray
+                    Gizmos.color = i < previewEnemyCount ? Color.magenta : new Color(0.5f, 0.5f, 0.5f, 0.5f);
+                    Gizmos.DrawSphere(ManualSpawnPoints[i].position, 0.5f);
+                }
             }
-            else
+        }
+        else
+        {
+            for (int i = 0; i < previewEnemyCount; i++)
             {
-                // Calculate exactly how the spawner does!
-                float randomForward = (float)previewRand.NextDouble() * (radius - 3f) + 1f;
-                float randomSide = (float)(previewRand.NextDouble() * 2.0 - 1.0) * (radius - 3f);
-                spawnPos = center + (forward * randomForward) + (divisionAxis * randomSide);
-                Gizmos.color = Color.red;
-            }
+                // Flawless Semicircle Math using EXACTLY 1.0f offset!
+                float padding = 1.0f;
+                float randomForward = (float)previewRand.NextDouble() * (radius - (padding * 2)) + padding;
+                float maxSide = (float)Math.Sqrt(Math.Pow(radius - padding, 2) - Math.Pow(randomForward, 2));
+                float randomSide = (float)(previewRand.NextDouble() * 2.0 - 1.0) * maxSide;
 
-            Gizmos.DrawSphere(spawnPos, 0.5f);
+                Vector3 spawnPos = center + (forward * randomForward) + (divisionAxis * randomSide);
+                Gizmos.color = Color.red;
+                Gizmos.DrawSphere(spawnPos, 0.5f);
+            }
         }
     }
 

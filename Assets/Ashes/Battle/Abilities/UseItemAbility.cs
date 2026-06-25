@@ -1,6 +1,6 @@
 public class UseItemAbility : Ability
 {
-    public UseItemAbility(Item item)
+    public UseItemAbility(ItemTemplate item)
     {
         Name = $"Use {item.Name}";
         Category = "Item";
@@ -10,7 +10,7 @@ public class UseItemAbility : Ability
         Alignment = item.Alignment;
         RefundPercent = 0.50f;
 
-        Requirements.Add(new ItemCost(item.Id, 1));
+        Requirements.Add(new ItemCost(item.ItemId, 1));
         Effects.AddRange(item.Effects);
     }
 }

@@ -110,43 +110,34 @@ public class ItemSelectionState : IInputState, IMenuState
             case InputButton.Confirm:
                 string selectedItemId = inventorySnapshot[currentIndex].Key;
                 
-                // TODO: Fetch real Item from ItemDatabase. 
-                // Hardcoded dummy data for now!
-                Item itemData = new Item(
-                    selectedItemId, 
-                    "Potion",
-                    "Restores 50 HP", 
-                    ItemType.Consumable, 
-                    20f,
-                    0f, 
-                    TargetingMode.SingleTarget, 
-                    TargetAlignment.Everyone, 
-                    new List<Effect> { new HealEffect(50) }
-                );
+                ItemTemplate itemData = context.Simulation.BattleContext.ItemDatabase.GetItem(selectedItemId);
 
                 Ability useItemAbility = new UseItemAbility(itemData);
 
                 // Validation
-                bool canCast = true;
-                foreach (var req in useItemAbility.Requirements)
+                if (itemData != null)
                 {
-                    if (!req.MeetsRequirement(context.ActiveActorId.Value, context.Simulation.BattleContext))
+                    bool canCast = true;
+                    foreach (var req in useItemAbility.Requirements)
                     {
-                        canCast = false;
-                        break;
+                        if (!req.MeetsRequirement(context.ActiveActorId.Value, context.Simulation.BattleContext))
+                        {
+                            canCast = false;
+                            break;
+                        }
                     }
-                }
 
-                if (canCast)
-                {
-                    // Remember the item for Cursor Memory
-                    context.SelectedItemId = selectedItemId; 
-                    context.SelectedAbility = useItemAbility;
-                    context.ChangeState(new TargetingActorState());
-                }
-                else
-                {
-                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Not enough items!"));
+                    if (canCast)
+                    {
+                        // Remember the item for Cursor Memory
+                        context.SelectedItemId = selectedItemId; 
+                        context.SelectedAbility = useItemAbility;
+                        context.ChangeState(new TargetingActorState());
+                    }
+                    else
+                    {
+                        context.Simulation.Events.Publish(new PlayerFeedbackEvent("Not enough items!"));
+                    }
                 }
                 break;
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 public class BattleTestBootstrapper : MonoBehaviour
@@ -28,6 +29,12 @@ public class BattleTestBootstrapper : MonoBehaviour
     [Header("Testing Tools")]
     public BattleScenarioTester ScenarioTester;
 
+    [Header("Databases")]
+    public ScriptableObjectClassDatabase ClassDatabase;
+    public ScriptableObjectItemDatabase ItemDatabase;
+    public ScriptableObjectEnemyDatabase EnemyDatabase;
+    public ScriptableObjectAbilityDatabase AbilityDatabase;
+
     void Start()
     {
         if (ScenarioTester != null && ScenarioTester.IsEnabled)
@@ -50,6 +57,11 @@ public class BattleTestBootstrapper : MonoBehaviour
 
     public void RunScenarioTest()
     {
+        // 0. Initialize Databases FIRST
+        if (ClassDatabase != null) ClassDatabase.Initialize();
+        if (ItemDatabase != null) ItemDatabase.Initialize();
+        if (EnemyDatabase != null) EnemyDatabase.Initialize();
+        if (AbilityDatabase != null) AbilityDatabase.Initialize();
         eventBus = new BattleEventBus();
         
         // 1. Create Persistent Party & Inventory from Sandbox Config
@@ -57,18 +69,13 @@ public class BattleTestBootstrapper : MonoBehaviour
 
         foreach (var memberConfig in ScenarioTester.PartyMembers)
         {
-            var attributes = new CoreAttributes
-            {
-                Strength = memberConfig.Strength,
-                Aether = memberConfig.Aether,
-                Vitality = memberConfig.Vitality,
-                Agility = memberConfig.Agility,
-                Speed = memberConfig.Speed,
-                MoveDistance = memberConfig.MoveDistance
-            };
+            if (memberConfig.ClassPreset == null) continue;
 
-            var stats = new CharacterStats(attributes);
-            // MaxHP/MP are now calculated! Just top off the current pools.
+            // Fetch the pure C# blueprint from the adapter
+            ClassTemplate classData = ClassDatabase.GetClass(memberConfig.ClassPreset.ClassId);
+            if (classData == null) continue;
+
+            var stats = new CharacterStats(classData.BaseStats);
             stats.CurrentHP = stats.MaxHP;
             stats.CurrentMP = stats.MaxMP;
 
@@ -77,11 +84,16 @@ public class BattleTestBootstrapper : MonoBehaviour
 
         foreach (var itemConfig in ScenarioTester.InventoryItems)
         {
-            globalPartyManager.Inventory.AddItem(itemConfig.ItemType.ToString(), itemConfig.Quantity);
+            if (itemConfig.ItemPreset == null) continue;
+            
+            // Add to inventory using the official ID
+            globalPartyManager.Inventory.AddItem(itemConfig.ItemPreset.ItemId, itemConfig.Quantity);
         }
 
         ILineOfSightChecker losChecker = new UnityLineOfSightAdapter(obstacleLayer);
-        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder, losChecker);
+
+        // Inject the databases into the simulation
+        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder, losChecker, ItemDatabase, AbilityDatabase);
         debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
 
         eventBus.Subscribe<ActorRegisteredEvent>(OnActorRegistered);
@@ -114,7 +126,7 @@ public class BattleTestBootstrapper : MonoBehaviour
         
         simulation.InitializeBattle(arena);
 
-        // 3. Spawn the Party!
+        // 3. Spawn the Party
         int nextActorId = 1;
         int[] formationOffsets = { 0, -1, 1, -2, 2 };
         float partySpacing = 1.5f;
@@ -136,50 +148,86 @@ public class BattleTestBootstrapper : MonoBehaviour
             nextActorId++;
         }
 
-        // 4. Spawn the Enemies!
+        // 4. PRE-CALCULATE ENCOUNTER DATA (Isolated RNG Sequence)
         nextActorId = 6;
-        IEnemyDatabase mockDB = new MockEnemyDatabase();
-        
-        // IMPORTANT: Seed the randomizer exactly the same as the Gizmo preview!
         System.Random rand = new System.Random(ScenarioTester.RandomSeed);
         Dictionary<string, int> enemySpawnCounts = new Dictionary<string, int>();
 
-        for (int i = 0; i < ScenarioTester.Enemies.Count; i++)
+        List<EnemyScenarioConfig> activeEnemies = new List<EnemyScenarioConfig>();
+        if (ScenarioTester.UseEncounterBlueprint && ScenarioTester.EncounterBlueprint != null)
         {
-            var config = ScenarioTester.Enemies[i];
-            EnemyTemplate template = mockDB.GetEnemy(config.EnemyId);
-            
+            int numEnemies = rand.Next(ScenarioTester.EncounterBlueprint.MinEnemies, ScenarioTester.EncounterBlueprint.MaxEnemies + 1);
+            for (int i = 0; i < numEnemies; i++)
+            {
+                var possibleEnemies = ScenarioTester.EncounterBlueprint.PossibleEnemies;
+                if (possibleEnemies != null && possibleEnemies.Count > 0)
+                {
+                    int randomIndex = rand.Next(0, possibleEnemies.Count);
+                    activeEnemies.Add(new EnemyScenarioConfig 
+                    { 
+                        EnemyPreset = possibleEnemies[randomIndex],
+                        OverrideStats = false 
+                    });
+                }
+            }
+        }
+        else
+        {
+            activeEnemies.AddRange(ScenarioTester.Enemies);
+        }
+
+        // Cap enemies if manual spawn points are forced
+        int spawnedEnemyCount = ScenarioTester.UseManualSpawnPoints 
+            ? Math.Min(activeEnemies.Count, ScenarioTester.ManualSpawnPoints.Count) 
+            : activeEnemies.Count;
+
+        for (int i = 0; i < spawnedEnemyCount; i++)
+        {
+            var config = activeEnemies[i];
+            if (config.EnemyPreset == null) continue;
+
+            EnemyTemplate template = EnemyDatabase.GetEnemy(config.EnemyPreset.EnemyId);
             if (template == null) continue; 
 
             // Naming Logic
-            if (!enemySpawnCounts.ContainsKey(config.EnemyId)) enemySpawnCounts[config.EnemyId] = 0;
-            int currentCount = enemySpawnCounts[config.EnemyId]++;
+            if (!enemySpawnCounts.ContainsKey(template.EnemyId)) enemySpawnCounts[template.EnemyId] = 0;
+            int currentCount = enemySpawnCounts[template.EnemyId]++;
             
             string actorName = template.DefaultName;
-            if (ScenarioTester.Enemies.Count > 1) 
+            if (activeEnemies.Count > 1) 
             {
                 actorName = $"{template.DefaultName} {(char)('A' + currentCount)}";
             }
 
-            // Determine Position
+            // Flawless Spawning Logic (Ensuring RNG is never desynced)
             SimVector3 spawnPos;
-            if (ScenarioTester.UseManualSpawnPoints && i < ScenarioTester.ManualSpawnPoints.Count && ScenarioTester.ManualSpawnPoints[i] != null)
+            if (ScenarioTester.UseManualSpawnPoints)
             {
-                Vector3 p = ScenarioTester.ManualSpawnPoints[i].position;
-                spawnPos = new SimVector3(p.x, p.y, p.z);
+                if (ScenarioTester.ManualSpawnPoints[i] != null)
+                {
+                    Vector3 p = ScenarioTester.ManualSpawnPoints[i].position;
+                    spawnPos = new SimVector3(p.x, p.y, p.z);
+                }
+                else
+                {
+                    // Fallback to center if manual point was deleted
+                    spawnPos = arena.Center + (arena.PlayerFacingDir * 1.0f);
+                }
             }
             else
             {
-                // This will perfectly replicate the sequence of NextDouble() calls from OnDrawGizmos
-                float randomForward = (float)rand.NextDouble() * (arena.Radius - 3f) + 1f;
-                float randomSide = (float)(rand.NextDouble() * 2.0 - 1.0) * (arena.Radius - 3f);
-                spawnPos = arena.Center + (arena.PlayerFacingDir * randomForward) + (arena.DivisionAxis * randomSide);
-                spawnPos = mapValidator.GetNearestValidPosition(spawnPos, 4f);
+                float padding = 1.0f;
+                float randomForward = (float)rand.NextDouble() * (arena.Radius - (padding * 2)) + padding;
+                float maxSide = (float)Math.Sqrt(Math.Pow(arena.Radius - padding, 2) - Math.Pow(randomForward, 2));
+                float randomSide = (float)(rand.NextDouble() * 2.0 - 1.0) * maxSide;
+
+                SimVector3 calculatedRandomPos = arena.Center + (arena.PlayerFacingDir * randomForward) + (arena.DivisionAxis * randomSide);
+                spawnPos = mapValidator.GetNearestValidPosition(calculatedRandomPos, 4f);
             }
 
-            // Determine Stats cleanly via Attributes
+            // Determine Sandbox Overrides
             CharacterStats enemyStats;
-            if (config.OverrideStats)
+            if (!ScenarioTester.UseEncounterBlueprint && config.OverrideStats)
             {
                 var customAttributes = new CoreAttributes
                 {
@@ -200,9 +248,24 @@ public class BattleTestBootstrapper : MonoBehaviour
             enemyStats.CurrentHP = enemyStats.MaxHP;
             enemyStats.CurrentMP = enemyStats.MaxMP;
 
-            // Register
             var enemy = new BattleActor(new ActorId(nextActorId), actorName, enemyStats, spawnPos, template.Radius, ActorFaction.Enemy);
+            
+            // ALWAYS give enemies a basic attack fallback
             enemy.Abilities.UnlockAbility(new BasicAttackAbility()); 
+            
+            // Read the template and load their specific abilities
+            if (template.Abilities != null)
+            {
+                foreach (var abilityId in template.Abilities)
+                {
+                    var abilityTemplate = AbilityDatabase.GetAbility(abilityId);
+                    if (abilityTemplate != null)
+                    {
+                        enemy.Abilities.UnlockAbility(new DataDrivenAbility(abilityTemplate));
+                    }
+                }
+            }
+
             simulation.Actors.RegisterActor(enemy);
             nextActorId++;
         }
@@ -221,59 +284,59 @@ public class BattleTestBootstrapper : MonoBehaviour
 
     public void RunEncounterTest()
     {
-        eventBus = new BattleEventBus();
+        // eventBus = new BattleEventBus();
         
-        // 1. CREATE PERSISTENT PARTY FIRST (So we have an inventory to inject!)
-        PartyManager globalPartyManager = new PartyManager();
-        var cecilStats = new CharacterStats(new CoreAttributes { Strength = 15, Aether = 15, Vitality = 20, Agility = 10, Speed = 10, MoveDistance = 10 });
-        globalPartyManager.AddMemberToParty(new PartyMemberData("Paladin_01", "Cecil", cecilStats));
+        // // 1. CREATE PERSISTENT PARTY FIRST (So we have an inventory to inject!)
+        // PartyManager globalPartyManager = new PartyManager();
+        // var cecilStats = new CharacterStats(new CoreAttributes { Strength = 15, Aether = 15, Vitality = 20, Agility = 10, Speed = 10, MoveDistance = 10 });
+        // globalPartyManager.AddMemberToParty(new PartyMemberData("Paladin_01", "Cecil", cecilStats));
         
-        // Give Cecil 5 Potions to test the ItemSelectionState
-        globalPartyManager.Inventory.AddItem("Potion", 5);
+        // // Give Cecil 5 Potions to test the ItemSelectionState
+        // globalPartyManager.Inventory.AddItem("Potion", 5);
 
-        // Create losChecker
-        ILineOfSightChecker losChecker = new UnityLineOfSightAdapter(obstacleLayer);
+        // // Create losChecker
+        // ILineOfSightChecker losChecker = new UnityLineOfSightAdapter(obstacleLayer);
 
-        // 2. INITIALIZE SIMULATION (Injecting the inventory!)
-        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder, losChecker);
-        debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
+        // // 2. INITIALIZE SIMULATION (Injecting the inventory!)
+        // simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder, losChecker);
+        // debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
 
-        // 3. SUBSCRIBE TO REGISTRATION EVENT
-        eventBus.Subscribe<ActorRegisteredEvent>(OnActorRegistered);
-        eventBus.Subscribe<BattleEndedEvent>(OnBattleEnded);
+        // // 3. SUBSCRIBE TO REGISTRATION EVENT
+        // eventBus.Subscribe<ActorRegisteredEvent>(OnActorRegistered);
+        // eventBus.Subscribe<BattleEndedEvent>(OnBattleEnded);
 
-        var cursorViewObj = Instantiate(CursorViewPrefab);
-        cursorViewObj.name = "View_Cursor";
-        cursorViewObj.GetComponent<CursorView>().Initialize(eventBus);
+        // var cursorViewObj = Instantiate(CursorViewPrefab);
+        // cursorViewObj.name = "View_Cursor";
+        // cursorViewObj.GetComponent<CursorView>().Initialize(eventBus);
 
-        // 4. CREATE ENCOUNTER DATA
-        EncounterData testEncounter = new EncounterData();
-        testEncounter.EnemyIds.Add("Goblin_01");
-        testEncounter.EnemyIds.Add("Goblin_01");
-        testEncounter.EnemyIds.Add("Goblin_01");
+        // // 4. CREATE ENCOUNTER DATA
+        // EncounterData testEncounter = new EncounterData();
+        // testEncounter.EnemyIds.Add("Goblin_01");
+        // testEncounter.EnemyIds.Add("Goblin_01");
+        // testEncounter.EnemyIds.Add("Goblin_01");
 
-        // 5. SIMULATE OVERWORLD COLLISION & RUN SPAWNER
-        SimVector3 fakePlayerPos = new SimVector3(0, 0, -4f); 
-        SimVector3 fakePlayerFacingDir = new SimVector3(0, 0, 1f); 
+        // // 5. SIMULATE OVERWORLD COLLISION & RUN SPAWNER
+        // SimVector3 fakePlayerPos = new SimVector3(0, 0, -4f); 
+        // SimVector3 fakePlayerFacingDir = new SimVector3(0, 0, 1f); 
 
-        IMapValidator mapValidator = new UnityNavMeshValidator();
-        IEnemyDatabase mockDB = new MockEnemyDatabase();
-        EncounterSpawner spawner = new EncounterSpawner();
+        // IMapValidator mapValidator = new UnityNavMeshValidator();
+        // IEnemyDatabase mockDB = new MockEnemyDatabase();
+        // EncounterSpawner spawner = new EncounterSpawner();
         
-        spawner.SetupEncounter(fakePlayerPos, fakePlayerFacingDir, globalPartyManager, mockDB, testEncounter, simulation, mapValidator);
+        // spawner.SetupEncounter(fakePlayerPos, fakePlayerFacingDir, globalPartyManager, mockDB, testEncounter, simulation, mapValidator);
 
-        // 6. INITIALIZE CONTROLLER & UI
-        var playerBuilder = new BattleCommandBuilder();
+        // // 6. INITIALIZE CONTROLLER & UI
+        // var playerBuilder = new BattleCommandBuilder();
 
-        // Controller now takes the PartyManager and handles roster lookups internally
-        controller = new PlayerTurnController(simulation, playerBuilder, globalPartyManager); 
+        // // Controller now takes the PartyManager and handles roster lookups internally
+        // controller = new PlayerTurnController(simulation, playerBuilder, globalPartyManager); 
 
-        if (inputManager != null) inputManager.Initialize(controller);
-        if (battleMenuUI != null) battleMenuUI.Initialize(controller);
-        if (battleFeedbackUI != null) battleFeedbackUI.Initialize(simulation);
+        // if (inputManager != null) inputManager.Initialize(controller);
+        // if (battleMenuUI != null) battleMenuUI.Initialize(controller);
+        // if (battleFeedbackUI != null) battleFeedbackUI.Initialize(simulation);
 
-        // 7. SUBSCRIBE TO GAMEPLAY EVENTS
-        eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
+        // // 7. SUBSCRIBE TO GAMEPLAY EVENTS
+        // eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
     }
 
     private void OnActorReady(ActorReadyEvent e)
