@@ -3,7 +3,6 @@ public class BattleContext
     public BattleEventBus Events;
 
     public ActorRegistry Actors;
-
     public ActorStateSystem ActorStates;
 
     public MovementSystem Movement;
@@ -17,4 +16,7 @@ public class BattleContext
     public EffectPipeline Effects;
 
     public BattleClock Clock;
+
+    public IItemDatabase ItemDatabase;
+    public IAbilityDatabase AbilityDatabase;
 }
