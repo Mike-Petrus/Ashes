@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Dart Goblin
   m_EditorClassIdentifier: Assembly-CSharp::EnemyTemplateSO
   EnemyId: Goblin_02
-  DefaultName: Poison Goblin
+  DefaultName: Dart Goblin
   Radius: 1
   Strength: 10
   Aether: 10

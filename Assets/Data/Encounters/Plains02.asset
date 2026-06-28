@@ -18,3 +18,4 @@ MonoBehaviour:
   MaxEnemies: 5
   PossibleEnemies:
   - {fileID: 11400000, guid: 0d31394b02746074e89031202a8a8f9f, type: 2}
+  - {fileID: 11400000, guid: d744dbe5c27556f479c56df124a647c5, type: 2}

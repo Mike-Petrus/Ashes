@@ -8,6 +8,7 @@ using System.Collections.Generic;
 public class PartyMemberConfig
 {
     public string CharacterName = "Cecil";
+    public int Level = 1;
     
     [Tooltip("Drag a Class Template SO here")]
     public ClassTemplateSO ClassPreset;

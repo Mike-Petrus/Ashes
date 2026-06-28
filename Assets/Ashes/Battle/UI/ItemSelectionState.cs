@@ -1,51 +1,55 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 public class ItemSelectionState : IInputState, IMenuState
 {
+    // --- IMenuState ---
+    public IReadOnlyList<string> MenuOptions => menuOptions;
+    public int CurrentIndex { get; private set; } = 0;
+
     // Cache a list of KVP (ItemId, Quantity)
+    private List<string> menuOptions = new();
     private List<KeyValuePair<string, int>> inventorySnapshot = new();
 
-    private int currentIndex = 0;
     private int columns = 3; // TODO: Decide final grid size
-
-    // --- IMenuState ---
-    public IReadOnlyList<string> MenuOptions
-    {
-        get
-        {
-            List<string> displayNames = new();
-            foreach (var kvp in inventorySnapshot)
-            {
-                // TODO: When we build the ItemDatabase, we will look up the real name here.
-                // For now, we just print the ID and the Quantity.
-                displayNames.Add($"{kvp.Key} x{kvp.Value}");
-            }
-            return displayNames;
-        }
-    }
-    public int CurrentIndex => currentIndex;
 
     public void Enter(PlayerTurnController context)
     {
         // 1. Get the current consumables from the PartyManager
         var consumables = context.Party.Inventory.GetConsumables();
-        inventorySnapshot = consumables.ToList();
+        
+        if (consumables.Count == 0)
+        {
+            menuOptions.Add("Empty");
+        }
+        else
+        {
+            // BattleMenuUI updates every frame. Build the Inventory once on Enter
+            foreach (var kvp in consumables)
+            {
+                inventorySnapshot.Add(kvp);
 
-        // 2. Safely clamp the cursor
+                // Query database for display name
+                ItemTemplate template = context.Simulation.BattleContext.ItemDatabase.GetItem(kvp.Key);
+                string displayName = template != null ? template.Name : kvp.Key;
+
+                menuOptions.Add($"{displayName} x{kvp.Value}");
+            }
+        }
+
+        // 2. Safely clamp the cursor (Cursor Memory)
         if (!string.IsNullOrEmpty(context.SelectedItemId))
         {
             int foundIndex = inventorySnapshot.FindIndex(kvp => kvp.Key == context.SelectedItemId);
             if (foundIndex >= 0)
             {
-                currentIndex = foundIndex;
+                CurrentIndex = foundIndex;
             }
         }
 
-        if (currentIndex >= inventorySnapshot.Count)
+        if (CurrentIndex >= inventorySnapshot.Count)
         {
-            currentIndex = 0;
+            CurrentIndex = 0;
         }
     }
 
@@ -55,68 +59,72 @@ public class ItemSelectionState : IInputState, IMenuState
 
         if (listSize == 0)
         {
+            if (button == InputButton.Cancel)
+            {
+                context.RevertToPreviousState();
+            }
             return;
         }
 
-        int minInRow = (currentIndex / columns) * columns;
+        int minInRow = (CurrentIndex / columns) * columns;
         int maxInRow = Math.Min(minInRow + columns - 1, listSize - 1);
 
         switch (button)
         {
             case InputButton.Right:
-                currentIndex++;
+                CurrentIndex++;
 
-                if (currentIndex > maxInRow)
+                if (CurrentIndex > maxInRow)
                 {
-                    currentIndex = minInRow; // Wrap to left
+                    CurrentIndex = minInRow; // Wrap to left
                 }
                 break;
 
             case InputButton.Left:
-                currentIndex--;
+                CurrentIndex--;
 
-                if (currentIndex < minInRow)
+                if (CurrentIndex < minInRow)
                 {
-                    currentIndex += maxInRow; // Wrap to right
+                    CurrentIndex += maxInRow; // Wrap to right
                 }
                 break;
 
             case InputButton.Down:
                 // Jump down a row
-                currentIndex += columns;
+                CurrentIndex += columns;
 
-                if (currentIndex >= listSize)
+                if (CurrentIndex >= listSize)
                 {
-                    currentIndex %= columns; // Wrap to top
+                    CurrentIndex %= columns; // Wrap to top
                 }
                 break;
 
             case InputButton.Up:
                 // Jump up a row
-                currentIndex -= columns;
+                CurrentIndex -= columns;
 
-                if (currentIndex < 0)
+                if (CurrentIndex < 0)
                 {
-                    int col = currentIndex + columns;
-                    currentIndex = col;
+                    int col = CurrentIndex + columns;
+                    CurrentIndex = col;
 
-                    while (currentIndex + columns < listSize)
+                    while (CurrentIndex + columns < listSize)
                     {
-                        currentIndex += columns;
+                        CurrentIndex += columns;
                     }
                 }
                 break;
 
             case InputButton.Confirm:
-                string selectedItemId = inventorySnapshot[currentIndex].Key;
+                string selectedItemId = inventorySnapshot[CurrentIndex].Key;
                 
                 ItemTemplate itemData = context.Simulation.BattleContext.ItemDatabase.GetItem(selectedItemId);
-
-                Ability useItemAbility = new UseItemAbility(itemData);
 
                 // Validation
                 if (itemData != null)
                 {
+                    Ability useItemAbility = new UseItemAbility(itemData);
+
                     bool canCast = true;
                     foreach (var req in useItemAbility.Requirements)
                     {
@@ -148,6 +156,5 @@ public class ItemSelectionState : IInputState, IMenuState
     }
 
     public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
-
     public void Exit(PlayerTurnController context) { }
 }

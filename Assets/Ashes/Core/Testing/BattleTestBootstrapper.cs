@@ -6,9 +6,11 @@ public class BattleTestBootstrapper : MonoBehaviour
 {
     [Header("Presentation Layer")]
     public BattleInputManager inputManager;
-    public ActorStatusUI paladinStatusUI;
+
     public BattleMenuUI battleMenuUI;
     public BattleFeedbackUI battleFeedbackUI;
+    
+    public Transform PartyContainerPanel;
 
     [Header("Simulation Adapters")]
     public NavMeshPathfinder navMeshPathfinder;
@@ -16,15 +18,15 @@ public class BattleTestBootstrapper : MonoBehaviour
     public LayerMask obstacleLayer;
 
     [Header("Prefabs")]
+    public GameObject ActorStatusPanelPrefab;
     public GameObject ActorViewPrefab;
     public GameObject CursorViewPrefab;
 
+    [Header("Core")]
     BattleEventBus eventBus;
     BattleSimulation simulation;
     BattleDebugSystem debugSystem;
-
     PlayerTurnController controller;
-    ActorId paladinId;
 
     [Header("Testing Tools")]
     public BattleScenarioTester ScenarioTester;
@@ -79,7 +81,7 @@ public class BattleTestBootstrapper : MonoBehaviour
             stats.CurrentHP = stats.MaxHP;
             stats.CurrentMP = stats.MaxMP;
 
-            globalPartyManager.AddMemberToParty(new PartyMemberData(memberConfig.CharacterName + "_ID", memberConfig.CharacterName, stats));
+            globalPartyManager.AddMemberToParty(new PartyMemberData(memberConfig.CharacterName + "_ID", memberConfig.CharacterName, classData, stats, memberConfig.Level));
         }
 
         foreach (var itemConfig in ScenarioTester.InventoryItems)
@@ -141,6 +143,20 @@ public class BattleTestBootstrapper : MonoBehaviour
             targetSpawn = mapValidator.GetNearestValidPosition(targetSpawn, 4f);
 
             var actor = new BattleActor(new ActorId(nextActorId), roster[i].CharacterName, roster[i].BaseStats, targetSpawn, 1.0f, ActorFaction.Party);
+
+            // Everyone gets attack
+            actor.Abilities.UnlockAbility(new BasicAttackAbility());
+
+            foreach (string abilityId in roster[i].UnlockedAbilities)
+            {
+                var abilityTemplate = AbilityDatabase.GetAbility(abilityId);
+
+                if (abilityTemplate != null)
+                {
+                    actor.Abilities.UnlockAbility(new DataDrivenAbility(abilityTemplate));                    
+                }
+            }
+
             actor.Stats.CurrentHP = roster[i].CurrentHP;
             actor.Stats.CurrentMP = roster[i].CurrentMP;
 
@@ -341,8 +357,9 @@ public class BattleTestBootstrapper : MonoBehaviour
 
     private void OnActorReady(ActorReadyEvent e)
     {
-        // Is paladin's turn?
-        if (paladinId != null && e.ActorId.Value == paladinId.Value)
+        var actor = simulation.Actors.GetActor(e.ActorId);
+
+        if (actor != null && actor.Faction == ActorFaction.Party)
         {
             controller.ChangeState(new PartySelectionState());
         }
@@ -378,18 +395,16 @@ public class BattleTestBootstrapper : MonoBehaviour
         {
             viewObj.GetComponentInChildren<Renderer>().material.color = Color.blue;
             
-            if (e.Actor.Name == "Cecil")
+            // Create the UI Panel
+            if (ActorStatusPanelPrefab != null && PartyContainerPanel != null)
             {
-                paladinId = e.Actor.Id;
-                e.Actor.Abilities.UnlockAbility(new SacrificeAbility());
-                e.Actor.Abilities.UnlockAbility(new HolyFireAbility());
+                var panelObj = Instantiate(ActorStatusPanelPrefab, PartyContainerPanel, false);
+                ActorStatusUI statusUI = panelObj.GetComponent<ActorStatusUI>();
 
-                // AoE Test Abilities
-                e.Actor.Abilities.UnlockAbility(new HolyNovaAbility());
-                e.Actor.Abilities.UnlockAbility(new CometAbility());
-                e.Actor.Abilities.UnlockAbility(new DivineCleaveAbility());
-                 
-                if (paladinStatusUI != null) paladinStatusUI.Initialize(e.Actor, eventBus);
+                if (statusUI != null)
+                {
+                    statusUI.Initialize(e.Actor, eventBus);
+                }
             }
         }
         else if (e.Actor.Faction == ActorFaction.Enemy)

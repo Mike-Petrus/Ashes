@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 675575cd8c513db448b89aab69aa5f72, type: 3}
   m_Name: DeveloperCube
   m_EditorClassIdentifier: Assembly-CSharp::ItemTemplateSO
-  ItemId: 
-  Name: 
-  Description: 
-  Type: 0
+  ItemId: developer_cube
+  Name: Developer's Cube
+  Description: The ultimate cube of power
+  Type: 3
   Range: 5
   Radius: 0
   TargetMode: 1

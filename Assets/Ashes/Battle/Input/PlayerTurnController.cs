@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-// TODO: Move move/targeting validation to their own functions
-// TODO: Create Error events for player feedback
-
 public class PlayerTurnController
 {
     // --- CORE DEPENDENCIES ---
@@ -22,11 +19,11 @@ public class PlayerTurnController
     public SimVector3 CurrentCursorPosition { get; set; }
     public float CursorSpeed { get; set; } = 8f;
 
+    // --- CURSOR MEMORY ---
+    public string SelectedPhase1Option { get; set; }
+    public string SelectedPhase2Option { get; set; }
     public Ability SelectedAbility { get; set; }
     public string SelectedItemId { get; set; }
-    
-    // --- MENU DATA ---
-    public List<string> CurrentMenuOptions { get; } = new();
 
     // Global toggle
     public bool PursuitEnabled { get; set; } = false;
@@ -116,7 +113,6 @@ public class PlayerTurnController
     {
         ActiveActorId = null;
         SelectedAbility = null;
-        CurrentMenuOptions.Clear();
         PreviousStates.Clear();
         
         ChangeState(new IdleState(), false);    
