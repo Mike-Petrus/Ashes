@@ -69,12 +69,23 @@ public class TargetingFreeAimState : IInputState
 
             case InputButton.Pursuit:
                 // TODO: Should probably be able to toggle here as long as in Phase 1
-                // context.PursuitEnabled = !context.PursuitEnabled;
+                context.PursuitEnabled = !context.PursuitEnabled;
                 break;
 
-            case InputButton.TargetSnap:
-                // TODO: Maybe check if Mode == PointAoE or Self? Most states should allow snapping
-                context.ChangeState(new TargetingActorState(), false);
+            case InputButton.FreeAim:
+                bool canTargetActor = context.SelectedAbility.Mode != TargetingMode.Self && context.SelectedAbility.Mode != TargetingMode.PointAoE;
+
+                if (canTargetActor)
+                {
+                    context.FreeAimEnabled = false;
+                    context.ChangeState(new TargetingActorState(), false);
+                }
+                else
+                {
+                    // Play error sound
+                    // This event may not be necessary, but for testing it is useful. Consider removing later
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent($"Cannot snap to target with {context.SelectedAbility.Name}!"));
+                }
                 break;
         }
     }

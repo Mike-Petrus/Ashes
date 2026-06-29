@@ -115,46 +115,76 @@ public class AbilitySelectionState : IInputState, IMenuState
 
             case InputButton.Confirm:
                 Ability selected = availableAbilities[CurrentIndex];
-
-                // Check requirements here
-                bool canCast = true;
-                foreach (var req in selected.Requirements)
-                {
-                    if (!req.MeetsRequirement(context.ActiveActorId.Value, context.Simulation.BattleContext))
-                    {
-                        canCast = false;
-                        break;
-                    }
-                }
-
-                if (canCast)
-                {
-                    context.SelectedAbility = selected;
-
-                    if (selected.Alignment == TargetAlignment.SelfOnly)
-                    {
-                        // TODO: implement TargetingSelfState
-                        // context.ChangeState(new TargetingSelfState());
-                        context.Simulation.Events.Publish(new PlayerFeedbackEvent("Self Targeting not implemented"));
-                    }
-                    else
-                    {
-                        context.ChangeState(new TargetingActorState());
-                    } 
-                }
-                else
-                {
-                    // TODO: Make message more specific depending on which requirements are not met
-                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Ability not available!"));
-                }
+                TryCastAbility(context, selected);
                 break;
 
             case InputButton.Cancel:
                 context.RevertToPreviousState();
+                break;
+
+            case InputButton.Pursuit:
+                context.PursuitEnabled = !context.PursuitEnabled;
+                break;
+                
+            case InputButton.FreeAim:
+                context.FreeAimEnabled = !context.FreeAimEnabled;
                 break;
         }
     }
 
     public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
     public void Exit(PlayerTurnController context) { }
+
+    private void TryCastAbility(PlayerTurnController context, Ability ability)
+    {
+        // Check requirements here
+        bool canCast = true;
+        foreach (var req in ability.Requirements)
+        {
+            if (!req.MeetsRequirement(context.ActiveActorId.Value, context.Simulation.BattleContext))
+            {
+                canCast = false;
+                return;
+            }
+        }
+
+        if (canCast)
+        {
+            context.SelectedAbility = ability;
+
+            switch (ability.Mode)
+            {
+                case TargetingMode.SingleTarget:
+                case TargetingMode.ActorAoE:
+                    context.ChangeState(new TargetingActorState());
+                    break;
+
+                case TargetingMode.Self:
+                    context.ChangeState(new TargetingSelfState());
+                    break;
+
+                case TargetingMode.Directional:
+                case TargetingMode.PointAoE:
+                    context.ChangeState(new TargetingFreeAimState());
+                    break;
+
+                case TargetingMode.HybridAoE:
+                    if (context.FreeAimEnabled)
+                    {
+                        context.ChangeState(new TargetingFreeAimState());
+                    }
+                    else
+                    {
+                        context.ChangeState(new TargetingActorState());
+                    }
+                    break;
+            }
+            return;
+        }
+        else
+        {
+            // TODO: Make message more specific depending on which requirements are not met
+            context.Simulation.Events.Publish(new PlayerFeedbackEvent("Ability not available!"));
+        }    
+    }
 }

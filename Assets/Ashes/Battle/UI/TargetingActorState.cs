@@ -140,18 +140,25 @@ public class TargetingActorState : IInputState
 
             case InputButton.Pursuit:
                 // TODO: Should probably be able to toggle here as long as in Phase 1
-                // context.PursuitEnabled = !context.PursuitEnabled;
+                context.PursuitEnabled = !context.PursuitEnabled;
                 break;
 
-            case InputButton.TargetSnap:
-                // Only toggle if the spell allows free aiming
-                if (context.SelectedAbility.Mode == TargetingMode.Self || context.SelectedAbility.Mode == TargetingMode.ActorAoE)
+            case InputButton.FreeAim:
+                bool canTargetFree =   context.SelectedAbility.Mode != TargetingMode.Self && 
+                                        context.SelectedAbility.Mode != TargetingMode.SingleTarget && 
+                                        context.SelectedAbility.Mode != TargetingMode.ActorAoE;
+
+                if (canTargetFree)
+                {
+                    context.FreeAimEnabled = true;
+                    context.ChangeState(new TargetingFreeAimState(), false);
+                }
+                else
                 {
                     // Play error sound
-                    return;
+                    // This event may not be necessary, but for testing it is useful. Consider removing later
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent($"Cannot free aim with {context.SelectedAbility.Name}!"));
                 }
-
-                context.ChangeState(new TargetingFreeAimState(), false);
                 break;
         }
     }

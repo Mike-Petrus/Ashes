@@ -27,6 +27,7 @@ public class PlayerTurnController
 
     // Global toggle
     public bool PursuitEnabled { get; set; } = false;
+    public bool FreeAimEnabled { get; set; } = false;
 
     public PlayerTurnController(BattleSimulation battleSimulation, BattleCommandBuilder commandBuilder, PartyManager partyManager)
     {

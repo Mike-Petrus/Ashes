@@ -117,44 +117,83 @@ public class ItemSelectionState : IInputState, IMenuState
 
             case InputButton.Confirm:
                 string selectedItemId = inventorySnapshot[CurrentIndex].Key;
-                
                 ItemTemplate itemData = context.Simulation.BattleContext.ItemDatabase.GetItem(selectedItemId);
 
-                // Validation
                 if (itemData != null)
                 {
-                    Ability useItemAbility = new UseItemAbility(itemData);
-
-                    bool canCast = true;
-                    foreach (var req in useItemAbility.Requirements)
-                    {
-                        if (!req.MeetsRequirement(context.ActiveActorId.Value, context.Simulation.BattleContext))
-                        {
-                            canCast = false;
-                            break;
-                        }
-                    }
-
-                    if (canCast)
-                    {
-                        // Remember the item for Cursor Memory
-                        context.SelectedItemId = selectedItemId; 
-                        context.SelectedAbility = useItemAbility;
-                        context.ChangeState(new TargetingActorState());
-                    }
-                    else
-                    {
-                        context.Simulation.Events.Publish(new PlayerFeedbackEvent("Not enough items!"));
-                    }
+                    TryUseItem(context, selectedItemId, itemData);
                 }
                 break;
 
             case InputButton.Cancel:
                 context.RevertToPreviousState();
                 break;
+
+            case InputButton.Pursuit:
+                context.PursuitEnabled = !context.PursuitEnabled;
+                break;
+                
+            case InputButton.FreeAim:
+                context.FreeAimEnabled = !context.FreeAimEnabled;
+                break;
         }        
     }
 
     public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
     public void Exit(PlayerTurnController context) { }
+
+    private void TryUseItem(PlayerTurnController context, string itemId, ItemTemplate itemData)
+    {
+        Ability useItemAbility = new UseItemAbility(itemData);
+
+        bool canCast = true;
+        foreach (var req in useItemAbility.Requirements)
+        {
+            if (!req.MeetsRequirement(context.ActiveActorId.Value, context.Simulation.BattleContext))
+            {
+                canCast = false;
+                return;
+            }
+        }
+
+        if (canCast)
+        {
+            // Remember the item for Cursor Memory
+            context.SelectedItemId = itemId; 
+            context.SelectedAbility = useItemAbility;
+            
+            switch (useItemAbility.Mode)
+            {
+                case TargetingMode.SingleTarget:
+                case TargetingMode.ActorAoE:
+                    context.ChangeState(new TargetingActorState());
+                    break;
+
+                case TargetingMode.Self:
+                    context.ChangeState(new TargetingSelfState());
+                    break;
+
+                case TargetingMode.Directional:
+                case TargetingMode.PointAoE:
+                    context.ChangeState(new TargetingFreeAimState());
+                    break;
+
+                case TargetingMode.HybridAoE:
+                    if (context.FreeAimEnabled)
+                    {
+                        context.ChangeState(new TargetingFreeAimState());
+                    }
+                    else
+                    {
+                        context.ChangeState(new TargetingActorState());
+                    }
+                    break;
+            }
+            return;
+        }
+        else
+        {
+            context.Simulation.Events.Publish(new PlayerFeedbackEvent("Not enough items!"));
+        }
+    }
 }
