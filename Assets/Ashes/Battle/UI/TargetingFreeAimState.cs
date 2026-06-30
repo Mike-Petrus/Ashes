@@ -1,3 +1,5 @@
+using System;
+
 public class TargetingFreeAimState : IInputState
 {
     // Cached Data
@@ -6,12 +8,8 @@ public class TargetingFreeAimState : IInputState
     private bool isValidPosition = true;
     private string currentErrorMessage = "";
 
-    private PlayerTurnController currentContext;
-
     public void Enter(PlayerTurnController context)
     {
-        currentContext = context;
-
         if (!savedCursorPosition.HasValue)
         {
             var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
@@ -96,6 +94,26 @@ public class TargetingFreeAimState : IInputState
         SimVector3 pos = context.CurrentCursorPosition;
         pos.x += x * context.CursorSpeed * deltaTime;
         pos.z += y * context.CursorSpeed * deltaTime;
+
+        // 2. HARD CLAMP: Tether to Arena Radius + Ability Radius
+        if (context.Simulation.Arena != null)
+        {
+            float maxDistance = context.Simulation.Arena.Radius + context.SelectedAbility.Radius - 0.05f;
+
+            float dx = pos.x - context.Simulation.Arena.Center.x;
+            float dz = pos.z - context.Simulation.Arena.Center.z;
+            float dist = (float)Math.Sqrt((dx * dx) + (dz * dz));
+
+            if (dist > maxDistance)
+            {
+                float dirX = dx / dist;
+                float dirZ = dz / dist;
+
+                pos.x = context.Simulation.Arena.Center.x + (dirX * maxDistance);
+                pos.z = context.Simulation.Arena.Center.z + (dirZ * maxDistance);
+            }
+        }
+
         context.CurrentCursorPosition = pos;
 
         // Cache cursor position for rewinding
@@ -119,7 +137,7 @@ public class TargetingFreeAimState : IInputState
 
         SimVector3 originPosition = activeActor.Position;
 
-        // If we moved in PHase 1, calculate range from FUTURE position
+        // If we moved in Phase 1, calculate range from FUTURE position
         if (context.Builder.Size > 0)
         {
             if (context.Builder.LastStepAdded() is MoveStep moveStep)
@@ -143,6 +161,5 @@ public class TargetingFreeAimState : IInputState
     public void Exit(PlayerTurnController context)
     {
         context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
-        currentContext = null;
     }
 }

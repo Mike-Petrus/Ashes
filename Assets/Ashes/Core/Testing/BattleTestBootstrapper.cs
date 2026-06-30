@@ -105,67 +105,8 @@ public class BattleTestBootstrapper : MonoBehaviour
         cursorViewObj.name = "View_Cursor";
         cursorViewObj.GetComponent<CursorView>().Initialize(eventBus);
 
-        // 2. Setup Arena
-        int totalActors = ScenarioTester.PartyMembers.Count + ScenarioTester.Enemies.Count;
-        
-        Vector3 unityCenter = ScenarioTester.EncounterCenter != null ? ScenarioTester.EncounterCenter.position : Vector3.zero;
-        Vector3 unityForward = ScenarioTester.EncounterCenter != null ? ScenarioTester.EncounterCenter.forward : Vector3.forward;
-
-        SimVector3 simCenter = new SimVector3(unityCenter.x, unityCenter.y, unityCenter.z);
-        SimVector3 simForward = new SimVector3(unityForward.x, unityForward.y, unityForward.z);
-
-        IMapValidator mapValidator = new UnityNavMeshValidator();
-        BattleArena arena;
-
-        if (ScenarioTester.OverrideArenaRadius)
-        {
-            arena = new BattleArena(simCenter, simForward, ScenarioTester.CustomArenaRadius, mapValidator);
-        }
-        else
-        {
-            arena = new BattleArena(simCenter, simForward, totalActors, mapValidator);
-        }
-        
-        simulation.InitializeBattle(arena);
-
-        // 3. Spawn the Party
-        int nextActorId = 1;
-        int[] formationOffsets = { 0, -1, 1, -2, 2 };
-        float partySpacing = 1.5f;
-        SimVector3 partyBaseLine = arena.GetPartyBaseLine();
-        var roster = globalPartyManager.ActiveRoster;
-
-        for (int i = 0; i < roster.Count; i++)
-        {
-            if (i >= formationOffsets.Length) break;
-
-            SimVector3 targetSpawn = partyBaseLine + (arena.DivisionAxis * formationOffsets[i] * partySpacing);
-            targetSpawn = mapValidator.GetNearestValidPosition(targetSpawn, 4f);
-
-            var actor = new BattleActor(new ActorId(nextActorId), roster[i].CharacterName, roster[i].BaseStats, targetSpawn, 1.0f, ActorFaction.Party);
-
-            // Everyone gets attack
-            actor.Abilities.UnlockAbility(new BasicAttackAbility());
-
-            foreach (string abilityId in roster[i].UnlockedAbilities)
-            {
-                var abilityTemplate = AbilityDatabase.GetAbility(abilityId);
-
-                if (abilityTemplate != null)
-                {
-                    actor.Abilities.UnlockAbility(new DataDrivenAbility(abilityTemplate));                    
-                }
-            }
-
-            actor.Stats.CurrentHP = roster[i].CurrentHP;
-            actor.Stats.CurrentMP = roster[i].CurrentMP;
-
-            simulation.Actors.RegisterActor(actor);
-            nextActorId++;
-        }
-
-        // 4. PRE-CALCULATE ENCOUNTER DATA (Isolated RNG Sequence)
-        nextActorId = 6;
+        // 2. PRE-CALCULATE ENCOUNTER DATA FIRST!
+        // We must do this before creating the arena so we know exactly how many actors exist.
         System.Random rand = new System.Random(ScenarioTester.RandomSeed);
         Dictionary<string, int> enemySpawnCounts = new Dictionary<string, int>();
 
@@ -197,6 +138,68 @@ public class BattleTestBootstrapper : MonoBehaviour
             ? Math.Min(activeEnemies.Count, ScenarioTester.ManualSpawnPoints.Count) 
             : activeEnemies.Count;
 
+        // 3. Setup Arena (Now using the accurate spawnedEnemyCount!)
+        int totalActors = ScenarioTester.PartyMembers.Count + spawnedEnemyCount;
+        
+        Vector3 unityCenter = ScenarioTester.EncounterCenter != null ? ScenarioTester.EncounterCenter.position : Vector3.zero;
+        Vector3 unityForward = ScenarioTester.EncounterCenter != null ? ScenarioTester.EncounterCenter.forward : Vector3.forward;
+
+        SimVector3 simCenter = new SimVector3(unityCenter.x, unityCenter.y, unityCenter.z);
+        SimVector3 simForward = new SimVector3(unityForward.x, unityForward.y, unityForward.z);
+
+        IMapValidator mapValidator = new UnityNavMeshValidator();
+        BattleArena arena;
+
+        if (ScenarioTester.OverrideArenaRadius)
+        {
+            arena = new BattleArena(simCenter, simForward, ScenarioTester.CustomArenaRadius, mapValidator);
+        }
+        else
+        {
+            arena = new BattleArena(simCenter, simForward, totalActors, mapValidator);
+        }
+        
+        simulation.InitializeBattle(arena);
+
+        // 4. Spawn the Party
+        int nextActorId = 1;
+        int[] formationOffsets = { 0, -1, 1, -2, 2 };
+        float partySpacing = 1.5f;
+        SimVector3 partyBaseLine = arena.GetPartyBaseLine();
+        var roster = globalPartyManager.ActiveRoster;
+
+        for (int i = 0; i < roster.Count; i++)
+        {
+            if (i >= formationOffsets.Length) break;
+
+            SimVector3 targetSpawn = partyBaseLine + (arena.DivisionAxis * formationOffsets[i] * partySpacing);
+            targetSpawn = mapValidator.GetNearestValidPosition(targetSpawn, 4f);
+
+            var actor = new BattleActor(new ActorId(nextActorId), roster[i].CharacterName, roster[i].BaseStats, targetSpawn, 1.0f, ActorFaction.Party);
+
+            // ALWAYS give the party a basic attack
+            actor.Abilities.UnlockAbility(new BasicAttackAbility());
+
+            // Read the template and load their specific abilities
+            foreach (string abilityId in roster[i].UnlockedAbilities)
+            {
+                var template = AbilityDatabase.GetAbility(abilityId);
+                if (template != null)
+                {
+                    actor.Abilities.UnlockAbility(new DataDrivenAbility(template));
+                }
+            }
+
+            actor.Stats.CurrentHP = roster[i].CurrentHP;
+            actor.Stats.CurrentMP = roster[i].CurrentMP;
+
+            simulation.Actors.RegisterActor(actor);
+            nextActorId++;
+        }
+
+        // 5. Spawn the Enemies
+        nextActorId = 6;
+        
         for (int i = 0; i < spawnedEnemyCount; i++)
         {
             var config = activeEnemies[i];
@@ -226,7 +229,6 @@ public class BattleTestBootstrapper : MonoBehaviour
                 }
                 else
                 {
-                    // Fallback to center if manual point was deleted
                     spawnPos = arena.Center + (arena.PlayerFacingDir * 1.0f);
                 }
             }
@@ -265,11 +267,9 @@ public class BattleTestBootstrapper : MonoBehaviour
             enemyStats.CurrentMP = enemyStats.MaxMP;
 
             var enemy = new BattleActor(new ActorId(nextActorId), actorName, enemyStats, spawnPos, template.Radius, ActorFaction.Enemy);
-            
-            // ALWAYS give enemies a basic attack fallback
             enemy.Abilities.UnlockAbility(new BasicAttackAbility()); 
             
-            // Read the template and load their specific abilities
+            // Read the template and load their specific abilities!
             if (template.Abilities != null)
             {
                 foreach (var abilityId in template.Abilities)

@@ -21,13 +21,13 @@ MonoBehaviour:
   Speed: 10
   MoveDistance: 10
   LearnedAbilities:
-  - RequiredLevel: 0
+  - RequiredLevel: 1
     AbilityPreset: {fileID: 11400000, guid: aff12feeaca79454fa754258bbed9a2e, type: 2}
-  - RequiredLevel: 0
+  - RequiredLevel: 1
     AbilityPreset: {fileID: 11400000, guid: 2e6ca15ce8cc3a44da8f521e2b1ce73c, type: 2}
-  - RequiredLevel: 0
+  - RequiredLevel: 1
     AbilityPreset: {fileID: 11400000, guid: 64e5433c4fa79cd4b9a3b50bd3f10c38, type: 2}
-  - RequiredLevel: 0
+  - RequiredLevel: 1
     AbilityPreset: {fileID: 11400000, guid: dff0d229a0c6f514ca495aacfa5587d8, type: 2}
-  - RequiredLevel: 0
+  - RequiredLevel: 1
     AbilityPreset: {fileID: 11400000, guid: 3c2d904738a47de4e9fe3e6616ac951b, type: 2}
