@@ -281,8 +281,10 @@ public class TargetingActorState : IInputState
             displayPosition = context.Simulation.Actors.GetActor(currentAvailableTargets[currentTargetIndex]).Position;
         }
 
+        SimVector3 originPosition = GetOriginPosition(context);
+
         // Pass the boolean into the event so the cursor changes color
-        context.Simulation.Events.Publish(new CursorMovedEvent(displayPosition, true, isTargetingValidActor, ability.Mode, ability.Radius, ability.Angle));
+        context.Simulation.Events.Publish(new CursorMovedEvent(displayPosition, true, isTargetingValidActor, ability.Mode, ability.Radius, ability.Angle, staticCenter: originPosition));
     }
 
     private void ForceSnapToTarget(PlayerTurnController context)
@@ -304,6 +306,19 @@ public class TargetingActorState : IInputState
 
         ValidateCurrentTarget(context);
         UpdateCursorVisuals(context);
+    }
+
+    private SimVector3 GetOriginPosition(PlayerTurnController context)
+    {
+        var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
+        SimVector3 originPosition = activeActor.Position;
+
+        if (context.Builder.Size > 0 && context.Builder.LastStepAdded() is MoveStep moveStep)
+        {
+            originPosition = moveStep.Destination;
+        }
+
+        return originPosition;
     }
 
     private void OnActorMoved(ActorMovedEvent e)

@@ -8,14 +8,14 @@ public class TargetingSelfState : IInputState
         var activeActor  = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
         var ability = context.SelectedAbility;
         
-        targetInfo = TargetInfo.ForSelf(activeActor.Id); // Change this function to take the ActorId?
+        targetInfo = TargetInfo.ForSelf(activeActor.Id);
         SimVector3 originPosition = GetOriginPosition(context, activeActor);
 
         // Query RangeSystem. In future could have Null-Magic Zone or spells that can only be self cast on certain terrain (e.g. water)
         isValid = context.Simulation.RangeSystem.IsInRange(originPosition, activeActor.Radius, ability, targetInfo);
 
         // Draw the cursor on the actor's position or future position if they move first
-        context.Simulation.Events.Publish(new CursorMovedEvent(originPosition, true, isValid, ability.Mode, ability.Radius, ability.Angle));
+        context.Simulation.Events.Publish(new CursorMovedEvent(originPosition, true, isValid, ability.Mode, ability.Radius, ability.Angle, staticCenter: originPosition));
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)

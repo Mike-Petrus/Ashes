@@ -126,8 +126,9 @@ public class TargetingFreeAimState : IInputState
     private void UpdateCursorVisuals(PlayerTurnController context)
     {
         var ability = context.SelectedAbility;
+        SimVector3 originPosition = GetOriginPosition(context);
         // Pass the AoE gemoetric data to the presentation layer
-        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isValidPosition, ability.Mode, ability.Radius, ability.Angle));
+        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isValidPosition, ability.Mode, ability.Radius, ability.Angle, staticCenter: originPosition));
     }
 
     private void ValidateCursorPosition(PlayerTurnController context)
@@ -156,6 +157,19 @@ public class TargetingFreeAimState : IInputState
             isValidPosition = true;
             currentErrorMessage = "";
         }
+    }
+
+    private SimVector3 GetOriginPosition(PlayerTurnController context)
+    {
+        var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
+        SimVector3 originPosition = activeActor.Position;
+
+        if (context.Builder.Size > 0 && context.Builder.LastStepAdded() is MoveStep moveStep)
+        {
+            originPosition = moveStep.Destination;
+        }
+
+        return originPosition;
     }
 
     public void Exit(PlayerTurnController context)
