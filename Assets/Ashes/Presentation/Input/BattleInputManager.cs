@@ -18,6 +18,7 @@ public class BattleInputManager : MonoBehaviour
         inputControls.Battle.Confirm.performed += ctx => SendInput(InputButton.Confirm);
         inputControls.Battle.Cancel.performed += ctx => SendInput(InputButton.Cancel);
         inputControls.Battle.Pursuit.performed += ctx => SendInput(InputButton.Pursuit);
+        inputControls.Battle.FreeAim.performed += ctx => SendInput(InputButton.FreeAim);
         
         inputControls.Battle.Up.performed += ctx => SendInput(InputButton.Up);
         inputControls.Battle.Down.performed += ctx => SendInput(InputButton.Down);

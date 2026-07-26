@@ -29,8 +29,13 @@ public class BattleCommandExecutor : IBattleSystem
         }
 
         currentCommand = command;
-        currentStepIndex = 0;
 
+        if (currentCommand.IsPursuit)
+        {
+            EvaluatePursuitCommand(command);
+        }
+
+        currentStepIndex = 0;
         context.Events.Publish(new CommandStartedEvent(command));
 
         StartCurrentStep();
@@ -90,5 +95,46 @@ public class BattleCommandExecutor : IBattleSystem
         
         currentCommand = null;
         currentStep = null;
+    }
+
+    private void EvaluatePursuitCommand(BattleCommand command)
+    {
+        BattleActor sourceActor = context.Actors.GetActor(command.ActorId);
+        BattleActor targetActor;
+        SimVector3 destination;
+        TargetInfo targetInfo;
+
+        // 1. Extract steps to determine intent
+        MoveStep ogMove = null;
+        AbilityStep ogAbility = null;
+
+        foreach (CommandStep step in command.Steps)
+        {
+            if (step is MoveStep moveStep)
+            {
+                ogMove = moveStep;
+            }
+            if (step is AbilityStep abilityStep)
+            {
+                ogAbility = abilityStep;
+            }
+        }
+
+        // This should never really happen... Unless we change "Wait" to "Follow"
+        // when Pursuit = ON in Phase 2
+        if (ogAbility == null)
+        {
+            destination = ogMove != null ? ogMove.Destination : sourceActor.Position;
+        }
+        
+        // ---- package regular move + wait ; return;
+
+        targetInfo = ogAbility.TargetInfo;
+
+        if (targetInfo.TargetActor.HasValue)
+        {
+            targetActor = context.Actors.GetActor(targetInfo.TargetActor.Value);
+            destination = targetActor.Position;
+        }
     }
 }

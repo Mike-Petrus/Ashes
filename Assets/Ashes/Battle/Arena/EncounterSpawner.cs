@@ -34,7 +34,20 @@ public class EncounterSpawner
             SimVector3 targetSpawn = partyBaseLine +  (arena.DivisionAxis * formationOffsets[i] * partySpacing);
             targetSpawn = mapValidator.GetNearestValidPosition(targetSpawn, 4f);
 
-            var actor = new BattleActor(new ActorId(nextActorId), roster[i].CharacterName, roster[i].BaseStats, targetSpawn, 1.0f);
+            var actor = new BattleActor(new ActorId(nextActorId), roster[i].CharacterName, roster[i].BaseStats, targetSpawn, 1.0f, ActorFaction.Party);
+
+            // Everyone gets attack
+            actor.Abilities.UnlockAbility(new BasicAttackAbility());
+
+            foreach (string abilityId in roster[i].UnlockedAbilities)
+            {
+                var abilityTemplate = abilityDatabase.GetAbility(abilityId);
+
+                if (abilityTemplate != null)
+                {
+                    actor.Abilities.UnlockAbility(new DataDrivenAbility(abilityTemplate));                    
+                }
+            }
 
             actor.Stats.CurrentHP = roster[i].CurrentHP;
             actor.Stats.CurrentMP = roster[i].CurrentMP;

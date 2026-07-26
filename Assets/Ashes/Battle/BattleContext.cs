@@ -6,6 +6,8 @@ public class BattleContext
     public ActorStateSystem ActorStates;
 
     public MovementSystem Movement;
+    public PositionSystem Position;
+    public IPathfinder Path;
 
     public AbilitySystem Abilities;
 

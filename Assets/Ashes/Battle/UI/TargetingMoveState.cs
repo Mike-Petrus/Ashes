@@ -17,9 +17,7 @@ public class TargetingMoveState : IInputState
         context.CurrentCursorPosition = savedCursorPosition ?? activeActor.Position;
 
         ValidateCurrentPosition(context);
-
-        // Tell the View to show the cursor
-        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isTargetingValidSpace, path: currentPath));
+        UpdateCursorVisuals(context);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -35,7 +33,7 @@ public class TargetingMoveState : IInputState
                 }
 
                 context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
-                context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, context.CurrentCursorPosition));
+                context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, context.CurrentCursorPosition, currentPath));
 
                 // Is Command complete?
                 if (context.Builder.Size >= 2)
@@ -78,57 +76,22 @@ public class TargetingMoveState : IInputState
         ValidateCurrentPosition(context);
 
         // 3. Broadcast to Unity View
-        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isTargetingValidSpace, path: currentPath));
+        UpdateCursorVisuals(context);
+    }
+
+    private void ValidateCurrentPosition(PlayerTurnController context)
+    {
+        isTargetingValidSpace = TargetingUtility.TryValidateStandardMove(context, context.CurrentCursorPosition, out currentPath, out currentErrorMessage);
+    }
+
+    private void UpdateCursorVisuals(PlayerTurnController context)
+    {
+        TargetingUtility.UpdateCursorVisuals(context, context.CurrentCursorPosition, isTargetingValidSpace, currentPath);
     }
 
     public void Exit(PlayerTurnController context)
     {
         // Safety to ensure cursor turns off
         context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
-    }
-
-    private void ValidateCurrentPosition(PlayerTurnController context)
-    {
-        isTargetingValidSpace = true;
-        currentErrorMessage = "";
-
-        // TODO: Display correct error message. E.g. An occupied space never displays the error message
-        // because it fails the path check first
-
-        // 1. Calculate NavMeshPath
-        currentPath = context.Simulation.Pathfinder.FindPath(activeActor.Position, context.CurrentCursorPosition, activeActor.Radius);
-
-        if (currentPath == null || currentPath.Count == 0)
-        {
-            isTargetingValidSpace = false;
-            currentErrorMessage = "Unreachable!";
-
-            return;
-        }
-
-        // 2. Validate True Path Distance
-        float pathDistance = 0f;
-
-        for (int i = 0; i < currentPath.Count - 1; i++)
-        {
-            pathDistance += SimVector3.Distance(currentPath[i], currentPath[i + 1]);
-        }
-
-        if (pathDistance > activeActor.Stats.MoveDistance)
-        {
-            isTargetingValidSpace = false;
-            currentErrorMessage = "Too Far!";
-
-            return;
-        }
-
-        // 3. Validate Collision
-        if (context.Simulation.PositionSystem.IsSpaceOccupied(context.CurrentCursorPosition, activeActor.Radius, context.ActiveActorId.Value))
-        {
-            isTargetingValidSpace = false;
-            currentErrorMessage = "Space Occupied!";
-
-            return;
-        }
     }
 }

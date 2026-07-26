@@ -156,7 +156,7 @@ public class TargetingSystem
         return FilterByAlignment(sourceId, hitTargets,ability.Alignment);
     }
 
-    private List<ActorId> FilterByAlignment(ActorId sourceId, List<ActorId> actorIds, TargetAlignment alignment)
+    public List<ActorId> FilterByAlignment(ActorId sourceId, List<ActorId> actorIds, TargetAlignment alignment)
     {
         List<ActorId> filteredList = new();
         var sourceActor = actors.GetActor(sourceId);

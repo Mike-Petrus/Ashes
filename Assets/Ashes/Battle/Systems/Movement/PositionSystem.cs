@@ -65,7 +65,7 @@ public class PositionSystem
         return false;
     }
 
-    // For Phase 3B: AoE Targeting
+    // For Phase 3B: AoE Targeting --- Deprecated ???
     public List<ActorId> GetActorsInRadius(SimVector3 center, float radius)
     {
         List<ActorId> targets = new();

@@ -60,6 +60,8 @@ public class BattleSimulation
             Actors = Actors,
             ActorStates = ActorStates,
             Movement = MovementSystem,
+            Position = PositionSystem,
+            Path = Pathfinder,
             Abilities = AbilitySystem,
             Inventory = inventory,
             Range = RangeSystem,

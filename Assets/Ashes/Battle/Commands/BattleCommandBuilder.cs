@@ -47,4 +47,12 @@ public class BattleCommandBuilder
     {
         return currentCommand.LastStep();
     }
+
+    public void SetPursuit(bool isPursuit)
+    {
+        if (currentCommand != null)
+        {
+            currentCommand.IsPursuit = isPursuit;
+        }
+    }
 }

@@ -14,6 +14,6 @@ public struct TargetInfo
     public static TargetInfo ForPosition(SimVector3 position, TargetingMode mode = TargetingMode.PointAoE) =>
         new TargetInfo { Mode = mode, TargetPosition = position };
 
-    public static TargetInfo ForSelf() =>
-        new TargetInfo { Mode = TargetingMode.Self };
+    public static TargetInfo ForSelf(ActorId selfId) =>
+        new TargetInfo { Mode = TargetingMode.Self, TargetActor = selfId };
 }

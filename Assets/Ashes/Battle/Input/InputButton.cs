@@ -7,5 +7,5 @@ public enum InputButton
     Down,
     Left,
     Right,
-    TargetSnap
+    FreeAim  // R2 / RT
 }

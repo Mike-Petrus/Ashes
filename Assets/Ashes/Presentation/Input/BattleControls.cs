@@ -163,6 +163,15 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""FreeAim"",
+                    ""type"": ""Button"",
+                    ""id"": ""db545b04-a8b6-4669-a866-f0540f3e8433"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -429,6 +438,28 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                     ""action"": ""CursorMove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fd6ae85a-f1eb-449e-85d8-fdcec90af9c2"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""FreeAim"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d402b5b7-f87f-41ac-89de-dbc4a1a5f822"",
+                    ""path"": ""<DualShockGamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""FreeAim"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -445,6 +476,7 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
         m_Battle_Left = m_Battle.FindAction("Left", throwIfNotFound: true);
         m_Battle_Right = m_Battle.FindAction("Right", throwIfNotFound: true);
         m_Battle_CursorMove = m_Battle.FindAction("CursorMove", throwIfNotFound: true);
+        m_Battle_FreeAim = m_Battle.FindAction("FreeAim", throwIfNotFound: true);
     }
 
     ~@BattleControls()
@@ -533,6 +565,7 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Battle_Left;
     private readonly InputAction m_Battle_Right;
     private readonly InputAction m_Battle_CursorMove;
+    private readonly InputAction m_Battle_FreeAim;
     /// <summary>
     /// Provides access to input actions defined in input action map "Battle".
     /// </summary>
@@ -576,6 +609,10 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Battle/CursorMove".
         /// </summary>
         public InputAction @CursorMove => m_Wrapper.m_Battle_CursorMove;
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/FreeAim".
+        /// </summary>
+        public InputAction @FreeAim => m_Wrapper.m_Battle_FreeAim;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -626,6 +663,9 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
             @CursorMove.started += instance.OnCursorMove;
             @CursorMove.performed += instance.OnCursorMove;
             @CursorMove.canceled += instance.OnCursorMove;
+            @FreeAim.started += instance.OnFreeAim;
+            @FreeAim.performed += instance.OnFreeAim;
+            @FreeAim.canceled += instance.OnFreeAim;
         }
 
         /// <summary>
@@ -661,6 +701,9 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
             @CursorMove.started -= instance.OnCursorMove;
             @CursorMove.performed -= instance.OnCursorMove;
             @CursorMove.canceled -= instance.OnCursorMove;
+            @FreeAim.started -= instance.OnFreeAim;
+            @FreeAim.performed -= instance.OnFreeAim;
+            @FreeAim.canceled -= instance.OnFreeAim;
         }
 
         /// <summary>
@@ -757,5 +800,12 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnCursorMove(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "FreeAim" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnFreeAim(InputAction.CallbackContext context);
     }
 }

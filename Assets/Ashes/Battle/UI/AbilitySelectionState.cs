@@ -3,26 +3,15 @@ using System.Collections.Generic;
 
 public class AbilitySelectionState : IInputState, IMenuState
 {
+        // --- IMenuState ---
+    public IReadOnlyList<string> MenuOptions => menuOptions;
+    public int CurrentIndex { get; private set; } = 0;
+
     private string category;
-    private List<Ability> subMenuOptions = new();
-
-    private int currentIndex = 0;
+    private List<string> menuOptions = new();
+    private List<Ability> availableAbilities = new();
+    
     private int columns = 3; // Define our grid size. TODO: Decide final size later
-
-    // --- IMenuState ---
-    public IReadOnlyList<string> MenuOptions
-    {
-        get
-        {
-            List<string> names = new();
-            foreach (var ability in subMenuOptions)
-            {
-                names.Add(ability.Name);
-            }
-            return names;
-        }
-    }
-    public int CurrentIndex => currentIndex;
 
     public AbilitySelectionState(string abilityCategory)
     {
@@ -31,109 +20,195 @@ public class AbilitySelectionState : IInputState, IMenuState
 
     public void Enter(PlayerTurnController context)
     {
-        var actor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
-        subMenuOptions.AddRange(actor.Abilities.AvailableAbilities[category]);
-        
-        currentIndex = subMenuOptions.IndexOf(context.SelectedAbility ?? subMenuOptions[0]);
+        menuOptions.Clear();
+        availableAbilities.Clear();
 
-        if (currentIndex < 0)
+        var actor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
+
+        if (actor.Abilities.AvailableAbilities.TryGetValue(category, out var abilities))
         {
-            currentIndex = 0;
+            availableAbilities.AddRange(abilities);
         }
 
-        // Tell UI to draw the 2D grid
+        if (availableAbilities.Count == 0)
+        {
+            menuOptions.Add("Empty");
+            CurrentIndex = 0;
+            return;
+        }
+
+        // Cache options
+        foreach (var ability in availableAbilities)
+        {
+            menuOptions.Add(ability.Name);
+        }
+        
+        // Cursor Memory
+        CurrentIndex = availableAbilities.IndexOf(context.SelectedAbility ?? availableAbilities[0]);
+        if (CurrentIndex < 0)
+        {
+            CurrentIndex = 0;
+        }
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
     {
-        int listSize = subMenuOptions.Count;
+        int listSize = availableAbilities.Count;
 
         if (listSize == 0)
         {
+            if (button == InputButton.Cancel)
+            {
+                context.RevertToPreviousState();
+            }
             return;
         }
 
-        int minInRow = (currentIndex / columns) * columns;
+        int minInRow = (CurrentIndex / columns) * columns;
         int maxInRow = Math.Min(minInRow + columns - 1, listSize - 1);
 
         switch (button)
         {
             case InputButton.Right:
-                currentIndex++;
+                CurrentIndex++;
 
-                if (currentIndex > maxInRow)
+                if (CurrentIndex > maxInRow)
                 {
-                    currentIndex = minInRow; // Wrap to left
+                    CurrentIndex = minInRow; // Wrap to left
                 }
                 break;
 
             case InputButton.Left:
-                currentIndex--;
+                CurrentIndex--;
 
-                if (currentIndex < minInRow)
+                if (CurrentIndex < minInRow)
                 {
-                    currentIndex += maxInRow; // Wrap to right
+                    CurrentIndex += maxInRow; // Wrap to right
                 }
                 break;
 
             case InputButton.Down:
                 // Jump down a row
-                currentIndex += columns;
+                CurrentIndex += columns;
 
-                if (currentIndex >= listSize)
+                if (CurrentIndex >= listSize)
                 {
-                    currentIndex %= columns; // Wrap to top
+                    CurrentIndex %= columns; // Wrap to top
                 }
                 break;
 
             case InputButton.Up:
                 // Jump up a row
-                currentIndex -= columns;
+                CurrentIndex -= columns;
 
-                if (currentIndex < 0)
+                if (CurrentIndex < 0)
                 {
-                    int col = currentIndex + columns;
-                    currentIndex = col;
+                    int col = CurrentIndex + columns;
+                    CurrentIndex = col;
 
-                    while (currentIndex + columns < listSize)
+                    while (CurrentIndex + columns < listSize)
                     {
-                        currentIndex += columns;
+                        CurrentIndex += columns;
                     }
                 }
                 break;
 
             case InputButton.Confirm:
-                Ability selected = subMenuOptions[currentIndex];
-
-                // Check requirements here
-                bool canCast = true;
-                foreach (var req in selected.Requirements)
-                {
-                    if (!req.MeetsRequirement(context.ActiveActorId.Value, context.Simulation.BattleContext))
-                    {
-                        canCast = false;
-                        break;
-                    }
-                }
-
-                if (canCast)
-                {
-                    context.SelectedAbility = selected;
-                    context.ChangeState(new TargetingActorState());
-                }
-                else
-                {
-                    // TODO: Make message more specific depending on which requirements are not met
-                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Ability not available!"));
-                }
+                Ability selected = availableAbilities[CurrentIndex];
+                TryCastAbility(context, selected);
                 break;
 
             case InputButton.Cancel:
                 context.RevertToPreviousState();
                 break;
+
+            case InputButton.Pursuit:
+                context.PursuitEnabled = !context.PursuitEnabled;
+                break;
+                
+            case InputButton.FreeAim:
+                context.FreeAimEnabled = !context.FreeAimEnabled;
+                break;
         }
     }
 
     public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
-    public void Exit(PlayerTurnController context) { /* close UI */ }
+    public void Exit(PlayerTurnController context) { }
+
+    private void TryCastAbility(PlayerTurnController context, Ability ability)
+    {
+        // Check requirements here
+        bool canCast = true;
+        foreach (var req in ability.Requirements)
+        {
+            if (!req.MeetsRequirement(context.ActiveActorId.Value, context.Simulation.BattleContext))
+            {
+                canCast = false;
+                return;
+            }
+        }
+
+        if (canCast)
+        {
+            context.SelectedAbility = ability;
+
+            SelectTargetingState(context, context.PursuitEnabled, ability.Mode);
+        }
+        else
+        {
+            // TODO: Make message more specific depending on which requirements are not met
+            context.Simulation.Events.Publish(new PlayerFeedbackEvent("Ability not available!"));
+        }    
+    }
+
+    private void SelectTargetingState(PlayerTurnController context, bool pursuitEnabled, TargetingMode targetingMode)
+    {
+        if (pursuitEnabled)
+        {
+            switch(targetingMode)
+            {
+                case TargetingMode.Self:
+                    context.ChangeState(new TargetingSelfState());
+                    break;
+
+                case TargetingMode.PointAoE:
+                    context.ChangeState(new TargetingFreeAimState());
+                    break;
+
+                default:
+                    context.ChangeState(new TargetingActorState());
+                    break;
+            }
+        }
+        else
+        {
+            switch (targetingMode)
+            {
+                case TargetingMode.SingleTarget:
+                case TargetingMode.ActorAoE:
+                    context.ChangeState(new TargetingActorState());
+                    break;
+
+                case TargetingMode.Self:
+                    context.ChangeState(new TargetingSelfState());
+                    break;
+
+                case TargetingMode.Directional:
+                case TargetingMode.PointAoE:
+                    context.ChangeState(new TargetingFreeAimState());
+                    break;
+
+                case TargetingMode.HybridAoE:
+                    if (context.FreeAimEnabled)
+                    {
+                        context.ChangeState(new TargetingFreeAimState());
+                    }
+                    else
+                    {
+                        context.ChangeState(new TargetingActorState());
+                    }
+                    break;
+            }
+        }
+    }
 }

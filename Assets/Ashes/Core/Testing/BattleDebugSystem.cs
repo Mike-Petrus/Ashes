@@ -49,7 +49,7 @@ public class BattleDebugSystem
 
     private void OnActorMoved(ActorMovedEvent e)
     {
-        if (Time.time - lastLogTime < 0.2f)
+        if (Time.time - lastLogTime < 0.8f)
         {
             return;
         }

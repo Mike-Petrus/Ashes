@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 public class TargetingFreeAimState : IInputState
 {
     // Cached Data
@@ -5,13 +9,10 @@ public class TargetingFreeAimState : IInputState
 
     private bool isValidPosition = true;
     private string currentErrorMessage = "";
-
-    private PlayerTurnController currentContext;
+    private List<SimVector3> currentPreviewPath = null;
 
     public void Enter(PlayerTurnController context)
     {
-        currentContext = context;
-
         if (!savedCursorPosition.HasValue)
         {
             var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
@@ -46,20 +47,37 @@ public class TargetingFreeAimState : IInputState
                 }    
 
                 var targetInfo = TargetInfo.ForPosition(context.CurrentCursorPosition, context.SelectedAbility.Mode);
-
                 context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
-                context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));  
-                
-                // Is Command complete?
-                if (context.Builder.Size >= 2)
+
+                if (context.PursuitEnabled)
                 {
+                    // 1. Determine the final point of the calculated preview path
+                    SimVector3 destination = currentPreviewPath != null && currentPreviewPath.Count > 0 ? currentPreviewPath.Last() : TargetingUtility.GetOriginPosition(context);
+
+                    // 2. Only generate a MoveStep if we actually have to move to reach it
+                    if (SimVector3.Distance(TargetingUtility.GetOriginPosition(context), destination) > 0.1f)
+                    {
+                        context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, destination, currentPreviewPath));
+                    }
+
+                    // 3. Add the Ability and Submit 
+                    context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
                     context.SubmitCommand();
                 }
                 else
                 {
-                    context.ChangeState(new RootMenuPhase2State());
-                }
+                    context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));  
 
+                    // Is Command complete?
+                    if (context.Builder.Size >= 2)
+                    {
+                        context.SubmitCommand();
+                    }
+                    else
+                    {
+                        context.ChangeState(new RootMenuPhase2State());
+                    }
+                }
                 break;
 
             case InputButton.Cancel:
@@ -69,12 +87,25 @@ public class TargetingFreeAimState : IInputState
 
             case InputButton.Pursuit:
                 // TODO: Should probably be able to toggle here as long as in Phase 1
-                // context.PursuitEnabled = !context.PursuitEnabled;
+                context.PursuitEnabled = !context.PursuitEnabled;
+                ValidateCursorPosition(context);
+                UpdateCursorVisuals(context);
                 break;
 
-            case InputButton.TargetSnap:
-                // TODO: Maybe check if Mode == PointAoE or Self? Most states should allow snapping
-                context.ChangeState(new TargetingActorState(), false);
+            case InputButton.FreeAim:
+                bool canTargetActor = context.SelectedAbility.Mode != TargetingMode.Self && context.SelectedAbility.Mode != TargetingMode.PointAoE;
+
+                if (canTargetActor)
+                {
+                    context.FreeAimEnabled = false;
+                    context.ChangeState(new TargetingActorState(), false);
+                }
+                else
+                {
+                    // Play error sound
+                    // This event may not be necessary, but for testing it is useful. Consider removing later
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent($"Cannot snap to target with {context.SelectedAbility.Name}!"));
+                }
                 break;
         }
     }
@@ -85,6 +116,26 @@ public class TargetingFreeAimState : IInputState
         SimVector3 pos = context.CurrentCursorPosition;
         pos.x += x * context.CursorSpeed * deltaTime;
         pos.z += y * context.CursorSpeed * deltaTime;
+
+        // 2. HARD CLAMP: Tether to Arena Radius + Ability Radius
+        if (context.Simulation.Arena != null)
+        {
+            float maxDistance = context.Simulation.Arena.Radius + context.SelectedAbility.Radius - 0.05f;
+
+            float dx = pos.x - context.Simulation.Arena.Center.x;
+            float dz = pos.z - context.Simulation.Arena.Center.z;
+            float dist = (float)Math.Sqrt((dx * dx) + (dz * dz));
+
+            if (dist > maxDistance)
+            {
+                float dirX = dx / dist;
+                float dirZ = dz / dist;
+
+                pos.x = context.Simulation.Arena.Center.x + (dirX * maxDistance);
+                pos.z = context.Simulation.Arena.Center.z + (dirZ * maxDistance);
+            }
+        }
+
         context.CurrentCursorPosition = pos;
 
         // Cache cursor position for rewinding
@@ -96,42 +147,32 @@ public class TargetingFreeAimState : IInputState
 
     private void UpdateCursorVisuals(PlayerTurnController context)
     {
-        var ability = context.SelectedAbility;
-        // Pass the AoE gemoetric data to the presentation layer
-        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isValidPosition, ability.Mode, ability.Radius, ability.Angle));
+        TargetingUtility.UpdateCursorVisuals(context, context.CurrentCursorPosition, isValidPosition, currentPreviewPath);
     }
 
     private void ValidateCursorPosition(PlayerTurnController context)
     {
+        isValidPosition = true;
+        currentErrorMessage = "";
+        currentPreviewPath = null;
+
         var targetInfo = TargetInfo.ForPosition(context.CurrentCursorPosition, context.SelectedAbility.Mode);
-        var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
 
-        SimVector3 originPosition = activeActor.Position;
-
-        // If we moved in PHase 1, calculate range from FUTURE position
-        if (context.Builder.Size > 0)
+        // Pursuit Validation & Preview Path
+        if (context.PursuitEnabled)
         {
-            if (context.Builder.LastStepAdded() is MoveStep moveStep)
-            {
-                originPosition = moveStep.Destination;
-            }
-        }
-
-        if (!context.Simulation.RangeSystem.IsInRange(originPosition, activeActor.Radius, context.SelectedAbility, targetInfo))
-        {
-            isValidPosition = false;
-            currentErrorMessage = "Out of Range!";
+            currentPreviewPath = TargetingUtility.GeneratePursuitPreview(context, targetInfo, context.SelectedAbility);
+            isValidPosition = true;
         }
         else
         {
-            isValidPosition = true;
-            currentErrorMessage = "";
+            // Standard Strict Path Validation
+            isValidPosition = TargetingUtility.IsTargetInRange(context, targetInfo, out currentErrorMessage);
         }
     }
 
     public void Exit(PlayerTurnController context)
     {
         context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
-        currentContext = null;
     }
 }

@@ -50,7 +50,7 @@ public class ClassTemplateSO : ScriptableObject
         var domainAbilities = new List<AbilityUnlock>();
         foreach (var config in this.LearnedAbilities)
         {
-            if (config.AbilityPreset != null)
+            if (config.AbilityPreset != null && !string.IsNullOrEmpty(config.AbilityPreset.AbilityId))
             {
                 domainAbilities.Add(new AbilityUnlock
                 {
