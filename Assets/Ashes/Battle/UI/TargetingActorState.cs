@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+
 public class TargetingActorState : IInputState
 {
     private List<ActorId> currentAvailableTargets = new();
@@ -11,6 +12,7 @@ public class TargetingActorState : IInputState
     private ActorId? savedTargetId = null;
     private bool isTargetingValidActor = true;
     private string currentErrorMessage = "";
+    private List<SimVector3> currentPreviewPath = null;
 
     // Cached context for event listening
     private PlayerTurnController currentContext;
@@ -109,29 +111,58 @@ public class TargetingActorState : IInputState
                 }
 
                 context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false)); // Hide cursor
-                context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
 
-                // Is Command complete?
-                if (context.Builder.Size >= 2)
+                if (context.PursuitEnabled)
                 {
+                    // 1. Determine the final point of the calculated preview path
+                    SimVector3 destination = currentPreviewPath != null && currentPreviewPath.Count > 0 ? currentPreviewPath.Last() : TargetingUtility.GetOriginPosition(context);
+
+                    // 2. Only generate a MoveStep if we actually have to move to reach it
+                    if (SimVector3.Distance(TargetingUtility.GetOriginPosition(context), destination) > 0.1f)
+                    {
+                        context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, destination, currentPreviewPath));
+                    }
+
+                    // 3. Add the Ability and Submit 
+                    context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
                     context.SubmitCommand();
                 }
                 else
                 {
-                    context.ChangeState(new RootMenuPhase2State());
-                }
+                    context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
 
+                    // Is Command complete?
+                    if (context.Builder.Size >= 2)
+                    {
+                        context.SubmitCommand();
+                    }
+                    else
+                    {
+                        context.ChangeState(new RootMenuPhase2State());
+                    }
+                }
                 break;
 
             case InputButton.Cancel:
                 context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
                 context.RevertToPreviousState();
-
                 break;
 
             case InputButton.Pursuit:
                 // TODO: Should probably be able to toggle here as long as in Phase 1
                 context.PursuitEnabled = !context.PursuitEnabled;
+
+                // If they turn Pursuit off while using the follow dummy, go to TargetingMoveState
+                if (!context.PursuitEnabled && context.SelectedAbility is DummyAbility dummy && dummy.DummyId == "system_follow")
+                {
+                    context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+                    context.ChangeState(new TargetingMoveState(), false);
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Switched to Move"));
+                    return;
+                }
+
+                ValidateCurrentTarget(context);
+                UpdateCursorVisuals(context);
                 break;
 
             case InputButton.FreeAim:
@@ -230,6 +261,7 @@ public class TargetingActorState : IInputState
     {
         isTargetingValidActor = true;
         currentErrorMessage = "";
+        currentPreviewPath = null;
 
         if (currentTargetIndex < 0 || currentAvailableTargets.Count == 0)
         {
@@ -239,16 +271,6 @@ public class TargetingActorState : IInputState
                 currentErrorMessage = "No target selected!";
                 return;
             }
-        }
-
-        var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
-
-        SimVector3 originPosition = activeActor.Position;
-
-        // If we moved in Phase 1, we must calculate range from the FUTURE position
-        if (context.Builder.Size > 0 && context.Builder.LastStepAdded() is MoveStep moveStep)
-        {
-            originPosition = moveStep.Destination;
         }
 
         TargetInfo targetInfo;
@@ -264,16 +286,21 @@ public class TargetingActorState : IInputState
             targetInfo = TargetInfo.ForPosition(context.CurrentCursorPosition, context.SelectedAbility.Mode);
         }
 
-        if (!context.Simulation.RangeSystem.IsInRange(originPosition, activeActor.Radius, context.SelectedAbility, targetInfo))
+        // Pursuit Validation & Preview Path
+        if (context.PursuitEnabled)
         {
-            isTargetingValidActor = false;
-            currentErrorMessage = "Out of Range!";
+            currentPreviewPath = TargetingUtility.GeneratePursuitPreview(context, targetInfo, context.SelectedAbility);
+            isTargetingValidActor = true;
+        }
+        else
+        {
+            // Standard Strict Path Validation
+            isTargetingValidActor = TargetingUtility.IsTargetInRange(context, targetInfo, out currentErrorMessage);
         }
     }
 
     private void UpdateCursorVisuals(PlayerTurnController context)
     {
-        var ability = context.SelectedAbility;
         SimVector3 displayPosition = context.CurrentCursorPosition;
 
         if (currentTargetIndex >= 0 && currentAvailableTargets.Count > 0)
@@ -281,10 +308,7 @@ public class TargetingActorState : IInputState
             displayPosition = context.Simulation.Actors.GetActor(currentAvailableTargets[currentTargetIndex]).Position;
         }
 
-        SimVector3 originPosition = GetOriginPosition(context);
-
-        // Pass the boolean into the event so the cursor changes color
-        context.Simulation.Events.Publish(new CursorMovedEvent(displayPosition, true, isTargetingValidActor, ability.Mode, ability.Radius, ability.Angle, staticCenter: originPosition));
+        TargetingUtility.UpdateCursorVisuals(context, displayPosition, isTargetingValidActor, currentPreviewPath);
     }
 
     private void ForceSnapToTarget(PlayerTurnController context)
@@ -306,19 +330,6 @@ public class TargetingActorState : IInputState
 
         ValidateCurrentTarget(context);
         UpdateCursorVisuals(context);
-    }
-
-    private SimVector3 GetOriginPosition(PlayerTurnController context)
-    {
-        var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
-        SimVector3 originPosition = activeActor.Position;
-
-        if (context.Builder.Size > 0 && context.Builder.LastStepAdded() is MoveStep moveStep)
-        {
-            originPosition = moveStep.Destination;
-        }
-
-        return originPosition;
     }
 
     private void OnActorMoved(ActorMovedEvent e)

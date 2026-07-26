@@ -93,13 +93,9 @@ public class RootMenuPhase2State : IInputState, IMenuState
                 break;
 
             case AbilityStep:
-                menuOptions.Add("Move");
+                menuOptions.Add(context.PursuitEnabled ? "Pursuit" : "Move");
                 menuOptions.Add("Wait");
 
-                break;
-
-            case PursuitStep:
-                // TODO: PursuitStep should technically never make it to this state, but for now, just break
                 break;
         }
    
@@ -115,6 +111,10 @@ public class RootMenuPhase2State : IInputState, IMenuState
 
             case "Move":
                 context.ChangeState(new TargetingMoveState());
+                break;
+
+            case "Pursuit":
+                context.SubmitCommand();
                 break;
 
             case "Wait":

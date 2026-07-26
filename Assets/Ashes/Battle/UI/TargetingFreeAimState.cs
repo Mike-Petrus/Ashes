@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 public class TargetingFreeAimState : IInputState
 {
@@ -7,6 +9,7 @@ public class TargetingFreeAimState : IInputState
 
     private bool isValidPosition = true;
     private string currentErrorMessage = "";
+    private List<SimVector3> currentPreviewPath = null;
 
     public void Enter(PlayerTurnController context)
     {
@@ -44,20 +47,37 @@ public class TargetingFreeAimState : IInputState
                 }    
 
                 var targetInfo = TargetInfo.ForPosition(context.CurrentCursorPosition, context.SelectedAbility.Mode);
-
                 context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
-                context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));  
-                
-                // Is Command complete?
-                if (context.Builder.Size >= 2)
+
+                if (context.PursuitEnabled)
                 {
+                    // 1. Determine the final point of the calculated preview path
+                    SimVector3 destination = currentPreviewPath != null && currentPreviewPath.Count > 0 ? currentPreviewPath.Last() : TargetingUtility.GetOriginPosition(context);
+
+                    // 2. Only generate a MoveStep if we actually have to move to reach it
+                    if (SimVector3.Distance(TargetingUtility.GetOriginPosition(context), destination) > 0.1f)
+                    {
+                        context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, destination, currentPreviewPath));
+                    }
+
+                    // 3. Add the Ability and Submit 
+                    context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
                     context.SubmitCommand();
                 }
                 else
                 {
-                    context.ChangeState(new RootMenuPhase2State());
-                }
+                    context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));  
 
+                    // Is Command complete?
+                    if (context.Builder.Size >= 2)
+                    {
+                        context.SubmitCommand();
+                    }
+                    else
+                    {
+                        context.ChangeState(new RootMenuPhase2State());
+                    }
+                }
                 break;
 
             case InputButton.Cancel:
@@ -68,6 +88,8 @@ public class TargetingFreeAimState : IInputState
             case InputButton.Pursuit:
                 // TODO: Should probably be able to toggle here as long as in Phase 1
                 context.PursuitEnabled = !context.PursuitEnabled;
+                ValidateCursorPosition(context);
+                UpdateCursorVisuals(context);
                 break;
 
             case InputButton.FreeAim:
@@ -125,51 +147,28 @@ public class TargetingFreeAimState : IInputState
 
     private void UpdateCursorVisuals(PlayerTurnController context)
     {
-        var ability = context.SelectedAbility;
-        SimVector3 originPosition = GetOriginPosition(context);
-        // Pass the AoE gemoetric data to the presentation layer
-        context.Simulation.Events.Publish(new CursorMovedEvent(context.CurrentCursorPosition, true, isValidPosition, ability.Mode, ability.Radius, ability.Angle, staticCenter: originPosition));
+        TargetingUtility.UpdateCursorVisuals(context, context.CurrentCursorPosition, isValidPosition, currentPreviewPath);
     }
 
     private void ValidateCursorPosition(PlayerTurnController context)
     {
+        isValidPosition = true;
+        currentErrorMessage = "";
+        currentPreviewPath = null;
+
         var targetInfo = TargetInfo.ForPosition(context.CurrentCursorPosition, context.SelectedAbility.Mode);
-        var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
 
-        SimVector3 originPosition = activeActor.Position;
-
-        // If we moved in Phase 1, calculate range from FUTURE position
-        if (context.Builder.Size > 0)
+        // Pursuit Validation & Preview Path
+        if (context.PursuitEnabled)
         {
-            if (context.Builder.LastStepAdded() is MoveStep moveStep)
-            {
-                originPosition = moveStep.Destination;
-            }
-        }
-
-        if (!context.Simulation.RangeSystem.IsInRange(originPosition, activeActor.Radius, context.SelectedAbility, targetInfo))
-        {
-            isValidPosition = false;
-            currentErrorMessage = "Out of Range!";
+            currentPreviewPath = TargetingUtility.GeneratePursuitPreview(context, targetInfo, context.SelectedAbility);
+            isValidPosition = true;
         }
         else
         {
-            isValidPosition = true;
-            currentErrorMessage = "";
+            // Standard Strict Path Validation
+            isValidPosition = TargetingUtility.IsTargetInRange(context, targetInfo, out currentErrorMessage);
         }
-    }
-
-    private SimVector3 GetOriginPosition(PlayerTurnController context)
-    {
-        var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
-        SimVector3 originPosition = activeActor.Position;
-
-        if (context.Builder.Size > 0 && context.Builder.LastStepAdded() is MoveStep moveStep)
-        {
-            originPosition = moveStep.Destination;
-        }
-
-        return originPosition;
     }
 
     public void Exit(PlayerTurnController context)

@@ -10,7 +10,6 @@ public class RootMenuPhase1State : IInputState, IMenuState
 
     public void Enter(PlayerTurnController context)
     {
-        menuOptions.Clear();
         PopulateMenuOptions(context);
 
         string lastSelection = string.IsNullOrEmpty(context.SelectedPhase1Option) ? menuOptions[0] : context.SelectedPhase1Option;
@@ -33,8 +32,6 @@ public class RootMenuPhase1State : IInputState, IMenuState
                 {
                     CurrentIndex = menuOptions.Count - 1;
                 }
-
-                // Tell UI to move cursor
                 break;
 
             case InputButton.Down:
@@ -44,8 +41,6 @@ public class RootMenuPhase1State : IInputState, IMenuState
                 {
                     CurrentIndex = 0;
                 }
-
-                // Tell UI to move cursor
                 break;
 
             case InputButton.Confirm:
@@ -63,12 +58,14 @@ public class RootMenuPhase1State : IInputState, IMenuState
 
             case InputButton.Pursuit:
                 context.PursuitEnabled = !context.PursuitEnabled;
+                PopulateMenuOptions(context);
                 break;
         }
     }
 
     private void PopulateMenuOptions(PlayerTurnController context)
     {
+        menuOptions.Clear();
         menuOptions.Add("Attack");
 
         var actor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
@@ -79,11 +76,10 @@ public class RootMenuPhase1State : IInputState, IMenuState
             {
                 continue;
             }
-
             menuOptions.Add(category);
         }
 
-        menuOptions.Add("Move");
+        menuOptions.Add(context.PursuitEnabled ? "Follow" : "Move");
         menuOptions.Add("Items");        
     }
 
@@ -97,6 +93,11 @@ public class RootMenuPhase1State : IInputState, IMenuState
 
             case "Move":
                 context.ChangeState(new TargetingMoveState());
+                break;
+
+            case "Follow":
+                context.SelectedAbility = new DummyAbility("system_follow", range: 1f);
+                context.ChangeState(new TargetingActorState());
                 break;
 
             case "Items":
@@ -151,7 +152,6 @@ public class RootMenuPhase1State : IInputState, IMenuState
     public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
     public void Exit(PlayerTurnController context)
     {
-        // Update/hide UI
         menuOptions.Clear();
     }
 }

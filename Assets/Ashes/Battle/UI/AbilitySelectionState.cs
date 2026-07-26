@@ -152,7 +152,37 @@ public class AbilitySelectionState : IInputState, IMenuState
         {
             context.SelectedAbility = ability;
 
-            switch (ability.Mode)
+            SelectTargetingState(context, context.PursuitEnabled, ability.Mode);
+        }
+        else
+        {
+            // TODO: Make message more specific depending on which requirements are not met
+            context.Simulation.Events.Publish(new PlayerFeedbackEvent("Ability not available!"));
+        }    
+    }
+
+    private void SelectTargetingState(PlayerTurnController context, bool pursuitEnabled, TargetingMode targetingMode)
+    {
+        if (pursuitEnabled)
+        {
+            switch(targetingMode)
+            {
+                case TargetingMode.Self:
+                    context.ChangeState(new TargetingSelfState());
+                    break;
+
+                case TargetingMode.PointAoE:
+                    context.ChangeState(new TargetingFreeAimState());
+                    break;
+
+                default:
+                    context.ChangeState(new TargetingActorState());
+                    break;
+            }
+        }
+        else
+        {
+            switch (targetingMode)
             {
                 case TargetingMode.SingleTarget:
                 case TargetingMode.ActorAoE:
@@ -179,12 +209,6 @@ public class AbilitySelectionState : IInputState, IMenuState
                     }
                     break;
             }
-            return;
         }
-        else
-        {
-            // TODO: Make message more specific depending on which requirements are not met
-            context.Simulation.Events.Publish(new PlayerFeedbackEvent("Ability not available!"));
-        }    
     }
 }

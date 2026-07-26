@@ -4,6 +4,8 @@ public class AbilityStep : CommandStep
     private Ability ability;
     private TargetInfo targetInfo;
 
+    public TargetInfo TargetInfo => targetInfo;
+
     public AbilityStep(ActorId sourceId, Ability ability, TargetInfo targetInfo)
     {
         this.sourceId = sourceId;

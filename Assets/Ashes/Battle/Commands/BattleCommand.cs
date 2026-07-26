@@ -4,6 +4,7 @@ using System.Linq;
 public class BattleCommand
 {
     public ActorId ActorId { get; }
+    public bool IsPursuit { get; set; } = false;
 
     private List<CommandStep> steps = new();
 
@@ -35,5 +36,10 @@ public class BattleCommand
         }
 
         return null;
+    }
+
+    public void OverwriteSteps(List<CommandStep> newSteps)
+    {
+        steps = newSteps;
     }
 }

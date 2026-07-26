@@ -1572,6 +1572,9 @@ MonoBehaviour:
   - CharacterName: Cecil
     Level: 1
     ClassPreset: {fileID: 11400000, guid: a68cee2b825fae0429d73802f2b57436, type: 2}
+  - CharacterName: Cecil
+    Level: 1
+    ClassPreset: {fileID: 11400000, guid: a68cee2b825fae0429d73802f2b57436, type: 2}
   InventoryItems:
   - ItemPreset: {fileID: 11400000, guid: 43efe0f5925ae974bb0584c4606f89c9, type: 2}
     Quantity: 3

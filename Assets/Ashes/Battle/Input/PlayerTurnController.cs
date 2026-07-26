@@ -103,7 +103,10 @@ public class PlayerTurnController
             }
         }
 
-        // 2. Build and queue
+        // 2. Set the pursuit right before we add to queue and reset all menues
+        Builder.SetPursuit(PursuitEnabled);
+
+        // 3. Build and queue
         var command = Builder.Build();
         Simulation.ActionQueue.Enqueue(command);
 

@@ -162,7 +162,37 @@ public class ItemSelectionState : IInputState, IMenuState
             context.SelectedItemId = itemId; 
             context.SelectedAbility = useItemAbility;
             
-            switch (useItemAbility.Mode)
+            SelectTargetingState(context, context.PursuitEnabled, useItemAbility.Mode);
+            return;
+        }
+        else
+        {
+            context.Simulation.Events.Publish(new PlayerFeedbackEvent("Not enough items!"));
+        }
+    }
+
+    private void SelectTargetingState(PlayerTurnController context, bool pursuitEnabled, TargetingMode targetingMode)
+    {
+        if (pursuitEnabled)
+        {
+            switch(targetingMode)
+            {
+                case TargetingMode.Self:
+                    context.ChangeState(new TargetingSelfState());
+                    break;
+
+                case TargetingMode.PointAoE:
+                    context.ChangeState(new TargetingFreeAimState());
+                    break;
+
+                default:
+                    context.ChangeState(new TargetingActorState());
+                    break;
+            }
+        }
+        else
+        {
+            switch (targetingMode)
             {
                 case TargetingMode.SingleTarget:
                 case TargetingMode.ActorAoE:
@@ -189,11 +219,6 @@ public class ItemSelectionState : IInputState, IMenuState
                     }
                     break;
             }
-            return;
-        }
-        else
-        {
-            context.Simulation.Events.Publish(new PlayerFeedbackEvent("Not enough items!"));
         }
     }
 }
