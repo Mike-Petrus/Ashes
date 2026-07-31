@@ -28,7 +28,8 @@ public class BattleTestCommandSource
         TargetInfo targetInfo = TargetInfo.ForActor(targetId);
 
         // Assign the Ability based on who is acting!
-        Ability abilityToCast = (actor.Value == 3) ? new PoisonDartAbility() : new BasicAttackAbility();
+        // Ability abilityToCast = (actor.Value == 3) ? new PoisonDartAbility() : new BasicAttackAbility();     // OLD Poison Dart test
+        Ability abilityToCast = new BasicAttackAbility();
 
         builder.AddStep(new AbilityStep(actor, abilityToCast, targetInfo));
 

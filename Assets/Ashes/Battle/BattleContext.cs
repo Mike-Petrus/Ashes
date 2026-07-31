@@ -21,4 +21,5 @@ public class BattleContext
 
     public IItemDatabase ItemDatabase;
     public IAbilityDatabase AbilityDatabase;
+    public IStatusEffectDatabase StatusDatabase;
 }

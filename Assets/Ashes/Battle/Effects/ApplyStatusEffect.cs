@@ -1,18 +1,16 @@
-using System.Collections.Generic;
-
 public class ApplyStatusEffect : Effect
 {
-    public string StatusName { get; } // Poison, Slow, Haste, etc.
-    // public bool IsBuff { get; } // TODO: refactor existing statuses to include
-    public float DurationSeconds { get; }
-    public float TickIntervalSeconds { get; } // Interval time for periodic effects (e.g. Poison). 0 if passive effect (Haste)
-    public List<Effect> TickPayload { get; }    // What happens when this status ticks
+    public string StatusId { get; }
+    public float OverrideDuration { get; }
+    
+    // We pass the Power of the spell/item here so the pipeline 
+    // knows how strong to make the Poison or Regen ticks!
+    public int Power { get; } 
 
-    public ApplyStatusEffect(string statusName, float durationSeconds, float tickInterval = 0f, List<Effect> tickPayload = null)
+    public ApplyStatusEffect(string statusId, float overrideDuration, int power)
     {
-        StatusName = statusName;
-        DurationSeconds = durationSeconds;
-        TickIntervalSeconds = tickInterval;
-        TickPayload = tickPayload ?? new List<Effect>();
+        StatusId = statusId;
+        OverrideDuration = overrideDuration;
+        Power = power;
     }
 }

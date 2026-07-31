@@ -10,11 +10,11 @@ public class BattleTestBootstrapper : MonoBehaviour
     public BattleMenuUI battleMenuUI;
     public BattleFeedbackUI battleFeedbackUI;
     
+    [Tooltip("Drag the UI Panel Container (e.g. a Horizontal Layout Group) here.")]
     public Transform PartyContainerPanel;
 
     [Header("Simulation Adapters")]
     public NavMeshPathfinder navMeshPathfinder;
-
     public LayerMask obstacleLayer;
 
     [Header("Prefabs")]
@@ -36,6 +36,7 @@ public class BattleTestBootstrapper : MonoBehaviour
     public ScriptableObjectItemDatabase ItemDatabase;
     public ScriptableObjectEnemyDatabase EnemyDatabase;
     public ScriptableObjectAbilityDatabase AbilityDatabase;
+    public ScriptableObjectStatusEffectDatabase StatusDatabase;
 
     void Start()
     {
@@ -64,6 +65,7 @@ public class BattleTestBootstrapper : MonoBehaviour
         if (ItemDatabase != null) ItemDatabase.Initialize();
         if (EnemyDatabase != null) EnemyDatabase.Initialize();
         if (AbilityDatabase != null) AbilityDatabase.Initialize();
+        if (StatusDatabase != null) StatusDatabase.Initialize();
         eventBus = new BattleEventBus();
         
         // 1. Create Persistent Party & Inventory from Sandbox Config
@@ -95,7 +97,7 @@ public class BattleTestBootstrapper : MonoBehaviour
         ILineOfSightChecker losChecker = new UnityLineOfSightAdapter(obstacleLayer);
 
         // Inject the databases into the simulation
-        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder, losChecker, ItemDatabase, AbilityDatabase);
+        simulation = new BattleSimulation(eventBus, globalPartyManager.Inventory, navMeshPathfinder, losChecker, ItemDatabase, AbilityDatabase, StatusDatabase);
         debugSystem = new BattleDebugSystem(eventBus, simulation.Actors);
 
         eventBus.Subscribe<ActorRegisteredEvent>(OnActorRegistered);

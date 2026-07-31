@@ -428,6 +428,7 @@ Transform:
   - {fileID: 1395428521}
   - {fileID: 2013325037}
   - {fileID: 394948782}
+  - {fileID: 1897291471}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &394948781
@@ -735,6 +736,7 @@ MonoBehaviour:
   - CategoryName: White Magic
     Abilities:
     - {fileID: 11400000, guid: dff0d229a0c6f514ca495aacfa5587d8, type: 2}
+    - {fileID: 11400000, guid: e0643d3c970cdea48bb93e56d653ec5a, type: 2}
     - {fileID: 11400000, guid: aff12feeaca79454fa754258bbed9a2e, type: 2}
   - CategoryName: Wrath
     Abilities:
@@ -1281,6 +1283,7 @@ MonoBehaviour:
   ItemDatabase: {fileID: 2013325038}
   EnemyDatabase: {fileID: 394948783}
   AbilityDatabase: {fileID: 739224079}
+  StatusDatabase: {fileID: 1897291472}
 --- !u!4 &1729713222
 Transform:
   m_ObjectHideFlags: 0
@@ -1484,6 +1487,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2062344835}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1897291470
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1897291471}
+  - component: {fileID: 1897291472}
+  m_Layer: 0
+  m_Name: StatusEffectDatabase
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1897291471
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897291470}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 341667889}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1897291472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897291470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15cff18207118204dab8a1d2366835f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScriptableObjectStatusEffectDatabase
+  StatusAssets:
+  - {fileID: 11400000, guid: 0a622650a822a4945b044c9a383e5b20, type: 2}
 --- !u!1 &2013325036
 GameObject:
   m_ObjectHideFlags: 0
@@ -1569,9 +1618,6 @@ MonoBehaviour:
   OverrideArenaRadius: 0
   CustomArenaRadius: 15
   PartyMembers:
-  - CharacterName: Cecil
-    Level: 1
-    ClassPreset: {fileID: 11400000, guid: a68cee2b825fae0429d73802f2b57436, type: 2}
   - CharacterName: Cecil
     Level: 1
     ClassPreset: {fileID: 11400000, guid: a68cee2b825fae0429d73802f2b57436, type: 2}

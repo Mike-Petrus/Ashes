@@ -2,14 +2,14 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
-public enum ConfigurableEffectType { Heal, Damage, ApplyStatus }
+public enum ConfigurableEffectType { Heal, Damage, ApplyStatus, ATBModify, Cleanse, TeleportToTarget }
 
 [Serializable]
 public class SharedEffectConfig
 {
     public ConfigurableEffectType EffectType;
     
-    [Tooltip("The amount to heal, damage, OR the power of the status tick!")]
+    [Tooltip("The amount to heal, damage, the power of the status tick, OR the raw ATB amount")]
     public int Power;
     
     [Header("Status Overrides (Only if ApplyStatus)")]
@@ -18,6 +18,10 @@ public class SharedEffectConfig
     
     [Tooltip("Leave at 0 to use the blueprint's default duration.")]
     public float OverrideDuration;
+
+    [Header("Cleanse Settings (Only if Cleanse)")]
+    public bool CleanseAllDebuffs;
+    public List<StatusBlueprintSO> SpecificStatusesToCleanse = new List<StatusBlueprintSO>();
 
     /// <summary>
     /// Acts as a Factory: Converts this Unity Inspector config into a pure C# Effect instance.
@@ -32,24 +36,30 @@ public class SharedEffectConfig
         {
             return new DamageEffect(Power);
         }
+        else if (EffectType == ConfigurableEffectType.ATBModify)
+        {
+            return new ATBModifyEffect(Power);
+        }
+        else if (EffectType == ConfigurableEffectType.TeleportToTarget)
+        {
+            return new TeleportToTargetEffect();
+        }
         else if (EffectType == ConfigurableEffectType.ApplyStatus && StatusBlueprint != null)
         {
             // 1. Determine Duration
             float duration = OverrideDuration > 0 ? OverrideDuration : StatusBlueprint.DefaultDuration;
 
-            // 2. Build the specific payload for this cast using the Power slider!
-            List<Effect> tickPayload = new List<Effect>();
-            if (StatusBlueprint.TickType == StatusTickType.Damage)
+            // 2. We no longer build the payload here! We just pass the ID and Power to the engine.
+            return new ApplyStatusEffect(StatusBlueprint.StatusId, duration, Power);
+        }
+        else if (EffectType == ConfigurableEffectType.Cleanse)
+        {
+            List<string> ids = new List<string>();
+            foreach (var statusBP in SpecificStatusesToCleanse)
             {
-                tickPayload.Add(new DamageEffect(Power));
+                if (statusBP != null) ids.Add(statusBP.StatusId);
             }
-            else if (StatusBlueprint.TickType == StatusTickType.Heal)
-            {
-                tickPayload.Add(new HealEffect(Power));
-            }
-
-            // 3. Return the fully self-contained domain object
-            return new ApplyStatusEffect(StatusBlueprint.StatusName, duration, StatusBlueprint.TickInterval, tickPayload);
+            return new CleanseEffect(CleanseAllDebuffs, ids);
         }
 
         return null;
