@@ -31,7 +31,7 @@ public class BattleSimulation
 
     private bool isBattleOver = false;
 
-    public BattleSimulation(BattleEventBus eventBus, SharedInventory inventory, IPathfinder pathfinder, ILineOfSightChecker lineOfSightChecker, IItemDatabase itemDatabase, IAbilityDatabase abilityDatabase)
+    public BattleSimulation(BattleEventBus eventBus, SharedInventory inventory, IPathfinder pathfinder, ILineOfSightChecker lineOfSightChecker, IItemDatabase itemDatabase, IAbilityDatabase abilityDatabase, IStatusEffectDatabase statusDatabase)
     {
         Events = eventBus;
         Pathfinder = pathfinder;
@@ -52,7 +52,7 @@ public class BattleSimulation
 
         AbilitySystem = new AbilitySystem(Events, Actors, ActorStates, inventory, TargetingSystem);
         StatusEffectSystem = new StatusEffectSystem(Events, Actors, Clock);
-        EffectPipeline = new EffectPipeline(Events, Actors);
+        EffectPipeline = new EffectPipeline(Events, Actors, statusDatabase, PositionSystem);
 
         BattleContext = new BattleContext
         {
@@ -69,6 +69,7 @@ public class BattleSimulation
             Clock = Clock,
             ItemDatabase = itemDatabase,
             AbilityDatabase = abilityDatabase,
+            StatusDatabase = statusDatabase
         };
 
         CommandExecutor = new BattleCommandExecutor(BattleContext);

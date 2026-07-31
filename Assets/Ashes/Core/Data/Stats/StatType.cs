@@ -1,0 +1,20 @@
+public enum StatType
+{
+    Strength,
+    Aether,
+    Vitality,
+    Agility,
+    Speed,
+    MoveDistance,
+    MaxHP,
+    MaxMP,
+    Defense,
+    MagicResist,
+    AttackCrit,
+    MagicCrit,
+    DodgeChance,
+    BlockChance,
+    BlockValue,
+    AttackPower,
+    MagicPower
+}
