@@ -10,24 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9fad8a29c972bb04cb27977f88f26467, type: 3}
-  m_Name: Paladin
+  m_Name: class_paladin
   m_EditorClassIdentifier: Assembly-CSharp::ClassTemplateSO
   ClassId: class_paladin
   ClassName: Paladin
   Strength: 15
-  Aether: 15
-  Vitality: 20
-  Agility: 8
+  Aether: 12
+  Vitality: 18
+  Agility: 10
   Speed: 10
-  MoveDistance: 10
+  MoveDistance: 5
   LearnedAbilities:
   - RequiredLevel: 1
-    AbilityPreset: {fileID: 11400000, guid: aff12feeaca79454fa754258bbed9a2e, type: 2}
-  - RequiredLevel: 1
-    AbilityPreset: {fileID: 11400000, guid: 2e6ca15ce8cc3a44da8f521e2b1ce73c, type: 2}
-  - RequiredLevel: 1
-    AbilityPreset: {fileID: 11400000, guid: 64e5433c4fa79cd4b9a3b50bd3f10c38, type: 2}
-  - RequiredLevel: 1
-    AbilityPreset: {fileID: 11400000, guid: dff0d229a0c6f514ca495aacfa5587d8, type: 2}
-  - RequiredLevel: 1
     AbilityPreset: {fileID: 11400000, guid: 3c2d904738a47de4e9fe3e6616ac951b, type: 2}
+  - RequiredLevel: 1
+    AbilityPreset: {fileID: 11400000, guid: c8d1e9cbfb8dfea4bb6b2a3e939dc75f, type: 2}
+  - RequiredLevel: 1
+    AbilityPreset: {fileID: 11400000, guid: 927282e34b77ea74484a163e97420104, type: 2}

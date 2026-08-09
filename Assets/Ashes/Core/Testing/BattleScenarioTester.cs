@@ -152,6 +152,9 @@ public class BattleScenarioTester : MonoBehaviour
             if (i >= formationOffsets.Length) break;
             
             Vector3 spawnPos = partyBaseLine + (divisionAxis * formationOffsets[i] * partySpacing);
+            // NEW: Snap spawn preview to the ground!
+            spawnPos = SnapToGround(spawnPos); 
+            
             Gizmos.DrawSphere(spawnPos, 0.5f);
             
             Gizmos.color = new Color(0, 0, 1, 0.3f);
@@ -161,7 +164,7 @@ public class BattleScenarioTester : MonoBehaviour
 
         // 6. Draw Threat Vector
         Gizmos.color = Color.red;
-        Gizmos.DrawLine(center, center + forward * (radius * 0.5f));
+        Gizmos.DrawLine(center, SnapToGround(center + forward * (radius * 0.5f)));
         
         // 7. Draw Enemy Spawns (Perfectly isolated RNG!)
         if (UseManualSpawnPoints)
@@ -170,7 +173,6 @@ public class BattleScenarioTester : MonoBehaviour
             {
                 if (ManualSpawnPoints[i] != null)
                 {
-                    // Draw used points as magenta, unused as gray
                     Gizmos.color = i < previewEnemyCount ? Color.magenta : new Color(0.5f, 0.5f, 0.5f, 0.5f);
                     Gizmos.DrawSphere(ManualSpawnPoints[i].position, 0.5f);
                 }
@@ -180,30 +182,49 @@ public class BattleScenarioTester : MonoBehaviour
         {
             for (int i = 0; i < previewEnemyCount; i++)
             {
-                // Flawless Semicircle Math using EXACTLY 1.0f offset!
                 float padding = 1.0f;
                 float randomForward = (float)previewRand.NextDouble() * (radius - (padding * 2)) + padding;
                 float maxSide = (float)Math.Sqrt(Math.Pow(radius - padding, 2) - Math.Pow(randomForward, 2));
                 float randomSide = (float)(previewRand.NextDouble() * 2.0 - 1.0) * maxSide;
 
                 Vector3 spawnPos = center + (forward * randomForward) + (divisionAxis * randomSide);
+                // NEW: Snap random spawn preview to the ground!
+                spawnPos = SnapToGround(spawnPos); 
+
                 Gizmos.color = Color.red;
                 Gizmos.DrawSphere(spawnPos, 0.5f);
             }
         }
     }
 
+    private Vector3 SnapToGround(Vector3 rawPosition)
+    {
+        // Shoot a ray from high up straight down to find the physical floor
+        Vector3 origin = new Vector3(rawPosition.x, rawPosition.y + 50f, rawPosition.z);
+        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 100f))
+        {
+            return hit.point;
+        }
+        return rawPosition;
+    }
+
     private void DrawWireCircle(Vector3 center, float radius, int segments)
     {
         float angleStep = 360f / segments;
-        Vector3 prevPoint = center + new Vector3(Mathf.Sin(0) * radius, 0, Mathf.Cos(0) * radius);
+        Vector3[] points = new Vector3[segments + 1];
 
-        for (int i = 1; i <= segments; i++)
+        // Pre-calculate all points and snap them to the ground
+        for (int i = 0; i <= segments; i++)
         {
             float rad = Mathf.Deg2Rad * (i * angleStep);
-            Vector3 newPoint = center + new Vector3(Mathf.Sin(rad) * radius, 0, Mathf.Cos(rad) * radius);
-            Gizmos.DrawLine(prevPoint, newPoint);
-            prevPoint = newPoint;
+            Vector3 rawPoint = center + new Vector3(Mathf.Sin(rad) * radius, 0, Mathf.Cos(rad) * radius);
+            points[i] = SnapToGround(rawPoint) + new Vector3(0, 0.1f, 0); // Raised slightly to prevent Z-fighting
+        }
+
+        // Draw the segments
+        for (int i = 0; i < segments; i++)
+        {
+            Gizmos.DrawLine(points[i], points[i + 1]);
         }
     }
 }

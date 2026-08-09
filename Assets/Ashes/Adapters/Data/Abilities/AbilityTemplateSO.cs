@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
-public enum ConfigurableRequirementType { MP, HP, Item }
+public enum ConfigurableRequirementType { MP, HP, Item, RequiresStatus, RequiresAbsenceOfStatus }
 
 [Serializable]
 public class RequirementConfig
@@ -11,6 +11,8 @@ public class RequirementConfig
     public int Amount;
     [Tooltip("Only required if Type is Item")]
     public string ItemId;
+    [Tooltip("Required for Status checks (e.g. 'status_silence_01')")]
+    public string StatusId;
 }
 
 [CreateAssetMenu(fileName = "NewAbilityTemplate", menuName = "Ashes/Data/Ability Template")]
@@ -72,6 +74,12 @@ public class AbilityTemplateSO : ScriptableObject
                     break;
                 case ConfigurableRequirementType.Item:
                     template.Requirements.Add(new ItemCost(req.ItemId, req.Amount));
+                    break;
+                case ConfigurableRequirementType.RequiresStatus:
+                    template.Requirements.Add(new StatusCost(req.StatusId, true));
+                    break;
+                case ConfigurableRequirementType.RequiresAbsenceOfStatus:
+                    template.Requirements.Add(new StatusCost(req.StatusId, false));
                     break;
             }
         }

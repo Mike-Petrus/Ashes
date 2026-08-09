@@ -96,14 +96,7 @@ public static class TargetingUtility
         var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
         SimVector3 originPosition = GetOriginPosition(context);
 
-        if (!context.Simulation.RangeSystem.IsInRange(originPosition, activeActor.Radius, context.SelectedAbility, targetInfo))
-        {
-            errorMessage = "Out of Range!";
-            return false;
-        }
-
-        errorMessage = "";
-        return true;
+        return context.Simulation.RangeSystem.IsInRange(originPosition, activeActor.Radius, context.SelectedAbility, targetInfo, out errorMessage);
     }
 
     /// <summary>

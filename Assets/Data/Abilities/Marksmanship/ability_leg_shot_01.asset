@@ -10,24 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0559b7447d947c47b7107fb2134a223, type: 3}
-  m_Name: DivineCleave
+  m_Name: ability_leg_shot_01
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
-  AbilityId: spell_divine_cleave
-  Name: Divine Cleave
-  Category: Wrath
-  Range: 5
-  Radius: 5
-  Angle: 120
+  AbilityId: ability_leg_shot_01
+  Name: Leg Shot
+  Category: Marksmanship
+  Range: 15
+  Radius: 0
+  Angle: 0
   RequiresLoS: 1
-  Mode: 5
+  Mode: 1
   Alignment: 1
   RefundPercent: 0.25
   Requirements:
   - Type: 0
-    Amount: 15
+    Amount: 12
     ItemId: 
   Effects:
   - EffectType: 1
-    Power: 30
+    Power: 15
     StatusBlueprint: {fileID: 0}
     OverrideDuration: 0
+    CleanseAllDebuffs: 0
+    SpecificStatusesToCleanse: []
+  - EffectType: 2
+    Power: 0
+    StatusBlueprint: {fileID: 11400000, guid: c7b88f155c7e11642a3d5d476606fa2b, type: 2}
+    OverrideDuration: 0
+    CleanseAllDebuffs: 0
+    SpecificStatusesToCleanse: []

@@ -10,12 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c4f9b8720d1cba4d920c47d6e3b0cc5, type: 3}
-  m_Name: Haste
+  m_Name: status_regen_01
   m_EditorClassIdentifier: Assembly-CSharp::StatusBlueprintSO
-  StatusId: 
-  StatusName: 
+  StatusId: status_regen_01
+  StatusName: Regen
   IsBuff: 0
-  DefaultDuration: 15
+  DefaultDuration: 24
   TickInterval: 3
-  TickType: 1
+  TickType: 2
+  MaxStacks: 1
+  TriggerAbilityId: {fileID: 0}
+  TriggerStatusBlueprint: {fileID: 0}
+  RequireMaxStacks: 1
+  ConsumesStacks: 1
   StatModifiers: []
