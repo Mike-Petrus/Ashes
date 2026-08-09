@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0559b7447d947c47b7107fb2134a223, type: 3}
+  m_Name: ability_adrenaline_01
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
+  AbilityId: ability_adrenaline_01
+  Name: Adrenaline
+  Category: Shadow Arts
+  Range: 0
+  Radius: 0
+  Angle: 0
+  RequiresLoS: 0
+  Mode: 0
+  Alignment: 3
+  RefundPercent: 0.25
+  Requirements:
+  - Type: 0
+    Amount: 15
+    ItemId: 
+  Effects:
+  - EffectType: 2
+    Power: 0
+    StatusBlueprint: {fileID: 11400000, guid: e9078c5260cb3b74bad31fd62cd4e482, type: 2}
+    OverrideDuration: 0
+    CleanseAllDebuffs: 0
+    SpecificStatusesToCleanse: []

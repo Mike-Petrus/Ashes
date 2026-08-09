@@ -47,7 +47,7 @@ public class BattleSimulation
         MovementSystem = new MovementSystem(Events, Pathfinder, ActorStates, Actors);
         PositionSystem = new PositionSystem(Actors);
 
-        RangeSystem = new RangeSystem(Actors);
+        RangeSystem = new RangeSystem(Actors, lineOfSightChecker);
         TargetingSystem = new TargetingSystem(Actors, PositionSystem, lineOfSightChecker);
 
         AbilitySystem = new AbilitySystem(Events, Actors, ActorStates, inventory, TargetingSystem);

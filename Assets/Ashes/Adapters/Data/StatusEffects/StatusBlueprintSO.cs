@@ -35,7 +35,7 @@ public class StatusBlueprintSO : ScriptableObject
     [Tooltip("How many times can this status stack? (1 = no stacking)")]
     public int MaxStacks = 1;
     [Tooltip("The ID of the ability that detonates this status (e.g., 'spell_frostbolt')")]
-    public string TriggerAbilityId;
+    public AbilityTemplateSO TriggerAbilityId;
     [Tooltip("The status to apply when triggered (e.g., Frozen)")]
     public StatusBlueprintSO TriggerStatusBlueprint;
     public bool RequireMaxStacks = true;
@@ -59,7 +59,7 @@ public class StatusBlueprintSO : ScriptableObject
             TickInterval = this.TickInterval,
             TickType = this.TickType,
             MaxStacks = this.MaxStacks,
-            TriggerAbilityId = this.TriggerAbilityId,
+            TriggerAbilityId = this.TriggerAbilityId != null ? this.TriggerAbilityId.AbilityId : null,
             TriggerStatusId = this.TriggerStatusBlueprint != null ? this.TriggerStatusBlueprint.StatusId : null,
             ConsumesStacks = this.ConsumesStacks,
             RequireMaxStacks = this.RequireMaxStacks

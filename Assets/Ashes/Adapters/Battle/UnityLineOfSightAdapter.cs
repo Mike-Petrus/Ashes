@@ -17,11 +17,6 @@ public class UnityLineOfSightAdapter : ILineOfSightChecker
         Vector3 direction = unityTarget - unityOrigin;
         float distance = direction.magnitude;
 
-        if (Physics.Raycast(unityOrigin, direction.normalized, distance, obstacleLayer))
-        {
-            return false;
-        }
-
-        return true;
+        return !Physics.Raycast(unityOrigin, direction.normalized, distance, obstacleLayer);
     }
 }

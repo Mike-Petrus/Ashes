@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0559b7447d947c47b7107fb2134a223, type: 3}
+  m_Name: ability_divine_cleave_01
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
+  AbilityId: ability_divine_cleave_01
+  Name: Divine Cleave
+  Category: Wrath
+  Range: 0
+  Radius: 4
+  Angle: 100
+  RequiresLoS: 1
+  Mode: 5
+  Alignment: 1
+  RefundPercent: 0.25
+  Requirements:
+  - Type: 0
+    Amount: 10
+    ItemId: 
+  Effects:
+  - EffectType: 1
+    Power: 35
+    StatusBlueprint: {fileID: 0}
+    OverrideDuration: 0
+    CleanseAllDebuffs: 0
+    SpecificStatusesToCleanse: []

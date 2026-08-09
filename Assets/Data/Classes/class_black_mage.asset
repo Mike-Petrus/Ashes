@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fad8a29c972bb04cb27977f88f26467, type: 3}
+  m_Name: class_black_mage
+  m_EditorClassIdentifier: Assembly-CSharp::ClassTemplateSO
+  ClassId: class_black_mage
+  ClassName: Black Mage
+  Strength: 5
+  Aether: 20
+  Vitality: 7
+  Agility: 10
+  Speed: 9
+  MoveDistance: 4
+  LearnedAbilities:
+  - RequiredLevel: 1
+    AbilityPreset: {fileID: 11400000, guid: dd84635f38de05f419599df4b674fa2d, type: 2}
+  - RequiredLevel: 1
+    AbilityPreset: {fileID: 11400000, guid: e66f293f13b5cd947ae9799de3766dab, type: 2}
+  - RequiredLevel: 1
+    AbilityPreset: {fileID: 11400000, guid: dc34a0f17a3e8b4458b164b1aa09ee6f, type: 2}
+  - RequiredLevel: 1
+    AbilityPreset: {fileID: 11400000, guid: 8f13daaf5af5bd045aeb449888d9e834, type: 2}

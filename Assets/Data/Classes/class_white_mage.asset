@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fad8a29c972bb04cb27977f88f26467, type: 3}
+  m_Name: class_white_mage
+  m_EditorClassIdentifier: Assembly-CSharp::ClassTemplateSO
+  ClassId: class_white_mage
+  ClassName: White Mage
+  Strength: 6
+  Aether: 18
+  Vitality: 8
+  Agility: 10
+  Speed: 10
+  MoveDistance: 5
+  LearnedAbilities:
+  - RequiredLevel: 1
+    AbilityPreset: {fileID: 11400000, guid: 9256ab03de846b248a7debb65eeccf71, type: 2}
+  - RequiredLevel: 1
+    AbilityPreset: {fileID: 11400000, guid: a3525f11e936a334ebca63109a274b69, type: 2}
+  - RequiredLevel: 1
+    AbilityPreset: {fileID: 11400000, guid: 6b193af8f4e221043ac099af09603581, type: 2}
