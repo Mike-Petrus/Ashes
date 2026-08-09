@@ -247,18 +247,6 @@ public class EffectPipeline : IBattleSystem
         }
 
         events.Publish(new StatusAppliedEvent(context.TargetId, template.StatusName));
-
-        //// OLD DEPRECATED SHIT ////
-        /// Still need to implement "on-hit" statuses
-        /// 
-        /// 
-        /// 
-        // Example of Ledger use: Frostbolt slow shouldn't apply if damage is 0
-        // TODO: Add boolean RequiresDamageToApply to ApplyStatusEffect
-        // if (context.FinalDamageDealt <= 0 && statusEffect.StatusName == "Slow")
-        // {
-        //     return;
-        // }
     }
 
     private void ApplyCleanse(CleanseEffect cleanse, EffectContext context, BattleActor target)
