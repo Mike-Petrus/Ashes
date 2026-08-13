@@ -1,3 +1,5 @@
+using UnityEditor.Rendering.LookDev;
+
 public class PartySelectionState : IInputState
 {
     private int currentIndex = 0;
@@ -11,6 +13,8 @@ public class PartySelectionState : IInputState
         {
             currentIndex = 0;
         }
+
+        context.Simulation.Events.Publish(new PartyMemberHoveredEvent(context.PartyActorIds[currentIndex]));
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -31,7 +35,8 @@ public class PartySelectionState : IInputState
                 {
                     currentIndex = listSize - 1;
                 }
-                // tell UI to update highlight
+
+                context.Simulation.Events.Publish(new PartyMemberHoveredEvent(context.PartyActorIds[currentIndex]));
                 break;
 
             case InputButton.Down:
@@ -41,7 +46,8 @@ public class PartySelectionState : IInputState
                 {
                     currentIndex = 0;
                 }
-                // tell UI to update highlight
+                
+                context.Simulation.Events.Publish(new PartyMemberHoveredEvent(context.PartyActorIds[currentIndex]));
                 break;
 
             case InputButton.Confirm:
@@ -51,6 +57,7 @@ public class PartySelectionState : IInputState
                 break;
 
             case InputButton.Cancel:
+                context.Simulation.Events.Publish(new PartyMemberHoveredEvent(new ActorId(-1)));
                 context.ChangeState(new IdleState(), false);
                 break;
 

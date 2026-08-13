@@ -9,6 +9,7 @@ public class BattleTestBootstrapper : MonoBehaviour
 
     public BattleMenuUI battleMenuUI;
     public BattleFeedbackUI battleFeedbackUI;
+    public FloatingTextManager floatingTextManager;
     
     [Tooltip("Drag the UI Panel Container (e.g. a Horizontal Layout Group) here.")]
     public Transform PartyContainerPanel;
@@ -296,8 +297,7 @@ public class BattleTestBootstrapper : MonoBehaviour
         if (inputManager != null) inputManager.Initialize(controller);
         if (battleMenuUI != null) battleMenuUI.Initialize(controller);
         if (battleFeedbackUI != null) battleFeedbackUI.Initialize(simulation);
-
-        eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
+        if (floatingTextManager != null) floatingTextManager.Initialize(simulation);
     }
 
     public void RunEncounterTest()
@@ -355,16 +355,6 @@ public class BattleTestBootstrapper : MonoBehaviour
 
         // // 7. SUBSCRIBE TO GAMEPLAY EVENTS
         // eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
-    }
-
-    private void OnActorReady(ActorReadyEvent e)
-    {
-        var actor = simulation.Actors.GetActor(e.ActorId);
-
-        if (actor != null && actor.Faction == ActorFaction.Party)
-        {
-            controller.ChangeState(new PartySelectionState());
-        }
     }
 
     private void OnBattleEnded(BattleEndedEvent e)

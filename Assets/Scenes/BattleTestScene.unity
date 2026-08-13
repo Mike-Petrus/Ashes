@@ -773,8 +773,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 300338264}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.12778656, y: -0.13287987, z: 0.017279113, w: -0.98270804}
-  m_LocalPosition: {x: 0, y: 10, z: -20}
+  m_LocalRotation: {x: -0.48829946, y: 0.021458516, z: -0.012014419, w: -0.8723296}
+  m_LocalPosition: {x: -1.1509749, y: 22.473135, z: -12.767668}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1064,7 +1064,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.16666667
+  m_VoxelSize: 0.06666667
   m_MinRegionArea: 2
   m_NavMeshData: {fileID: 23800000, guid: 7f5ad5a25e9c0b34cb7971a1a446785e, type: 2}
   m_BuildHeightMesh: 0
@@ -1822,7 +1822,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.09803922}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3175,6 +3175,51 @@ Transform:
   - {fileID: 313358448}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1197320383
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1197320384}
+  - component: {fileID: 1197320385}
+  m_Layer: 0
+  m_Name: FloatingTextManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1197320384
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1197320383}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.14997, y: -19.67882, z: 12.51675}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1197320385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1197320383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 860be607c5d144444a7005c598352f50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FloatingTextManager
+  FloatingTextPrefab: {fileID: 2308160420491009447, guid: e8bb555338920fa4992b4603d1120169, type: 3}
 --- !u!1 &1218465888
 GameObject:
   m_ObjectHideFlags: 0
@@ -4241,12 +4286,13 @@ MonoBehaviour:
   inputManager: {fileID: 320455490}
   battleMenuUI: {fileID: 1294967270}
   battleFeedbackUI: {fileID: 1791614901}
+  floatingTextManager: {fileID: 1197320385}
   PartyContainerPanel: {fileID: 571658412}
   navMeshPathfinder: {fileID: 1294967272}
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 0
-  ActorStatusPanelPrefab: {fileID: 4331569307822480887, guid: 3b857aaea2f84754992ad44e1a97f93d, type: 3}
+    m_Bits: 768
+  ActorStatusPanelPrefab: {fileID: 41681518760882008, guid: 3afe20d3923949a4f94455473c125db7, type: 3}
   ActorViewPrefab: {fileID: 3337067125838145014, guid: 7a2f06e74b67b6c488debe3e6fca027a, type: 3}
   CursorViewPrefab: {fileID: 6455597371687583390, guid: 1ac66dd527e4cfe47a24c4bb78c0a363, type: 3}
   ScenarioTester: {fileID: 2062344834}
@@ -5050,7 +5096,7 @@ MonoBehaviour:
     ClassPreset: {fileID: 11400000, guid: a68cee2b825fae0429d73802f2b57436, type: 2}
   - CharacterName: Enmera
     Level: 1
-    ClassPreset: {fileID: 11400000, guid: a68cee2b825fae0429d73802f2b57436, type: 2}
+    ClassPreset: {fileID: 11400000, guid: 7a7fee63ed030be4cb63c717271bfaad, type: 2}
   InventoryItems:
   - ItemPreset: {fileID: 11400000, guid: 43efe0f5925ae974bb0584c4606f89c9, type: 2}
     Quantity: 3
@@ -5116,3 +5162,4 @@ SceneRoots:
   - {fileID: 1149781944}
   - {fileID: 341667889}
   - {fileID: 91082452}
+  - {fileID: 1197320384}
