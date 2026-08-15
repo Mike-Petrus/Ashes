@@ -7,19 +7,13 @@ public class BattleTestBootstrapper : MonoBehaviour
     [Header("Presentation Layer")]
     public BattleInputManager inputManager;
 
-    public BattleMenuUI battleMenuUI;
-    public BattleFeedbackUI battleFeedbackUI;
-    public FloatingTextManager floatingTextManager;
-    
-    [Tooltip("Drag the UI Panel Container (e.g. a Horizontal Layout Group) here.")]
-    public Transform PartyContainerPanel;
+    public BattleUIManager UIManager;
 
     [Header("Simulation Adapters")]
     public NavMeshPathfinder navMeshPathfinder;
     public LayerMask obstacleLayer;
 
     [Header("Prefabs")]
-    public GameObject ActorStatusPanelPrefab;
     public GameObject ActorViewPrefab;
     public GameObject CursorViewPrefab;
 
@@ -295,9 +289,9 @@ public class BattleTestBootstrapper : MonoBehaviour
         controller = new PlayerTurnController(simulation, playerBuilder, globalPartyManager); 
 
         if (inputManager != null) inputManager.Initialize(controller);
-        if (battleMenuUI != null) battleMenuUI.Initialize(controller);
-        if (battleFeedbackUI != null) battleFeedbackUI.Initialize(simulation);
-        if (floatingTextManager != null) floatingTextManager.Initialize(simulation);
+        if (UIManager != null) UIManager.Initialize(simulation, controller);
+
+        eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
     }
 
     public void RunEncounterTest()
@@ -377,6 +371,17 @@ public class BattleTestBootstrapper : MonoBehaviour
         controller.ChangeState(new IdleState(), false);
     }
 
+    private void OnActorReady(ActorReadyEvent e)
+    {
+        var actor = simulation.Actors.GetActor(e.ActorId);
+        
+        // Dynamically checks if the actor is in the party, no longer hardcoded to Cecil!
+        if (actor != null && actor.Faction == ActorFaction.Party)
+        {
+            controller.ChangeState(new PartySelectionState());
+        }
+    }
+
     private void OnActorRegistered(ActorRegisteredEvent e)
     {
         var viewObj = Instantiate(ActorViewPrefab);
@@ -386,18 +391,6 @@ public class BattleTestBootstrapper : MonoBehaviour
         if (e.Actor.Faction == ActorFaction.Party)
         {
             viewObj.GetComponentInChildren<Renderer>().material.color = Color.blue;
-            
-            // Create the UI Panel
-            if (ActorStatusPanelPrefab != null && PartyContainerPanel != null)
-            {
-                var panelObj = Instantiate(ActorStatusPanelPrefab, PartyContainerPanel, false);
-                ActorStatusUI statusUI = panelObj.GetComponent<ActorStatusUI>();
-
-                if (statusUI != null)
-                {
-                    statusUI.Initialize(e.Actor, eventBus);
-                }
-            }
         }
         else if (e.Actor.Faction == ActorFaction.Enemy)
         {

@@ -87,7 +87,7 @@ public class TargetingFreeAimState : IInputState
 
             case InputButton.Pursuit:
                 // TODO: Should probably be able to toggle here as long as in Phase 1
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
                 ValidateCursorPosition(context);
                 UpdateCursorVisuals(context);
                 break;
@@ -97,7 +97,7 @@ public class TargetingFreeAimState : IInputState
 
                 if (canTargetActor)
                 {
-                    context.FreeAimEnabled = false;
+                    context.ToggleFreeAim(false);
                     context.ChangeState(new TargetingActorState(), false);
                 }
                 else

@@ -57,7 +57,7 @@ public class RootMenuPhase1State : IInputState, IMenuState
                 break;
 
             case InputButton.Pursuit:
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
                 PopulateMenuOptions(context);
                 break;
         }

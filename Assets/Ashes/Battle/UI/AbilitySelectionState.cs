@@ -123,11 +123,11 @@ public class AbilitySelectionState : IInputState, IMenuState
                 break;
 
             case InputButton.Pursuit:
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
                 break;
                 
             case InputButton.FreeAim:
-                context.FreeAimEnabled = !context.FreeAimEnabled;
+                context.ToggleFreeAim();
                 break;
         }
     }

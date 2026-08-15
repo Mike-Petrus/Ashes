@@ -62,7 +62,7 @@ public class PartySelectionState : IInputState
                 break;
 
             case InputButton.Pursuit:
-                context.PursuitEnabled = !context.PursuitEnabled;   // Safe to toggle
+                context.TogglePursuit(); // Safe to toggle
                 break;   
         }
     }

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7670320439511867998}
   - component: {fileID: 8455800502714950703}
   m_Layer: 5
-  m_Name: CommandMenu Text
+  m_Name: CommandMenuTextPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

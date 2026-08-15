@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class FloatingTextManager : MonoBehaviour
+public class FloatingTextUIController : MonoBehaviour
 {
     [Tooltip("A Prefab containing a TextMeshPro component. Add a simple script to it that moves it up and destroys it after 1.5s!")]
     public GameObject FloatingTextPrefab; 

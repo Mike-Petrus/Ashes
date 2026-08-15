@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ActorStatusUI : MonoBehaviour
+public class PartyMemberUIController : MonoBehaviour
 {
     [Header("UI Elements")]
     public TextMeshProUGUI NameText;
@@ -12,9 +12,7 @@ public class ActorStatusUI : MonoBehaviour
 
     [Header("Visual Feedback")]
     public Image BackgroundImage;
-    public Color NormalColor = new Color(0.1f, 0.1f, 0.1f, 0.8f);
-    public Color HoverColor = new Color(0.55f, 0.55f, 0.55f, 0.9f);
-    public Color ActiveCommandColor = new Color(0.1f, 0.3f, 0.6f, 0.9f);
+    public Image ATBFillImage;
 
     [Header("Animation Settings")]
     [Tooltip("The inner container that holds the background and text. (Needs to be a child of this object)")]
@@ -23,26 +21,24 @@ public class ActorStatusUI : MonoBehaviour
     public float ActivePopOutX = 35f; // Slide out even further when confirming commands!
     public float SlideSpeed = 15f;
 
-    [Header("ATB Visuals")]
-    public Image ATBFillImage;
-    public Color ATBNormalColor = Color.red;
-    public Color ATBReadyColor = Color.green;
-
     private ActorId trackedActorId;
     private BattleActor actor;
+    private UIThemeSO theme;
     private float targetX = 0f;
 
     // Set up by Boostrapper
-    public void Initialize(BattleActor battleActor, BattleEventBus battleEvents)
+    public void Initialize(BattleActor battleActor, BattleEventBus battleEvents, UIThemeSO globalTheme)
     {
+
         actor = battleActor;
         trackedActorId = actor.Id;
+        theme = globalTheme;
 
         NameText.text = actor.Name;
         UpdateText();
         
-        if (BackgroundImage != null) BackgroundImage.color = NormalColor;
-        if (ATBFillImage != null) ATBFillImage.color = ATBNormalColor;
+        if (BackgroundImage != null) BackgroundImage.color = theme.PanelNormal;
+        if (ATBFillImage != null) ATBFillImage.color = theme.ATBFilling;
         
         battleEvents.Subscribe<ResourceConsumedEvent>(OnResourceConsumed);
         battleEvents.Subscribe<DamageAppliedEvent>(OnDamageApplied);
@@ -77,30 +73,36 @@ public class ActorStatusUI : MonoBehaviour
 
     private void OnPartyHovered(PartyMemberHoveredEvent e)
     {
-        if (BackgroundImage == null) return;
+        if (BackgroundImage == null || theme == null)
+        {
+            return;
+        }
         
         // Don't override the active command blue color/position if they are currently taking their turn
-        if (BackgroundImage.color == ActiveCommandColor) return;
+        if (BackgroundImage.color == theme.PanelActive)
+        {
+            return;
+        }
 
         if (e.ActorId == trackedActorId)
         {
-            BackgroundImage.color = HoverColor;
+            BackgroundImage.color = theme.PanelHover;
             targetX = HoverPopOutX; // Slide out slightly
         }
         else
         {
-            BackgroundImage.color = NormalColor;
+            BackgroundImage.color = theme.PanelNormal;
             targetX = 0f; // Slide back to origin
         }
     }
 
     private void OnCommandStarted(PlayerCommandStartedEvent e)
     {
-        if (BackgroundImage == null) return;
+        if (BackgroundImage == null || theme == null) return;
         
         if (e.ActorId == trackedActorId)
         {
-            BackgroundImage.color = ActiveCommandColor;
+            BackgroundImage.color = theme.PanelActive;
             targetX = ActivePopOutX; // Slide out even further!
         }
     }
@@ -109,7 +111,7 @@ public class ActorStatusUI : MonoBehaviour
     {
         if (e.ActorId == trackedActorId)
         {
-            BackgroundImage.color = NormalColor;
+            BackgroundImage.color = theme.PanelNormal;
             targetX = 0f; // Slide back to origin
         }
     }
@@ -138,7 +140,7 @@ public class ActorStatusUI : MonoBehaviour
             // If ATB was spent, revert the color back to normal
             if (e.ActorATB < actor.MaxATB && ATBFillImage != null)
             {
-                ATBFillImage.color = ATBNormalColor;
+                ATBFillImage.color = theme.ATBFilling;
             }
         }
     }
@@ -147,7 +149,7 @@ public class ActorStatusUI : MonoBehaviour
     {
         if (e.ActorId == trackedActorId && ATBFillImage != null)
         {
-            ATBFillImage.color = ATBReadyColor; // Turn green when ready!
+            ATBFillImage.color = theme.ATBReady; // Turn green when ready!
         }
     }
 }

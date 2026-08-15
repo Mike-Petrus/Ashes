@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6073707494618576842}
   - component: {fileID: 8521625207970516805}
   m_Layer: 5
-  m_Name: ActorStatusPanel
+  m_Name: PartyMemberUIControllerPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

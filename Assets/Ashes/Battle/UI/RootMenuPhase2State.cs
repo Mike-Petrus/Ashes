@@ -63,7 +63,7 @@ public class RootMenuPhase2State : IInputState, IMenuState
 
             case InputButton.Pursuit:
                 // TODO: probably should be disabled at this point, but we'll see in testing
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
                 break;
         }
     }

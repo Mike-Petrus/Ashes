@@ -10,6 +10,7 @@ public class TargetingActorState : IInputState
 
     // Cached Data
     private ActorId? savedTargetId = null;
+    private ActorId? lastFocusedActorId = null;
     private bool isTargetingValidActor = true;
     private string currentErrorMessage = "";
     private List<SimVector3> currentPreviewPath = null;
@@ -145,12 +146,13 @@ public class TargetingActorState : IInputState
 
             case InputButton.Cancel:
                 context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+                context.Simulation.Events.Publish(new TargetingFocusChangedEvent(null));
                 context.RevertToPreviousState();
                 break;
 
             case InputButton.Pursuit:
                 // TODO: Should probably be able to toggle here as long as in Phase 1
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
 
                 // If they turn Pursuit off while using the follow dummy, go to TargetingMoveState
                 if (!context.PursuitEnabled && context.SelectedAbility is DummyAbility dummy && dummy.DummyId == "system_follow")
@@ -172,8 +174,7 @@ public class TargetingActorState : IInputState
 
                 if (canTargetFree)
                 {
-                    context.FreeAimEnabled = true;
-                    context.Simulation.Events.Publish(new PlayerFeedbackEvent($"Switching to Free Aim"));
+                    context.ToggleFreeAim(true);
                     context.ChangeState(new TargetingFreeAimState(), false);
                 }
                 else
@@ -246,15 +247,13 @@ public class TargetingActorState : IInputState
         if (bestIndex != -1 && closestDist <= magneticRadius)
         {
             currentTargetIndex = bestIndex;
-            savedTargetId = currentAvailableTargets[currentTargetIndex];
         }
         else
         {
             currentTargetIndex = -1;
         }
 
-        ValidateCurrentTarget(context);
-        UpdateCursorVisuals(context);
+        UpdateFocusInfo(context);
     }
 
     private void ValidateCurrentTarget(PlayerTurnController context)
@@ -315,8 +314,9 @@ public class TargetingActorState : IInputState
     {
         if (currentAvailableTargets.Count == 0)
         {
-            ValidateCurrentTarget(context);
-            UpdateCursorVisuals(context);
+            currentTargetIndex = -1;
+            UpdateFocusInfo(context);
+            
             return;
         }
 
@@ -325,9 +325,29 @@ public class TargetingActorState : IInputState
             currentTargetIndex = 0;
         }
 
-        savedTargetId = currentAvailableTargets[currentTargetIndex];
-        context.CurrentCursorPosition = context.Simulation.Actors.GetActor(savedTargetId.Value).Position;
+        // Snapped ID
+        ActorId snapId = currentAvailableTargets[currentTargetIndex];
+        context.CurrentCursorPosition = context.Simulation.Actors.GetActor(snapId).Position;
 
+        // centralized focus publish
+        UpdateFocusInfo(context);
+    }
+
+    private void UpdateFocusInfo(PlayerTurnController context)
+    {
+        // 1. Maintain the original internal state
+        savedTargetId = (currentTargetIndex >= 0 && currentAvailableTargets.Count > 0) 
+            ? currentAvailableTargets[currentTargetIndex] 
+            : (ActorId?)null;
+
+        // 2. Publish event *only if focus changed* to prevent UI jitter/spam
+        if (savedTargetId != lastFocusedActorId)
+        {
+            context.Simulation.Events.Publish(new TargetingFocusChangedEvent(savedTargetId));
+            lastFocusedActorId = savedTargetId;
+        }
+
+        // 3. Maintain original visual/validation pipeline exactly as before
         ValidateCurrentTarget(context);
         UpdateCursorVisuals(context);
     }
@@ -346,18 +366,19 @@ public class TargetingActorState : IInputState
                 currentContext.CurrentCursorPosition = currentContext.Simulation.Actors.GetActor(savedTargetId.Value).Position;
             }
 
-            ValidateCurrentTarget(currentContext);
-            UpdateCursorVisuals(currentContext);
+            UpdateFocusInfo(currentContext);
         }
     }
 
     public void Exit(PlayerTurnController context)
     {
         context.Simulation.Events.Unsubscribe<ActorMovedEvent>(OnActorMoved);
+        context.Simulation.Events.Publish(new TargetingFocusChangedEvent(null));
         context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
         // Do NOT clear CurrentAvailableTargets here so that if we come back,
         // the memory index doesn't temporarily throw an out of bounds error
 
+        lastFocusedActorId = null;
         currentContext = null;
     }
 }

@@ -14,7 +14,7 @@ public class IdleState : IInputState
                 break;
 
             case InputButton.Pursuit:
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
                 break;
         }
     }

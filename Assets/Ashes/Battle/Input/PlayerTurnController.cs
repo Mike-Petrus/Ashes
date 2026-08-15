@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.PackageManager;
 
 public class PlayerTurnController
 {
@@ -133,6 +132,24 @@ public class PlayerTurnController
         }
 
         ResetController();
+    }
+
+    public void TogglePursuit()
+    {
+        PursuitEnabled = !PursuitEnabled;
+        Simulation.Events.Publish(new PursuitToggledEvent(PursuitEnabled));
+    }
+
+    public void ToggleFreeAim()
+    {
+        FreeAimEnabled = !FreeAimEnabled;
+        Simulation.Events.Publish(new FreeAimToggledEvent(FreeAimEnabled));
+    }
+
+    public void ToggleFreeAim(bool enable)
+    {
+        FreeAimEnabled = enable;
+        Simulation.Events.Publish(new FreeAimToggledEvent(FreeAimEnabled));
     }
     
     public void ResetController()

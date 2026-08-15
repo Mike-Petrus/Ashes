@@ -2,22 +2,23 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-public class BattleFeedbackUI : MonoBehaviour
+[RequireComponent(typeof(TextMeshProUGUI))]
+public class BattleFeedbackUIController : MonoBehaviour
 {
-    [Header("UI References")]
-    [Tooltip("The TextMeshPro element that will dispaly the error message")]
-    public TextMeshProUGUI FeedbackText;
-
     [Header("Animation Settings")]
     public float DisplayDuration = 1.0f;
     public float FadeDuration = 0.5f;
 
+    private TextMeshProUGUI feedbackText; 
     private Coroutine currentAnimation;
     private BattleSimulation simulation;
 
     public void Initialize(BattleSimulation simulation)
     {
         this.simulation = simulation;
+        
+        // Dynamically grab the component attached to this GameObject
+        feedbackText = GetComponent<TextMeshProUGUI>();
 
         SetTextAlpha(0f);
 
@@ -38,7 +39,7 @@ public class BattleFeedbackUI : MonoBehaviour
 
     private IEnumerator AnimateFeedback(string message)
     {
-        FeedbackText.text = message;
+        if (feedbackText != null) feedbackText.text = message;
         SetTextAlpha(1f);
 
         // Hold for the display duration
@@ -61,11 +62,11 @@ public class BattleFeedbackUI : MonoBehaviour
 
     private void SetTextAlpha(float alpha)
     {
-        if (FeedbackText != null)
+        if (feedbackText != null)
         {
-            Color c = FeedbackText.color;
+            Color c = feedbackText.color;
             c.a = alpha;
-            FeedbackText.color = c;
+            feedbackText.color = c;
         }
     }
 

@@ -56,7 +56,7 @@ public class TargetingMoveState : IInputState
 
             case InputButton.Pursuit:
                 // TODO: probably shouldn't be able to toggle Pursuit in this state, but if we want to, just uncomment
-                // context.PursuitEnabled = !context.PursuitEnabled;
+                // context.TogglePursuit();
                 break;
         }
     }
