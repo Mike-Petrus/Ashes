@@ -14,11 +14,11 @@ public class ScriptableObjectAbilityDatabase : MonoBehaviour, IAbilityDatabase
     [Tooltip("Click the three dots in the top right of this component and select 'Auto-Populate' to fill this list!")]
     public List<AbilityCategoryGroup> CategorizedAbilities = new List<AbilityCategoryGroup>();
 
-    private Dictionary<string, AbilityTemplate> _abilityCache;
+    private Dictionary<string, AbilityTemplate> abilityCache;
 
     public void Initialize()
     {
-        _abilityCache = new Dictionary<string, AbilityTemplate>();
+        abilityCache = new Dictionary<string, AbilityTemplate>();
 
         // Loop through categories, then loop through abilities to build the flat dictionary
         foreach (var group in CategorizedAbilities)
@@ -27,7 +27,7 @@ public class ScriptableObjectAbilityDatabase : MonoBehaviour, IAbilityDatabase
             {
                 if (asset != null && !string.IsNullOrEmpty(asset.AbilityId))
                 {
-                    _abilityCache[asset.AbilityId] = asset.ToDomain();
+                    abilityCache[asset.AbilityId] = asset.ToDomain();
                 }
             }
         }
@@ -35,7 +35,7 @@ public class ScriptableObjectAbilityDatabase : MonoBehaviour, IAbilityDatabase
 
     public AbilityTemplate GetAbility(string abilityId)
     {
-        if (_abilityCache != null && _abilityCache.TryGetValue(abilityId, out var ability))
+        if (abilityCache != null && abilityCache.TryGetValue(abilityId, out var ability))
         {
             return ability;
         }

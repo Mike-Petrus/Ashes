@@ -57,12 +57,6 @@ public class PlayerTurnController
         CurrentState?.Exit(this);
         CurrentState = newState;
         CurrentState.Enter(this);
-
-        // Broadcast when a character is selected for commands
-        if (CurrentState is RootMenuPhase1State && ActiveActorId.HasValue && PreviousStates.Count > 0 && PreviousStates.Peek() is PartySelectionState)
-        {
-            Simulation.Events.Publish(new PlayerCommandStartedEvent(ActiveActorId.Value));
-        }
     }
 
     public void RevertToPreviousState()
@@ -71,15 +65,8 @@ public class PlayerTurnController
         {
             var previousState = PreviousStates.Pop();
 
-            if (CurrentState is RootMenuPhase1State && previousState is PartySelectionState)
-            {
-                if (ActiveActorId.HasValue)
-                {
-                    Simulation.Events.Publish(new PlayerCommandEndedEvent(ActiveActorId.Value));
-                }
-            }
             CurrentState?.Exit(this);
-            CurrentState = PreviousStates.Pop();
+            CurrentState = previousState;
             CurrentState.Enter(this);
         }
         else

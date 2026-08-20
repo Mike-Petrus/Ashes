@@ -8,6 +8,7 @@ public class BattleTestBootstrapper : MonoBehaviour
     public BattleInputManager inputManager;
 
     public BattleUIManager UIManager;
+    public BattleVFXManager VFXManager;
 
     [Header("Simulation Adapters")]
     public NavMeshPathfinder navMeshPathfinder;
@@ -25,6 +26,7 @@ public class BattleTestBootstrapper : MonoBehaviour
 
     [Header("Testing Tools")]
     public BattleScenarioTester ScenarioTester;
+    public ArenaBoundaryView ArenaBoundary;
 
     [Header("Databases")]
     public ScriptableObjectClassDatabase ClassDatabase;
@@ -156,7 +158,9 @@ public class BattleTestBootstrapper : MonoBehaviour
             arena = new BattleArena(simCenter, simForward, totalActors, mapValidator);
         }
         
+        ArenaBoundary.Initialize(eventBus);
         simulation.InitializeBattle(arena);
+        eventBus.Publish(new ArenaInitializedEvent(arena.Center, arena.Radius));
 
         // 4. Spawn the Party
         int nextActorId = 1;
@@ -290,8 +294,7 @@ public class BattleTestBootstrapper : MonoBehaviour
 
         if (inputManager != null) inputManager.Initialize(controller);
         if (UIManager != null) UIManager.Initialize(simulation, controller);
-
-        eventBus.Subscribe<ActorReadyEvent>(OnActorReady);
+        if (VFXManager != null) VFXManager.Initialize(simulation, controller);
     }
 
     public void RunEncounterTest()
@@ -369,17 +372,6 @@ public class BattleTestBootstrapper : MonoBehaviour
         }
 
         controller.ChangeState(new IdleState(), false);
-    }
-
-    private void OnActorReady(ActorReadyEvent e)
-    {
-        var actor = simulation.Actors.GetActor(e.ActorId);
-        
-        // Dynamically checks if the actor is in the party, no longer hardcoded to Cecil!
-        if (actor != null && actor.Faction == ActorFaction.Party)
-        {
-            controller.ChangeState(new PartySelectionState());
-        }
     }
 
     private void OnActorRegistered(ActorRegisteredEvent e)

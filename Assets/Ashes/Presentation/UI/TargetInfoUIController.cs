@@ -61,6 +61,11 @@ public class TargetInfoUIController : MonoBehaviour
 
     private void OnFocusChanged(TargetingFocusChangedEvent e)
     {
+        if (currentFocusedActorId == e.FocusedTargetId)
+        {
+            return;
+        }
+        
         currentFocusedActorId = e.FocusedTargetId;
 
         if (!currentFocusedActorId.HasValue)

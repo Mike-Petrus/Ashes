@@ -10,6 +10,8 @@ public class RootMenuPhase1State : IInputState, IMenuState
 
     public void Enter(PlayerTurnController context)
     {
+        context.Simulation.Events.Publish(new PlayerCommandStartedEvent(context.ActiveActorId.Value));
+
         PopulateMenuOptions(context);
 
         string lastSelection = string.IsNullOrEmpty(context.SelectedPhase1Option) ? menuOptions[0] : context.SelectedPhase1Option;
@@ -51,6 +53,7 @@ public class RootMenuPhase1State : IInputState, IMenuState
                 break;
 
             case InputButton.Cancel:
+                context.Simulation.Events.Publish(new PlayerCommandEndedEvent(context.ActiveActorId.Value));
                 context.SelectedPhase1Option = null;
                 context.ActiveActorId = null;
                 context.RevertToPreviousState();

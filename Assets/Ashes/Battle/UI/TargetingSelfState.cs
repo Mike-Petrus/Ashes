@@ -9,12 +9,10 @@ public class TargetingSelfState : IInputState
         var activeActor  = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
         targetInfo = TargetInfo.ForSelf(activeActor.Id);
 
-        // Query RangeSystem. In future could have Null-Magic Zone or spells that can only be self cast on certain terrain (e.g. water)
-        isValid = TargetingUtility.IsTargetInRange(context, targetInfo, out currentErrorMessage);
-
         // Draw the cursor on the actor's position or future position if they move first
-        SimVector3 displayPosition = TargetingUtility.GetOriginPosition(context);
-        TargetingUtility.UpdateCursorVisuals(context, displayPosition, isValid);
+        context.CurrentCursorPosition = TargetingUtility.GetOriginPosition(context);
+
+        UpdateTargetVisuals(context);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -23,30 +21,20 @@ public class TargetingSelfState : IInputState
         switch (button)
         {
             case InputButton.Confirm:
-                if (isValid)
+                if (!isValid)
                 {
-                    context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
-                    context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
-
-                    // Standard Command sequence flow
-                    if (context.Builder.Size == 1)
-                    {
-                        context.ChangeState(new RootMenuPhase2State());
-                    }
-                    else
-                    {
-                        context.SubmitCommand();
-                    }
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent(currentErrorMessage));
+                    return;
                 }
-                else
-                {
-                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Cannot target self!"));
-                }
+                
+                TryConfirmCommand(context);  
+                
                 break;
 
             case InputButton.Cancel:
-                context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+                DisableTargetVisuals(context);
                 context.RevertToPreviousState();
+
                 break;
 
             case InputButton.Pursuit:
@@ -64,8 +52,41 @@ public class TargetingSelfState : IInputState
 
     public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
 
-    public void Exit(PlayerTurnController context)
+    private void DisableTargetVisuals(PlayerTurnController context)
     {
         context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+        context.Simulation.Events.Publish(new TargetingFocusChangedEvent(null));
+        context.Simulation.Events.Publish(new TargetingImpactsChangedEvent(null));
+    }
+
+    private void UpdateTargetVisuals(PlayerTurnController context)
+    {
+        // Query RangeSystem. In future could have Null-Magic Zone or spells that can only be self cast on certain terrain (e.g. water)
+        isValid = TargetingUtility.IsTargetInRange(context, targetInfo, out currentErrorMessage);
+
+        // Unified Hub Call. We pass the active actor as the snapped ID.
+        TargetingUtility.UpdateTargetVisuals(context, context.CurrentCursorPosition, isValid, null, context.ActiveActorId);
+    }
+
+    private void TryConfirmCommand(PlayerTurnController context)
+    {
+        DisableTargetVisuals(context);
+                    
+        context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
+
+        // Standard Command sequence flow
+        if (context.Builder.Size >= 2)
+        {
+            context.SubmitCommand();
+        }
+        else
+        {
+            context.ChangeState(new RootMenuPhase2State());
+        }
+    }
+
+    public void Exit(PlayerTurnController context)
+    {
+        DisableTargetVisuals(context);
     }
 }

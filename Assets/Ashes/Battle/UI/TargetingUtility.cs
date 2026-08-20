@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 public static class TargetingUtility
 {
@@ -100,27 +101,99 @@ public static class TargetingUtility
     }
 
     /// <summary>
-    /// Consolidates event publishing so every targeting state safely broadcasts 
-    /// the correct display position, origin, path, and AoE geometry to the Presentation Layer.
+    // Unified Visualization Hub. This replaces UpdateCursorVisuals.
+    // It answers all queries: Caster origin, decel valid, caught targets, and highlight outcomes.
     /// </summary>
-    public static void UpdateCursorVisuals(PlayerTurnController context, SimVector3 displayPosition, bool isValid, List<SimVector3> path = null)
+    /// projectorCenter // Center of the decal (unsnapped or snapped ID pos)
+    /// movePath // Path visualization (if Pursuit tethers)
+    /// snappedTargetId // Passes snapped ID for hybrid AoE center calculations
+    public static void UpdateTargetVisuals(PlayerTurnController context, SimVector3 projectorCenter, bool projectorIsValid, List<SimVector3> movePath = null, ActorId? snappedTargetId = null)
     {
-        var ability = context.SelectedAbility;
-        SimVector3 originPosition = GetOriginPosition(context);
+        BattleSimulation simulation = context.Simulation;
+        Ability ability = context.SelectedAbility;
 
-        TargetingMode mode = ability != null ? ability.Mode : TargetingMode.SingleTarget;
-        float radius = ability != null ? ability.Radius : 0f;
+        // 1. Establish Origin (accounts for MoveStep tethers)
+        SimVector3 originPosition = GetOriginPosition(context);
+        var activeActor = simulation.Actors.GetActor(context.ActiveActorId.Value);       
+
+        // 2. Publish original ground projector event.
+        // extractor logic:extract decal mode/radius/angle/valid
+        TargetingMode projectorMode = ability != null ? ability.Mode : TargetingMode.SingleTarget;
+        float radius = ability != null ? ability.Radius : activeActor.Radius;
         float angle = ability != null ? ability.Angle : 0f;
 
-        context.Simulation.Events.Publish(new CursorMovedEvent(
-            displayPosition, 
-            true, 
-            isValid, 
-            mode, 
-            radius, 
-            angle, 
-            path: path,
-            staticCenter: originPosition
-        ));
+        simulation.Events.Publish(new CursorMovedEvent(projectorCenter, true, projectorIsValid, projectorMode, radius, angle, path: movePath,staticCenter: originPosition));
+        simulation.Events.Publish(new TargetingFocusChangedEvent(snappedTargetId));
+
+        // 3. --- VISUAL IMPACT GATHERING PIPELINE (O(Actors)) ---
+
+        TargetInfo targetInfo;
+        // In Hybrid AoE modes, if snapped ON, that actor is the AoE center. If snapped OFF, floor is center.
+        if (snappedTargetId.HasValue)
+        {
+            targetInfo = TargetInfo.ForActor(snappedTargetId.Value, projectorMode);
+        }
+        else
+        {
+            targetInfo = TargetInfo.ForPosition(projectorCenter, projectorMode);
+        }
+
+        // If it's a movement command (no ability), don't highlight actors
+        if (ability == null)
+        {
+            simulation.Events.Publish(new TargetingImpactsChangedEvent(null));
+        }
+
+        // A. Ask existing Pure C# Targeting System for raw affect targets List<ActorId>
+        // Note: For visualization, we always pass alignment everyone/all to calculate collateral!
+        // GetAffectedTargets must return *Everyone* physically inside the zone.
+        var affectedActorIds = simulation.TargetingSystem.GetAffectedTargets(activeActor.Id, targetInfo, ability, TargetAlignment.Everyone);
+
+        // B. Perform pre-emptive Impact Evaluation and standard Outcome Sorting.
+        // We use the NEW Ability SO metadata (Heal/Harm) to perform the math inside C#.
+        var visualizationDTOs = SortTargetsByOutcomeColor(context.Simulation, activeActor, ability, affectedActorIds);
+
+        // C. Publish the specific highlights semantic event!
+        simulation.Events.Publish(new TargetingImpactsChangedEvent(visualizationDTOs));
+    }
+
+    /// <summary>
+    // Standardized Outcome-Based Sorting. This logic *defines* what Red, Yellow, Blue, Green mean.
+    // Leveraging the NEW Ability ImpactType/ElementType metadata.
+    /// </summary>
+    private static List<TargetVisualImpact> SortTargetsByOutcomeColor(
+        BattleSimulation sim, BattleActor sourceActor, Ability ability, List<ActorId> affectedActorIds)
+    {
+        List<TargetVisualImpact> visualList = new List<TargetVisualImpact>();
+
+        foreach (var id in affectedActorIds)
+        {
+            var targetActor = sim.Actors.GetActor(id);
+            if (targetActor == null) continue;
+
+            OutcomeColor visualOutcome = OutcomeColor.None; // Invisible failsafe
+
+            bool isAlly = sourceActor.Faction == targetActor.Faction;
+
+            // Simple Phase 10 logic based on the ability's intention.
+            // Undead inversion math happens inside this check in later phases!
+            bool abilityIsHostileIntention = ability.ImpactType == ImpactType.Damage;
+
+            if (abilityIsHostileIntention)
+            {
+                // Case A: Damage Ability. Enemy gets hurt (Red), Cecil gets friendly fire (Yellow).
+                // Assuming Undead and Absorption aren't present yet for MVP.
+                visualOutcome = !isAlly ? OutcomeColor.IntendedHarm : OutcomeColor.UnintendedHarm;
+            }
+            else
+            {
+                // Case B: Healing Ability. Cecil gets healed (Green), Enemy waste/heal (Blue).
+                visualOutcome = isAlly ? OutcomeColor.IntendedHelp : OutcomeColor.UnintendedHelp;
+            }
+            
+            visualList.Add(new TargetVisualImpact(id, visualOutcome));
+        }
+
+        return visualList;
     }
 }

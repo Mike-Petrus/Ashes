@@ -21,17 +21,28 @@ public class AbilityTemplateSO : ScriptableObject
     [Header("Identity")]
     public string AbilityId;
     public string Name;
+    public Sprite Icon;
+    [TextArea(3, 5)]
+    public string Description;
+
+    [Header("Core Properties")]
     public string Category = "Magic";
+    public ImpactType ImpactType;
+    public ElementType ElementType;
 
     [Header("Spatial Rules")]
     public float Range = 5f;
+    [Tooltip("Radius of AoE Effect (0 if not AoE)")]
     public float Radius = 0f;
+    [Tooltip("Angle of the Cone Effect (0 if not Cone)")]
     public float Angle = 0f;
     public bool RequiresLoS = true;
 
     [Header("Targeting Rules")]
     public TargetingMode Mode = TargetingMode.SingleTarget;
     public TargetAlignment Alignment = TargetAlignment.Enemy;
+    [Tooltip("Check if this ability only functions on dead actors.")]
+    public bool CanTargetDead = false; 
     public float RefundPercent = 0.25f;
 
     [Header("Requirements (Costs)")]
@@ -50,12 +61,15 @@ public class AbilityTemplateSO : ScriptableObject
             AbilityId = this.AbilityId,
             Name = this.Name,
             Category = this.Category,
+            Impact = this.ImpactType,
+            Element = this.ElementType,
             Range = this.Range,
             Radius = this.Radius,
             Angle = this.Angle,
             RequiresLoS = this.RequiresLoS,
             Mode = this.Mode,
             Alignment = this.Alignment,
+            CanTargetDead = this.CanTargetDead,
             RefundPercent = this.RefundPercent,
             Requirements = new List<AbilityRequirement>(),
             Effects = new List<Effect>()

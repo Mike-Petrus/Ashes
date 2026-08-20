@@ -10,10 +10,10 @@ public class TargetingActorState : IInputState
 
     // Cached Data
     private ActorId? savedTargetId = null;
-    private ActorId? lastFocusedActorId = null;
+    
     private bool isTargetingValidActor = true;
-    private string currentErrorMessage = "";
     private List<SimVector3> currentPreviewPath = null;
+    private string currentErrorMessage = "";
 
     // Cached context for event listening
     private PlayerTurnController currentContext;
@@ -41,7 +41,7 @@ public class TargetingActorState : IInputState
             currentTargetIndex = -1;
         }
 
-        ForceSnapToTarget(context);
+        ProcessSnapToTarget(context, true);
 
         // Listen for actors moving while targeting
         context.Simulation.Events.Subscribe<ActorMovedEvent>(OnActorMoved);
@@ -62,7 +62,7 @@ public class TargetingActorState : IInputState
                     {
                         currentTargetIndex = 0;
                     }
-                    ForceSnapToTarget(context);
+                    ProcessSnapToTarget(context);
                 }
                 break;
 
@@ -75,7 +75,7 @@ public class TargetingActorState : IInputState
                     {
                         currentTargetIndex = listSize - 1;
                     }
-                    ForceSnapToTarget(context);
+                    ProcessSnapToTarget(context);
                 }
                 break;
 
@@ -99,55 +99,14 @@ public class TargetingActorState : IInputState
                     return;
                 }
 
-                TargetInfo targetInfo;
+                TryConfirmCommand(context);
 
-                if (currentTargetIndex >= 0 && currentAvailableTargets.Count > 0)
-                {
-                    ActorId selectedTarget = currentAvailableTargets[currentTargetIndex];
-                    targetInfo = TargetInfo.ForActor(selectedTarget, context.SelectedAbility.Mode);
-                }
-                else
-                {
-                    targetInfo = TargetInfo.ForPosition(context.CurrentCursorPosition, context.SelectedAbility.Mode);
-                }
-
-                context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false)); // Hide cursor
-
-                if (context.PursuitEnabled)
-                {
-                    // 1. Determine the final point of the calculated preview path
-                    SimVector3 destination = currentPreviewPath != null && currentPreviewPath.Count > 0 ? currentPreviewPath.Last() : TargetingUtility.GetOriginPosition(context);
-
-                    // 2. Only generate a MoveStep if we actually have to move to reach it
-                    if (SimVector3.Distance(TargetingUtility.GetOriginPosition(context), destination) > 0.1f)
-                    {
-                        context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, destination, currentPreviewPath));
-                    }
-
-                    // 3. Add the Ability and Submit 
-                    context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
-                    context.SubmitCommand();
-                }
-                else
-                {
-                    context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
-
-                    // Is Command complete?
-                    if (context.Builder.Size >= 2)
-                    {
-                        context.SubmitCommand();
-                    }
-                    else
-                    {
-                        context.ChangeState(new RootMenuPhase2State());
-                    }
-                }
                 break;
 
             case InputButton.Cancel:
-                context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
-                context.Simulation.Events.Publish(new TargetingFocusChangedEvent(null));
+                DisableTargetVisuals(context);
                 context.RevertToPreviousState();
+
                 break;
 
             case InputButton.Pursuit:
@@ -157,14 +116,17 @@ public class TargetingActorState : IInputState
                 // If they turn Pursuit off while using the follow dummy, go to TargetingMoveState
                 if (!context.PursuitEnabled && context.SelectedAbility is DummyAbility dummy && dummy.DummyId == "system_follow")
                 {
-                    context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+                    DisableTargetVisuals(context);
+
+                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Switched to Move")); // DEBUG
+
                     context.ChangeState(new TargetingMoveState(), false);
-                    context.Simulation.Events.Publish(new PlayerFeedbackEvent("Switched to Move"));
+                    
                     return;
                 }
 
-                ValidateCurrentTarget(context);
-                UpdateCursorVisuals(context);
+                UpdateTargetVisuals(context);
+
                 break;
 
             case InputButton.FreeAim:
@@ -253,28 +215,51 @@ public class TargetingActorState : IInputState
             currentTargetIndex = -1;
         }
 
-        UpdateFocusInfo(context);
+        UpdateTargetVisuals(context);
     }
 
-    private void ValidateCurrentTarget(PlayerTurnController context)
+    private void UpdateTargetVisuals(PlayerTurnController context)
     {
-        isTargetingValidActor = true;
-        currentErrorMessage = "";
-        currentPreviewPath = null;
+        // 1. Maintain the original internal state
+        savedTargetId = (currentTargetIndex >= 0 && currentAvailableTargets.Count > 0) 
+            ? currentAvailableTargets[currentTargetIndex] 
+            : (ActorId?)null;
 
-        if (currentTargetIndex < 0 || currentAvailableTargets.Count == 0)
+        SimVector3 projectedCenter = context.CurrentCursorPosition;
+
+        // 2. Build semantic targetInfo based only on snap data
+        TargetInfo targetInfo = savedTargetId.HasValue
+            ? TargetInfo.ForActor(savedTargetId.Value, context.SelectedAbility.Mode)
+            : TargetInfo.ForPosition(projectedCenter, context.SelectedAbility.Mode);
+
+        // 3. Perform Pure C# Validation
+        if (context.PursuitEnabled)
         {
-            if (context.SelectedAbility.Mode != TargetingMode.HybridAoE && context.SelectedAbility.Mode != TargetingMode.Directional)
-            {
-                isTargetingValidActor = false;
-                currentErrorMessage = "No target selected!";
-                return;
-            }
+            currentPreviewPath = TargetingUtility.GeneratePursuitPreview(context, targetInfo, context.SelectedAbility);
+            isTargetingValidActor = true;
+            currentErrorMessage = "";
+        }
+        else
+        {
+            currentPreviewPath = null;
+            isTargetingValidActor = TargetingUtility.IsTargetInRange(context, targetInfo, out currentErrorMessage);
         }
 
+        // Unified Visual Update Call
+        TargetingUtility.UpdateTargetVisuals(context, projectedCenter, isTargetingValidActor, currentPreviewPath, savedTargetId);
+    }
+
+    private void DisableTargetVisuals(PlayerTurnController context)
+    {
+        context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+        context.Simulation.Events.Publish(new TargetingFocusChangedEvent(null));
+        context.Simulation.Events.Publish(new TargetingImpactsChangedEvent(null));
+    }
+
+    private void TryConfirmCommand(PlayerTurnController context)
+    {
         TargetInfo targetInfo;
 
-        // Dynamically validate against the actor OR floor position
         if (currentTargetIndex >= 0 && currentAvailableTargets.Count > 0)
         {
             ActorId selectedTarget = currentAvailableTargets[currentTargetIndex];
@@ -285,71 +270,63 @@ public class TargetingActorState : IInputState
             targetInfo = TargetInfo.ForPosition(context.CurrentCursorPosition, context.SelectedAbility.Mode);
         }
 
-        // Pursuit Validation & Preview Path
+        DisableTargetVisuals(context);
+
         if (context.PursuitEnabled)
         {
-            currentPreviewPath = TargetingUtility.GeneratePursuitPreview(context, targetInfo, context.SelectedAbility);
-            isTargetingValidActor = true;
+            // 1. Determine the final point of the calculated preview path
+            SimVector3 destination = currentPreviewPath != null && currentPreviewPath.Count > 0 ? currentPreviewPath.Last() : TargetingUtility.GetOriginPosition(context);
+
+            // 2. Only generate a MoveStep if we actually have to move to reach it
+            if (SimVector3.Distance(TargetingUtility.GetOriginPosition(context), destination) > 0.1f)
+            {
+                context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, destination, currentPreviewPath));
+            }
+
+            // 3. Add the Ability and Submit 
+            context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
+            context.SubmitCommand();
         }
         else
         {
-            // Standard Strict Path Validation
-            isTargetingValidActor = TargetingUtility.IsTargetInRange(context, targetInfo, out currentErrorMessage);
+            context.Builder.AddStep(new AbilityStep(context.ActiveActorId.Value, context.SelectedAbility, targetInfo));
+
+            // Is Command complete?
+            if (context.Builder.Size >= 2)
+            {
+                context.SubmitCommand();
+            }
+            else
+            {
+                context.ChangeState(new RootMenuPhase2State());
+            }
         }
     }
 
-    private void UpdateCursorVisuals(PlayerTurnController context)
-    {
-        SimVector3 displayPosition = context.CurrentCursorPosition;
-
-        if (currentTargetIndex >= 0 && currentAvailableTargets.Count > 0)
-        {
-            displayPosition = context.Simulation.Actors.GetActor(currentAvailableTargets[currentTargetIndex]).Position;
-        }
-
-        TargetingUtility.UpdateCursorVisuals(context, displayPosition, isTargetingValidActor, currentPreviewPath);
-    }
-
-    private void ForceSnapToTarget(PlayerTurnController context)
+    private void ProcessSnapToTarget(PlayerTurnController context, bool initialSnap = false)
     {
         if (currentAvailableTargets.Count == 0)
         {
             currentTargetIndex = -1;
-            UpdateFocusInfo(context);
+            UpdateTargetVisuals(context);
             
             return;
         }
 
-        if (currentTargetIndex < 0)
+        if (currentTargetIndex < 0 && !initialSnap)
         {
             currentTargetIndex = 0;
         }
 
-        // Snapped ID
-        ActorId snapId = currentAvailableTargets[currentTargetIndex];
-        context.CurrentCursorPosition = context.Simulation.Actors.GetActor(snapId).Position;
-
-        // centralized focus publish
-        UpdateFocusInfo(context);
-    }
-
-    private void UpdateFocusInfo(PlayerTurnController context)
-    {
-        // 1. Maintain the original internal state
-        savedTargetId = (currentTargetIndex >= 0 && currentAvailableTargets.Count > 0) 
-            ? currentAvailableTargets[currentTargetIndex] 
-            : (ActorId?)null;
-
-        // 2. Publish event *only if focus changed* to prevent UI jitter/spam
-        if (savedTargetId != lastFocusedActorId)
-        {
-            context.Simulation.Events.Publish(new TargetingFocusChangedEvent(savedTargetId));
-            lastFocusedActorId = savedTargetId;
+        if (currentTargetIndex >= 0)
+        {   
+            // Snapped ID
+            ActorId snapId = currentAvailableTargets[currentTargetIndex];
+            context.CurrentCursorPosition = context.Simulation.Actors.GetActor(snapId).Position;
         }
 
-        // 3. Maintain original visual/validation pipeline exactly as before
-        ValidateCurrentTarget(context);
-        UpdateCursorVisuals(context);
+        // centralized focus publish
+        UpdateTargetVisuals(context);
     }
 
     private void OnActorMoved(ActorMovedEvent e)
@@ -366,19 +343,18 @@ public class TargetingActorState : IInputState
                 currentContext.CurrentCursorPosition = currentContext.Simulation.Actors.GetActor(savedTargetId.Value).Position;
             }
 
-            UpdateFocusInfo(currentContext);
+            UpdateTargetVisuals(currentContext);
         }
     }
 
     public void Exit(PlayerTurnController context)
     {
         context.Simulation.Events.Unsubscribe<ActorMovedEvent>(OnActorMoved);
-        context.Simulation.Events.Publish(new TargetingFocusChangedEvent(null));
-        context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+
+        DisableTargetVisuals(context);
         // Do NOT clear CurrentAvailableTargets here so that if we come back,
         // the memory index doesn't temporarily throw an out of bounds error
 
-        lastFocusedActorId = null;
         currentContext = null;
     }
 }

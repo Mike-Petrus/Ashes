@@ -6,12 +6,19 @@ public class DataDrivenAbility : Ability
     {
         Name = template.Name;
         Category = template.Category;
+        ImpactType = template.Impact;
+        ElementType = template.Element;
+
+        // Spatial Rules
         Range = template.Range;
         Radius = template.Radius;
         Angle = template.Angle;
         RequiresLoS = template.RequiresLoS;
+
+        // Targeting Rules
         Mode = template.Mode;
         Alignment = template.Alignment;
+        CanTargetDead = template.CanTargetDead;
         RefundPercent = template.RefundPercent;
 
         Requirements.AddRange(template.Requirements);

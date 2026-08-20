@@ -21,4 +21,14 @@ public class UIThemeSO : ScriptableObject
     public Color DamageText = Color.white;
     public Color HealText = Color.green;
     public Color SystemText = Color.cyan;
+
+    [Header("3D Targeting Highlights (Outcomes)")]
+    [Tooltip("Enemy gets damaged / Undead gets healed")]
+    public Color HighlightIntendedFoe = Color.red;
+    [Tooltip("Ally gets healed / Intended friendly damage")]
+    public Color HighlightIntendedFriend = Color.green;
+    [Tooltip("Friendly/Neutral actor will take accidental damage (Yellow Alert)")]
+    public Color HighlightUnintendedHarm = Color.yellow; 
+    [Tooltip("Enemy will absorb damage / Normal Heal hitting Living Enemy")]
+    public Color HighlightUnintendedHelp = Color.blue; 
 }
