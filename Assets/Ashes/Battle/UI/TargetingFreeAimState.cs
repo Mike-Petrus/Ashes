@@ -13,6 +13,8 @@ public class TargetingFreeAimState : IInputState
 
     public void Enter(PlayerTurnController context)
     {
+        context.ToggleFreeAim(true);
+
         if (!savedCursorPosition.HasValue)
         {
             var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
@@ -93,33 +95,53 @@ public class TargetingFreeAimState : IInputState
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime)
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime)
     {
-        // 1. Slide the cursor
-        SimVector3 pos = context.CurrentCursorPosition;
-        pos.x += x * context.CursorSpeed * deltaTime;
-        pos.z += y * context.CursorSpeed * deltaTime;
+        float inputMagnitude = (float)Math.Sqrt((x * x) + (y * y));
 
-        // 2. HARD CLAMP: Tether to Arena Radius + Ability Radius
-        if (context.Simulation.Arena != null)
+        // Directional pointing. Snaps directly to the direction the stick is pointing in
+        // TODO: Update to make movement smoother. Make sure decal maps to actual mouse positioning and targeting is accurate
+        // TODO: Test TargetingActorState and see if this needs to be duplicated
+        if (context.SelectedAbility.Mode == TargetingMode.Directional)
         {
-            float maxDistance = context.Simulation.Arena.Radius + context.SelectedAbility.Radius - 0.05f;
-
-            float dx = pos.x - context.Simulation.Arena.Center.x;
-            float dz = pos.z - context.Simulation.Arena.Center.z;
-            float dist = (float)Math.Sqrt((dx * dx) + (dz * dz));
-
-            if (dist > maxDistance)
+            if (inputMagnitude > 0.1f)
             {
-                float dirX = dx / dist;
-                float dirZ = dz / dist;
+                SimVector3 origin = TargetingUtility.GetOriginPosition(context);
 
-                pos.x = context.Simulation.Arena.Center.x + (dirX * maxDistance);
-                pos.z = context.Simulation.Arena.Center.z + (dirZ * maxDistance);
+                // Normalize the analog input into a raw direction vector
+                SimVector3 stickDirection = new SimVector3(x / inputMagnitude, 0 , y / inputMagnitude);
+
+                // Project the cursor out along that vector
+                context.CurrentCursorPosition = origin + (stickDirection * (context.SelectedAbility.Radius - 0.5f));
             }
         }
+        else
+        {
+            // 1. Slide the cursor
+            SimVector3 pos = context.CurrentCursorPosition;
+            pos.x += x * context.CursorSpeed * deltaTime;
+            pos.z += y * context.CursorSpeed * deltaTime;
 
-        context.CurrentCursorPosition = pos;
+            // 2. HARD CLAMP: Tether to Arena Radius + Ability Radius
+            if (context.Simulation.Arena != null)
+            {
+                float maxDistance = context.Simulation.Arena.Radius + context.SelectedAbility.Radius - 0.05f;
+
+                float dx = pos.x - context.Simulation.Arena.Center.x;
+                float dz = pos.z - context.Simulation.Arena.Center.z;
+                float dist = (float)Math.Sqrt((dx * dx) + (dz * dz));
+
+                if (dist > maxDistance)
+                {
+                    float dirX = dx / dist;
+                    float dirZ = dz / dist;
+
+                    pos.x = context.Simulation.Arena.Center.x + (dirX * maxDistance);
+                    pos.z = context.Simulation.Arena.Center.z + (dirZ * maxDistance);
+                }
+            }
+            context.CurrentCursorPosition = pos;
+        }
 
         // Cache cursor position for rewinding
         savedCursorPosition = context.CurrentCursorPosition;

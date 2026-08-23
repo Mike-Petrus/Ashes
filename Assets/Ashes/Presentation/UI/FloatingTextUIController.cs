@@ -1,6 +1,8 @@
 using UnityEngine;
 using TMPro;
 
+/// ///////// Probably should be FloatingTextVFXController and be managed by BattleVFXManager //////// ///
+/// ////////////////////////////////////////////////////////////////////////////////////////////////// ///
 public class FloatingTextUIController : MonoBehaviour
 {
     [Tooltip("A Prefab containing a TextMeshPro component. Add a simple script to it that moves it up and destroys it after 1.5s!")]

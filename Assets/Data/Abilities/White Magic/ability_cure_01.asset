@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_cure_01
   Name: Cure
+  Icon: {fileID: 0}
+  Description: 
   Category: White Magic
+  ImpactType: 2
+  ElementType: 6
   Range: 12
   Radius: 0
   Angle: 0
   RequiresLoS: 0
   Mode: 1
   Alignment: 2
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 10
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 0
     Power: 35

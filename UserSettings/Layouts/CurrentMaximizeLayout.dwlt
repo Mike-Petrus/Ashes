@@ -249,11 +249,19 @@ MonoBehaviour:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs:
-      - m_Data: 46396
+      - m_Data: -85422
       m_LastClickedID:
-        m_Data: 0
+        m_Data: -85422
       m_ExpandedIDs:
+      - m_Data: -85422
+      - m_Data: -84596
+      - m_Data: -45944
+      - m_Data: -39362
+      - m_Data: -18258
+      - m_Data: -13896
+      - m_Data: -3958
       - m_Data: -1408
+      - m_Data: 49390
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -831,9 +839,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: 5.899308, y: -24.4996, z: 11.786836}
+    m_Target: {x: 5.762582, y: -27.045853, z: 7.088834}
     speed: 2
-    m_Value: {x: 5.899308, y: -24.4996, z: 11.786836}
+    m_Value: {x: 5.762582, y: -27.045853, z: 7.088834}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -883,9 +891,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: -0.48904708, y: -0.17125066, z: 0.09857617, w: -0.8495817}
   m_Size:
-    m_Target: 23.366217
+    m_Target: 20.416843
     speed: 2
-    m_Value: 23.366217
+    m_Value: 20.416843
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -995,7 +1003,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets
+    - Assets/Icons
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -1005,29 +1013,33 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets
+  - Assets/Icons
   m_LastFoldersGridSize: -1
   m_LastProjectPath: C:\Users\MikeP\Unity\Ashes
   m_LockTracker:
     m_IsLocked: 0
   m_LastLocalAssetsSearchArea: 1
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 31}
+    scrollPos: {x: 0, y: 88}
     m_SelectedIDs:
-    - m_Data: 47512
+    - m_Data: 47696
     m_LastClickedID:
-      m_Data: 47512
+      m_Data: 47696
     m_ExpandedIDs:
     - m_Data: 0
     - m_Data: 47512
     - m_Data: 47514
-    - m_Data: 47516
     - m_Data: 47518
     - m_Data: 47520
     - m_Data: 47522
     - m_Data: 47524
     - m_Data: 47526
     - m_Data: 47528
+    - m_Data: 47680
+    - m_Data: 47684
+    - m_Data: 47698
+    - m_Data: 53428
+    - m_Data: 70650
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1062,13 +1074,17 @@ MonoBehaviour:
     - m_Data: 0
     - m_Data: 47512
     - m_Data: 47514
-    - m_Data: 47516
     - m_Data: 47518
     - m_Data: 47520
     - m_Data: 47522
     - m_Data: 47524
     - m_Data: 47526
     - m_Data: 47528
+    - m_Data: 47680
+    - m_Data: 47684
+    - m_Data: 47698
+    - m_Data: 53428
+    - m_Data: 70650
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1096,10 +1112,11 @@ MonoBehaviour:
       m_ResourceFile: 
   m_ListAreaState:
     m_SelectedInstanceIDs:
-    - m_Data: 46396
-    m_LastClickedInstanceID: 46396
+    - m_Data: -85422
+    m_LastClickedInstanceID: -85422
     m_HadKeyboardFocusLastEvent: 0
-    m_ExpandedInstanceIDs: []
+    m_ExpandedInstanceIDs:
+    - m_Data: 19850
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

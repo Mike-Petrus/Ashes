@@ -8,6 +8,7 @@ public class BattleVFXManager : MonoBehaviour
 
     [Header("VFX Sub-Controllers")]
     public TargetHighlightVFXController TargetHighlightVFX;
+    public CursorVFXController CursorVFX;
 
     public void Initialize(BattleSimulation simulation, PlayerTurnController turnController)
     {
@@ -18,5 +19,6 @@ public class BattleVFXManager : MonoBehaviour
         }
 
         if (TargetHighlightVFX != null) TargetHighlightVFX.Initialize(simulation, CurrentTheme);
+        if (CursorVFX != null) CursorVFX.Initialize(simulation);
     }
 }

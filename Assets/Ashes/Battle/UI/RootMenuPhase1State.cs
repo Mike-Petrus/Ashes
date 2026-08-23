@@ -152,7 +152,8 @@ public class RootMenuPhase1State : IInputState, IMenuState
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime) { }
+
     public void Exit(PlayerTurnController context)
     {
         menuOptions.Clear();

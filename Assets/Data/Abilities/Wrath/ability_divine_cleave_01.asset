@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_divine_cleave_01
   Name: Divine Cleave
+  Icon: {fileID: 0}
+  Description: 
   Category: Wrath
+  ImpactType: 1
+  ElementType: 1
   Range: 0
   Radius: 4
   Angle: 100
   RequiresLoS: 1
   Mode: 5
   Alignment: 1
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 10
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 1
     Power: 35

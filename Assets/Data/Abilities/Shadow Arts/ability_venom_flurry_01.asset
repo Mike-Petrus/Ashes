@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_venom_flurry_01
   Name: Venom Flurry
+  Icon: {fileID: 0}
+  Description: 
   Category: Shadow Arts
+  ImpactType: 1
+  ElementType: 5
   Range: 1.5
   Radius: 0
   Angle: 0
   RequiresLoS: 1
   Mode: 1
   Alignment: 1
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 5
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 1
     Power: 10

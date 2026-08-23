@@ -81,9 +81,9 @@ public class PlayerTurnController
         CurrentState?.ProcessInput(this, button);
     }
 
-    public void ProcessAnalogInput(float x, float y, float deltaTime)
+    public void ProcessAnalogLeft(float x, float y, float deltaTime)
     {
-        CurrentState?.ProcessAnalogInput(this, x, y, deltaTime);
+        CurrentState?.ProcessAnalogLeft(this, x, y, deltaTime);
     }
 
     public void SubmitCommand()
@@ -127,6 +127,12 @@ public class PlayerTurnController
         Simulation.Events.Publish(new PursuitToggledEvent(PursuitEnabled));
     }
 
+    public void TogglePursuit(bool enable)
+    {
+        PursuitEnabled = !PursuitEnabled;
+        Simulation.Events.Publish(new PursuitToggledEvent(PursuitEnabled));
+    }
+
     public void ToggleFreeAim()
     {
         FreeAimEnabled = !FreeAimEnabled;
@@ -144,6 +150,9 @@ public class PlayerTurnController
         ActiveActorId = null;
         SelectedAbility = null;
         PreviousStates.Clear();
+
+        ToggleFreeAim(false);
+        TogglePursuit(false);
         
         ChangeState(new IdleState(), false);    
     }

@@ -54,7 +54,7 @@ public class TargetingMoveState : IInputState
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime)
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime)
     {
         // 1. Slide the cursor
         SimVector3 pos = context.CurrentCursorPosition;

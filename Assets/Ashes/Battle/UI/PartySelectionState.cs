@@ -65,6 +65,7 @@ public class PartySelectionState : IInputState
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime) { }
+    
     public void Exit(PlayerTurnController context) { /* close UI */ }
 }

@@ -5,10 +5,10 @@ using System.Collections.Generic;
 public class BattleTestBootstrapper : MonoBehaviour
 {
     [Header("Presentation Layer")]
-    public BattleInputManager inputManager;
-
+    public BattleInputManager InputManager;
     public BattleUIManager UIManager;
     public BattleVFXManager VFXManager;
+    public CameraController CameraController;
 
     [Header("Simulation Adapters")]
     public NavMeshPathfinder navMeshPathfinder;
@@ -100,9 +100,12 @@ public class BattleTestBootstrapper : MonoBehaviour
         eventBus.Subscribe<ActorRegisteredEvent>(OnActorRegistered);
         eventBus.Subscribe<BattleEndedEvent>(OnBattleEnded);
 
-        var cursorViewObj = Instantiate(CursorViewPrefab);
-        cursorViewObj.name = "View_Cursor";
-        cursorViewObj.GetComponent<CursorView>().Initialize(eventBus);
+        /// OLD CURSOR ///
+        /// ////////// ///
+        
+        // var cursorViewObj = Instantiate(CursorViewPrefab);
+        // cursorViewObj.name = "View_Cursor";
+        // cursorViewObj.GetComponent<CursorView>().Initialize(eventBus);
 
         // 2. PRE-CALCULATE ENCOUNTER DATA FIRST!
         // We must do this before creating the arena so we know exactly how many actors exist.
@@ -292,7 +295,8 @@ public class BattleTestBootstrapper : MonoBehaviour
 
         controller = new PlayerTurnController(simulation, playerBuilder, globalPartyManager); 
 
-        if (inputManager != null) inputManager.Initialize(controller);
+        if (CameraController != null) CameraController.Initialize();
+        if (InputManager != null) InputManager.Initialize(controller, CameraController);
         if (UIManager != null) UIManager.Initialize(simulation, controller);
         if (VFXManager != null) VFXManager.Initialize(simulation, controller);
     }

@@ -14,14 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemTemplateSO
   ItemId: potion_01
   Name: Potion
+  Icon: {fileID: 0}
   Description: Restores 50 HP
   Type: 0
+  Impact: 2
+  Element: 1
   Range: 20
   Radius: 0
+  Angle: 0
+  RequiresLoS: 1
   TargetMode: 1
   Alignment: 2
+  CanTargetDead: 0
   Effects:
   - EffectType: 0
     Power: 50
     StatusBlueprint: {fileID: 0}
     OverrideDuration: 0
+    CleanseAllDebuffs: 0
+    SpecificStatusesToCleanse: []

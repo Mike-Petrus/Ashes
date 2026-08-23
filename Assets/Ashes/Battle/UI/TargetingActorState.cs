@@ -23,7 +23,9 @@ public class TargetingActorState : IInputState
     public void Enter(PlayerTurnController context)
     {
         currentContext = context;
+
         currentAvailableTargets.Clear();
+        context.ToggleFreeAim(false);
 
         var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
         var abilityAlignment = context.SelectedAbility.Alignment;
@@ -149,7 +151,7 @@ public class TargetingActorState : IInputState
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime)
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime)
     {
         float inputMagnitude = (float)Math.Sqrt((x * x) + (y * y));
 

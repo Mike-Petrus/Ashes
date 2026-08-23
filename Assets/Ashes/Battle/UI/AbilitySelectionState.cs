@@ -132,9 +132,6 @@ public class AbilitySelectionState : IInputState, IMenuState
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
-    public void Exit(PlayerTurnController context) { }
-
     private void TryCastAbility(PlayerTurnController context, Ability ability)
     {
         // Check requirements here
@@ -211,4 +208,8 @@ public class AbilitySelectionState : IInputState, IMenuState
             }
         }
     }
+
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime) { }
+
+    public void Exit(PlayerTurnController context) { }
 }

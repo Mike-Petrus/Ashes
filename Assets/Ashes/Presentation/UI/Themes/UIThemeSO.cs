@@ -8,10 +8,22 @@ public class UIThemeSO : ScriptableObject
     public Color PanelHover = new Color(0.55f, 0.55f, 0.55f, 0.9f);
     public Color PanelActive = new Color(0.1f, 0.3f, 0.6f, 0.9f);
 
-    [Header("Text & Cursors")]
+    [Header("Text")]
     public Color TextNormal = Color.white;
     public Color TextHighlight = Color.yellow;
     public Color TextDisabled = Color.gray;
+
+    // May not need these for Projected Materials / Decals //
+    /// ///////////////////////////////////////////////// ///
+    /// ///////////////////////////////////////////////// ///
+    /// ///////////////////////////////////////////////// ///
+
+    // [Header("Cursor")]
+    // public Color CursorNormal = new Color(0.15f, 0.15f, 0.15f, 1.0f);
+    // public Color CursorValid = new Color(0.05f, 0.05f, 0.05f, 1.0f);
+    // public Color CursorInvalid = Color.red;
+    // public Color AreaValid = Color.white;
+    // public Color AreaInvalid = Color.red;
 
     [Header("Bars")]
     public Color ATBFilling = Color.red;

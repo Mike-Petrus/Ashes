@@ -139,9 +139,6 @@ public class ItemSelectionState : IInputState, IMenuState
         }        
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
-    public void Exit(PlayerTurnController context) { }
-
     private void TryUseItem(PlayerTurnController context, string itemId, ItemTemplate itemData)
     {
         Ability useItemAbility = new UseItemAbility(itemData);
@@ -221,4 +218,10 @@ public class ItemSelectionState : IInputState, IMenuState
             }
         }
     }
+
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime) { }
+
+    public void Exit(PlayerTurnController context) { }
+
+    
 }

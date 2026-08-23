@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_phalanx_01
   Name: Phalanx
+  Icon: {fileID: 0}
+  Description: 
   Category: Wrath
+  ImpactType: 0
+  ElementType: 1
   Range: 5
   Radius: 0
   Angle: 0
   RequiresLoS: 1
   Mode: 0
   Alignment: 3
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 15
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 2
     Power: 0
