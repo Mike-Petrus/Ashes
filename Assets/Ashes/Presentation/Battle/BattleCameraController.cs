@@ -5,8 +5,13 @@ public class CameraController : MonoBehaviour
     [Header("Rig Settings")]
     [Tooltip("Drag the child Camera object here")]
     public Transform CameraChild; 
-    public float ZoomDistance = 12f;
     public float HeightPivotOffset = 1.5f; // Looks at the actors' chests, not their feet
+
+    [Header("Zoom Settings")]
+    public float ZoomDistance = 12f;
+    public float ZoomSpeed = 30f;
+    public float MinZoom = 12f;
+    public float MaxZoom = 20f;
 
     [Header("Orbit Settings")]
     public float OrbitSpeed = 120f;
@@ -21,6 +26,9 @@ public class CameraController : MonoBehaviour
     private float currentYaw;
     private float currentPitch = 45f; // Start at a nice isometric angle
     private Camera cam;
+
+    // TODO: Add functions/coroutines to smoothly change position
+    // e.g. smooth pan, smoothly rotate and lookat, smooth move to position, follow, etc.
 
     // Explicit Initialization called by the Bootstrapper
     public void Initialize()
@@ -37,7 +45,7 @@ public class CameraController : MonoBehaviour
         UpdateCameraTransform();
     }
 
-    // Called by the State Machine via Right Stick
+    // Called by the Input Manager via left stick
     public void RotateCamera(float x, float y, float deltaTime)
     {
         // 1. Calculate new angles
@@ -47,6 +55,19 @@ public class CameraController : MonoBehaviour
         currentPitch = Mathf.Clamp(currentPitch, MinPitch, MaxPitch);
 
         // 2. Apply transformations
+        UpdateCameraTransform();
+    }
+
+    // Called by the Input Manager via Triggers, Bumpers, or Scroll Wheel
+    public void ZoomCamera(float zoomInput, float deltaTime)
+    {
+        if (Mathf.Abs(zoomInput) < 0.01f) return;
+
+        // If zoomInput is positive, we zoom IN (decrease distance)
+        // If zoomInput is negative, we zoom OUT (increase distance)
+        ZoomDistance -= zoomInput * ZoomSpeed * deltaTime;
+        ZoomDistance = Mathf.Clamp(ZoomDistance, MinZoom, MaxZoom);
+
         UpdateCameraTransform();
     }
 

@@ -174,9 +174,27 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
+                    ""name"": ""ZoomIn"",
+                    ""type"": ""Button"",
+                    ""id"": ""93390d30-8abf-49dd-9483-ded9a03961c2"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""FreeAim"",
                     ""type"": ""Button"",
                     ""id"": ""db545b04-a8b6-4669-a866-f0540f3e8433"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ZoomOut"",
+                    ""type"": ""Button"",
+                    ""id"": ""9aadfb36-29f5-4e35-b9c9-d41a77733826"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -579,6 +597,28 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                     ""action"": ""FreeAim"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""065aba51-23f6-44d9-bedf-a72d56c5b472"",
+                    ""path"": ""<DualShockGamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ZoomIn"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""648b03b8-b0ba-41de-8c83-2756c5b34416"",
+                    ""path"": ""<DualShockGamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ZoomOut"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -596,7 +636,9 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
         m_Battle_Right = m_Battle.FindAction("Right", throwIfNotFound: true);
         m_Battle_CursorMove = m_Battle.FindAction("CursorMove", throwIfNotFound: true);
         m_Battle_CameraLook = m_Battle.FindAction("CameraLook", throwIfNotFound: true);
+        m_Battle_ZoomIn = m_Battle.FindAction("ZoomIn", throwIfNotFound: true);
         m_Battle_FreeAim = m_Battle.FindAction("FreeAim", throwIfNotFound: true);
+        m_Battle_ZoomOut = m_Battle.FindAction("ZoomOut", throwIfNotFound: true);
     }
 
     ~@BattleControls()
@@ -686,7 +728,9 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Battle_Right;
     private readonly InputAction m_Battle_CursorMove;
     private readonly InputAction m_Battle_CameraLook;
+    private readonly InputAction m_Battle_ZoomIn;
     private readonly InputAction m_Battle_FreeAim;
+    private readonly InputAction m_Battle_ZoomOut;
     /// <summary>
     /// Provides access to input actions defined in input action map "Battle".
     /// </summary>
@@ -735,9 +779,17 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @CameraLook => m_Wrapper.m_Battle_CameraLook;
         /// <summary>
+        /// Provides access to the underlying input action "Battle/ZoomIn".
+        /// </summary>
+        public InputAction @ZoomIn => m_Wrapper.m_Battle_ZoomIn;
+        /// <summary>
         /// Provides access to the underlying input action "Battle/FreeAim".
         /// </summary>
         public InputAction @FreeAim => m_Wrapper.m_Battle_FreeAim;
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/ZoomOut".
+        /// </summary>
+        public InputAction @ZoomOut => m_Wrapper.m_Battle_ZoomOut;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -791,9 +843,15 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
             @CameraLook.started += instance.OnCameraLook;
             @CameraLook.performed += instance.OnCameraLook;
             @CameraLook.canceled += instance.OnCameraLook;
+            @ZoomIn.started += instance.OnZoomIn;
+            @ZoomIn.performed += instance.OnZoomIn;
+            @ZoomIn.canceled += instance.OnZoomIn;
             @FreeAim.started += instance.OnFreeAim;
             @FreeAim.performed += instance.OnFreeAim;
             @FreeAim.canceled += instance.OnFreeAim;
+            @ZoomOut.started += instance.OnZoomOut;
+            @ZoomOut.performed += instance.OnZoomOut;
+            @ZoomOut.canceled += instance.OnZoomOut;
         }
 
         /// <summary>
@@ -832,9 +890,15 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
             @CameraLook.started -= instance.OnCameraLook;
             @CameraLook.performed -= instance.OnCameraLook;
             @CameraLook.canceled -= instance.OnCameraLook;
+            @ZoomIn.started -= instance.OnZoomIn;
+            @ZoomIn.performed -= instance.OnZoomIn;
+            @ZoomIn.canceled -= instance.OnZoomIn;
             @FreeAim.started -= instance.OnFreeAim;
             @FreeAim.performed -= instance.OnFreeAim;
             @FreeAim.canceled -= instance.OnFreeAim;
+            @ZoomOut.started -= instance.OnZoomOut;
+            @ZoomOut.performed -= instance.OnZoomOut;
+            @ZoomOut.canceled -= instance.OnZoomOut;
         }
 
         /// <summary>
@@ -939,11 +1003,25 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnCameraLook(InputAction.CallbackContext context);
         /// <summary>
+        /// Method invoked when associated input action "ZoomIn" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnZoomIn(InputAction.CallbackContext context);
+        /// <summary>
         /// Method invoked when associated input action "FreeAim" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnFreeAim(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ZoomOut" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnZoomOut(InputAction.CallbackContext context);
     }
 }

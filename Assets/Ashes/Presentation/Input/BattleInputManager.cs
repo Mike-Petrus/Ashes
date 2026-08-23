@@ -17,10 +17,13 @@ public class BattleInputManager : MonoBehaviour
 
         // 2. Subscribe to the C# events!
         // "performed" fires exactly once when the button is successfully fully pressed.
-        inputControls.Battle.Confirm.performed += ctx => SendInput(InputButton.Confirm);
-        inputControls.Battle.Cancel.performed += ctx => SendInput(InputButton.Cancel);
-        inputControls.Battle.Pursuit.performed += ctx => SendInput(InputButton.Pursuit);
-        inputControls.Battle.FreeAim.performed += ctx => SendInput(InputButton.FreeAim);
+        inputControls.Battle.Confirm.performed += ctx => SendInput(InputButton.Confirm);    // X
+        inputControls.Battle.Cancel.performed += ctx => SendInput(InputButton.Cancel);      // Circle
+        inputControls.Battle.Pursuit.performed += ctx => SendInput(InputButton.Pursuit);    // Triangle
+                                                                                            // Square ??? D:
+
+        inputControls.Battle.FreeAim.performed += ctx => SendInput(InputButton.FreeAim);    // R2
+        // Toggle nameplates?                                                               // L2
         
         inputControls.Battle.Up.performed += ctx => SendInput(InputButton.Up);
         inputControls.Battle.Down.performed += ctx => SendInput(InputButton.Down);
@@ -39,20 +42,31 @@ public class BattleInputManager : MonoBehaviour
     // We only use Update for reading the continuous analog float values
     public void Update()
     {
-        if (controller == null || controller.CurrentState is IdleState)
-        {
-            return;
-        }
+        // if (controller == null || controller.CurrentState is IdleState)
+        // {
+        //     return;
+        // }
 
         float deadzoneSqr = 0.0625f; // 25% deadzone
 
-        // 1. PROCESS RIGHT STICK (CAMERA) NATIVELY
         if (cameraController != null)
         {
+            // 1. PROCESS RIGHT STICK (CAMERA ORBIT)
             Vector2 rightStick = inputControls.Battle.CameraLook.ReadValue<Vector2>();
             if (rightStick.sqrMagnitude > deadzoneSqr)
             {
                 cameraController.RotateCamera(rightStick.x, rightStick.y, Time.deltaTime);
+            }
+
+            // 2. PROCESS ZOOM BUTTONS (CONTINUOUS HOLD)
+            float zoomIn = inputControls.Battle.ZoomIn.ReadValue<float>();
+            float zoomOut = inputControls.Battle.ZoomOut.ReadValue<float>();
+            
+            float zoomInput = zoomIn - zoomOut;
+            
+            if (Mathf.Abs(zoomInput) > 0.01f)
+            {
+                cameraController.ZoomCamera(zoomInput, Time.deltaTime);
             }
         }
 
