@@ -7,6 +7,6 @@ public enum ElementType
     Lightning,
     Poison,
     Holy,
-    Dark,
+    Dark,               // Void?
     System
 }

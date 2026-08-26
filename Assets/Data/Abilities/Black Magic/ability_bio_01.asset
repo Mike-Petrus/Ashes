@@ -15,7 +15,7 @@ MonoBehaviour:
   AbilityId: ability_bio_01
   Name: Bio
   Icon: {fileID: 0}
-  Description: 
+  Description: Does like poison and stuff
   Category: Black Magic
   ImpactType: 1
   ElementType: 5

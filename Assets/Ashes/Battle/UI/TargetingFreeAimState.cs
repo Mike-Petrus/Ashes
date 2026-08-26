@@ -62,7 +62,7 @@ public class TargetingFreeAimState : IInputState
                 context.TogglePursuit();
                 
                 // If they turn Pursuit off while using the follow dummy, go to TargetingMoveState
-                if (!context.PursuitEnabled && context.SelectedAbility is DummyAbility dummy && dummy.DummyId == "system_follow")
+                if (!context.PursuitEnabled && context.SelectedAbility is DummyAbility dummy && dummy.AbilityId == "system_follow")
                 {
                     DisableTargetVisuals(context);
 

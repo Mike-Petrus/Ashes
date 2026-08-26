@@ -2,7 +2,11 @@ using System.Collections.Generic;
 
 public abstract class Ability
 {
+    // Identity
+    public string AbilityId { get; protected set; }
     public string Name { get; protected set; }
+
+    // Core Properties
     public string Category { get; protected set; }
     public ImpactType ImpactType { get; protected set; }
     public ElementType ElementType { get; protected set; }

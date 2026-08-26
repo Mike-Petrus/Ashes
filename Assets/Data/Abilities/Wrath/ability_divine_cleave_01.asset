@@ -15,7 +15,7 @@ MonoBehaviour:
   AbilityId: ability_divine_cleave_01
   Name: Divine Cleave
   Icon: {fileID: 0}
-  Description: 
+  Description: Swippy swipe
   Category: Wrath
   ImpactType: 1
   ElementType: 1

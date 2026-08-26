@@ -2,7 +2,8 @@ public class UseItemAbility : Ability
 {
     public UseItemAbility(ItemTemplate item)
     {
-        Name = $"Use {item.Name}";
+        AbilityId = $"ability_item_{item.ItemId}";          // TODO: I have actually no idea how the fuck this will work if you need to query the database"
+        Name = $"Use {item.Name}";                          // Probably needs just 1 ID, but IDK. We should never need to look up the description for this anyways
         Category = "Item";
         ImpactType = item.Impact;
         ElementType = item.Element;

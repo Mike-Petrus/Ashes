@@ -7,6 +7,7 @@ public class BattleTestBootstrapper : MonoBehaviour
     [Header("Presentation Layer")]
     public BattleInputManager InputManager;
     public BattleUIManager UIManager;
+    public BattleWorldUIManager WorldUIManager;
     public BattleVFXManager VFXManager;
     public CameraController CameraController;
 
@@ -297,7 +298,8 @@ public class BattleTestBootstrapper : MonoBehaviour
 
         if (CameraController != null) CameraController.Initialize();
         if (InputManager != null) InputManager.Initialize(controller, CameraController);
-        if (UIManager != null) UIManager.Initialize(simulation, controller);
+        if (UIManager != null) UIManager.Initialize(simulation, controller, AbilityDatabase);
+        if (WorldUIManager != null) WorldUIManager.Initialize(simulation, CameraController.Cam);
         if (VFXManager != null) VFXManager.Initialize(simulation, controller);
     }
 

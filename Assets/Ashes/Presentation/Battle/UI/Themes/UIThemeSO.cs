@@ -25,8 +25,10 @@ public class UIThemeSO : ScriptableObject
     // public Color AreaValid = Color.white;
     // public Color AreaInvalid = Color.red;
 
-    [Header("Bars")]
+    [Header("ATB Bars")]
     public Color ATBFilling = Color.red;
+    public Color ATBNormal = Color.yellow;
+    public Color ATBWarning = Color.orange;
     public Color ATBReady = Color.green;
 
     [Header("Floating Text")]

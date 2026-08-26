@@ -2,8 +2,11 @@ using System.Collections.Generic;
 
 public class AbilityTemplate
 {
+    // Identity
     public string AbilityId { get; set; }
     public string Name { get; set; }
+
+    // Core
     public string Category { get; set; }
     public ImpactType Impact { get; set; }
     public ElementType Element { get; set; }

@@ -4,6 +4,7 @@ public class BasicAttackAbility : Ability
 
     public BasicAttackAbility()
     {
+        AbilityId = "ability_attack_01";
         Name = "Attack";
         Category = "Weapon Skill";
         ImpactType = ImpactType.Damage;

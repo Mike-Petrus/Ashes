@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-/// ///////// Probably should be FloatingTextVFXController and be managed by BattleVFXManager //////// ///
+/// ///////// TODO: Move Ownership to BattleWorldUIManager //////// ///
 /// ////////////////////////////////////////////////////////////////////////////////////////////////// ///
 public class FloatingTextUIController : MonoBehaviour
 {

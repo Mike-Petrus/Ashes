@@ -10,15 +10,13 @@ public class BattleUIManager : MonoBehaviour
     public PartyUIController PartyUI;
     public CommandMenuUIController CommandMenuUI;
     public BattleFeedbackUIController FeedbackUI;
-    public FloatingTextUIController FloatingTextUI;
     public StateIndicatorUIController StateIndicatorUI;
     public TargetInfoUIController TargetInfoUI;
 
     // Future Controllers:
-    // public TargetInfoUIController TargetInfoUI;
     // public TimelineUIController TimelineUI;
 
-    public void Initialize(BattleSimulation simulation, PlayerTurnController turnController)
+    public void Initialize(BattleSimulation simulation, PlayerTurnController turnController, IAbilityAssetProvider abilityDatabase)
     {
         if (CurrentTheme == null)
         {
@@ -27,9 +25,8 @@ public class BattleUIManager : MonoBehaviour
         }
 
         if (PartyUI != null) PartyUI.Initialize(simulation.Events, CurrentTheme);
-        if (CommandMenuUI != null) CommandMenuUI.Initialize(turnController, CurrentTheme);
+        if (CommandMenuUI != null) CommandMenuUI.Initialize(simulation, turnController, abilityDatabase, CurrentTheme);
         if (FeedbackUI != null) FeedbackUI.Initialize(simulation);
-        if (FloatingTextUI != null) FloatingTextUI.Initialize(simulation);
         if (StateIndicatorUI != null) StateIndicatorUI.Initialize(simulation.Events);
         if (TargetInfoUI != null) TargetInfoUI.Initialize(simulation, CurrentTheme);
     }

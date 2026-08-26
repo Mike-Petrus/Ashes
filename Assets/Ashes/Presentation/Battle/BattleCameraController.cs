@@ -27,6 +27,8 @@ public class CameraController : MonoBehaviour
     private float currentPitch = 45f; // Start at a nice isometric angle
     private Camera cam;
 
+    public Camera Cam => cam;
+
     // TODO: Add functions/coroutines to smoothly change position
     // e.g. smooth pan, smoothly rotate and lookat, smooth move to position, follow, etc.
 

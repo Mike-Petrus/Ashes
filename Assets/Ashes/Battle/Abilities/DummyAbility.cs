@@ -2,7 +2,8 @@ using System.Collections.Generic;
 
 public class DummyAbility : Ability
 {
-    public string DummyId;     // Describes the reason for dummy
+    // DummyId was replaced with the general AbilityId
+    // The id should describe the reason for the dummy
 
     public DummyAbility(
         string id,
@@ -18,7 +19,7 @@ public class DummyAbility : Ability
         TargetAlignment alignment = TargetAlignment.Everyone,
         bool canTargetDead = false)
     {
-        DummyId = id;
+        AbilityId = id;
         Name = name;
         Category = category;
         ImpactType = impact;

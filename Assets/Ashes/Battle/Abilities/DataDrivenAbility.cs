@@ -4,7 +4,11 @@ public class DataDrivenAbility : Ability
     // database and instantiate a DD-Ability. This is then used to execute the ability
     public DataDrivenAbility(AbilityTemplate template)
     {
+        // Identity
+        AbilityId = template.AbilityId;
         Name = template.Name;
+
+        // Core Properties
         Category = template.Category;
         ImpactType = template.Impact;
         ElementType = template.Element;

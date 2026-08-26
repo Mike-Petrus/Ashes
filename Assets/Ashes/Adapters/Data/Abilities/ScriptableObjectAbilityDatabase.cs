@@ -9,7 +9,7 @@ public class AbilityCategoryGroup
     public List<AbilityTemplateSO> Abilities = new List<AbilityTemplateSO>();
 }
 
-public class ScriptableObjectAbilityDatabase : MonoBehaviour, IAbilityDatabase
+public class ScriptableObjectAbilityDatabase : MonoBehaviour, IAbilityDatabase, IAbilityAssetProvider
 {
     [Tooltip("Click the three dots in the top right of this component and select 'Auto-Populate' to fill this list!")]
     public List<AbilityCategoryGroup> CategorizedAbilities = new List<AbilityCategoryGroup>();
@@ -41,6 +41,24 @@ public class ScriptableObjectAbilityDatabase : MonoBehaviour, IAbilityDatabase
         }
 
         Debug.LogError($"[AbilityDatabase] Could not find ability with ID: {abilityId}");
+        return null;
+    }
+
+    public AbilityTemplateSO GetAbilitySO(string abilityId, string category)
+    {
+        AbilityCategoryGroup group = CategorizedAbilities.Find(g => g.CategoryName == category);
+
+        if (group != null)
+        {
+            AbilityTemplateSO abilitySO = group.Abilities.Find(a => a.AbilityId == abilityId);
+
+            if (abilitySO != null)
+            {
+                return abilitySO;
+            }
+        }
+
+        Debug.LogWarning($"[AbilityDatabase] Could not find Ability SO with ID: {abilityId} in Category: {category}");
         return null;
     }
 

@@ -49,6 +49,8 @@ public class AbilitySelectionState : IInputState, IMenuState
         {
             CurrentIndex = 0;
         }
+
+        BroadcastHoverEvent(context);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -76,6 +78,8 @@ public class AbilitySelectionState : IInputState, IMenuState
                 {
                     CurrentIndex = minInRow; // Wrap to left
                 }
+                BroadcastHoverEvent(context);
+
                 break;
 
             case InputButton.Left:
@@ -85,6 +89,8 @@ public class AbilitySelectionState : IInputState, IMenuState
                 {
                     CurrentIndex += maxInRow; // Wrap to right
                 }
+                BroadcastHoverEvent(context);
+
                 break;
 
             case InputButton.Down:
@@ -209,7 +215,18 @@ public class AbilitySelectionState : IInputState, IMenuState
         }
     }
 
+    private void BroadcastHoverEvent(PlayerTurnController context)
+    {
+        if (availableAbilities.Count == 0) return;
+
+        Ability hoveredAbility = availableAbilities[CurrentIndex];
+        context.Simulation.Events.Publish(new MenuOptionHoveredEvent(hoveredAbility.AbilityId, hoveredAbility.Name, category));
+    }
+
     public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime) { }
 
-    public void Exit(PlayerTurnController context) { }
+    public void Exit(PlayerTurnController context)
+    {
+        context.Simulation.Events.Publish(new MenuSelectionClosedEvent());
+    }
 }
