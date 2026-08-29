@@ -248,9 +248,10 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: []
+      m_SelectedIDs:
+      - m_Data: -290810
       m_LastClickedID:
-        m_Data: 0
+        m_Data: -290810
       m_ExpandedIDs:
       - m_Data: -290810
       - m_Data: -234118
@@ -843,9 +844,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: 6.944315, y: -49.72883, z: 24.785513}
+    m_Target: {x: 5.5402346, y: -47.58697, z: 29.086979}
     speed: 2
-    m_Value: {x: 6.944315, y: -49.72883, z: 24.785513}
+    m_Value: {x: 5.5402346, y: -47.58697, z: 29.086979}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -895,9 +896,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: 0.49976766, y: 0.11265674, z: -0.06574965, w: 0.8562814}
   m_Size:
-    m_Target: 32.54207
+    m_Target: 35.255806
     speed: 2
-    m_Value: 34.075462
+    m_Value: 35.255806
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -1024,7 +1025,7 @@ MonoBehaviour:
     m_IsLocked: 0
   m_LastLocalAssetsSearchArea: 1
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 751}
+    scrollPos: {x: 0, y: 0}
     m_SelectedIDs:
     - m_Data: 47700
     m_LastClickedID:
@@ -1033,14 +1034,11 @@ MonoBehaviour:
     - m_Data: 0
     - m_Data: 47512
     - m_Data: 47514
-    - m_Data: 47516
     - m_Data: 47518
     - m_Data: 47520
-    - m_Data: 47522
     - m_Data: 47524
     - m_Data: 47526
     - m_Data: 47528
-    - m_Data: 47674
     - m_Data: 47680
     - m_Data: 47684
     - m_Data: 47698
@@ -1082,7 +1080,6 @@ MonoBehaviour:
     - m_Data: 47514
     - m_Data: 47518
     - m_Data: 47520
-    - m_Data: 47522
     - m_Data: 47524
     - m_Data: 47526
     - m_Data: 47528
@@ -1117,8 +1114,9 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: []
-    m_LastClickedInstanceID: 0
+    m_SelectedInstanceIDs:
+    - m_Data: -290810
+    m_LastClickedInstanceID: -290810
     m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs:
     - m_Data: 19850

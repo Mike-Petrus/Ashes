@@ -20,6 +20,8 @@ public class RootMenuPhase2State : IInputState, IMenuState
         {
             CurrentIndex = 0;
         }
+
+        context.UpdateGhostPreview(false);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)

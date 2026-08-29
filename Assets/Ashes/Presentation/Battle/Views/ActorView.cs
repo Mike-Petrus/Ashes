@@ -6,11 +6,16 @@ public class ActorView : MonoBehaviour
     private ActorId actorId;
     private NavMeshObstacle navMeshObstacle;
     private Outline outlineComponent;
+    private GhostViewController ghostController;
+
+    private BattleEventBus events;
 
     public ActorId ActorId => actorId;
 
     public void Initialize(BattleEventBus eventBus, ActorId actorId, SimVector3 initialPosition, float actorRadius = 1.0f)
     {
+        events = eventBus;
+
         this.actorId = actorId;
         transform.position = VectorAdapter.ToUnity(initialPosition);
 
@@ -31,7 +36,14 @@ public class ActorView : MonoBehaviour
             Debug.LogWarning($"[ActorView] No Outline component found on children of {gameObject.name}!");
         }
 
+        ghostController = GetComponent<GhostViewController>();
+        if (ghostController != null)
+        {
+            ghostController.Initialize();
+        }
+
         eventBus.Subscribe<ActorMovedEvent>(OnActorMoved);
+        eventBus.Subscribe<UpdateActorGhostEvent>(OnUpdateGhost);
         // TODO: Subscribe to other events for floating text
     }
 
@@ -40,6 +52,16 @@ public class ActorView : MonoBehaviour
         if (e.ActorId.Value == actorId.Value)
         {
             transform.position = VectorAdapter.ToUnity(e.Position);
+        }
+    }
+
+    private void OnUpdateGhost(UpdateActorGhostEvent e)
+    {
+        // Only update if this event is specifically for THIS actor
+        if (e.ActorId == this.ActorId && ghostController != null)
+        {
+            Vector3 unityPos = new Vector3(e.Position.x, e.Position.y, e.Position.z);
+            ghostController.SetGhostState(e.IsVisible, unityPos);
         }
     }
 
@@ -68,5 +90,7 @@ public class ActorView : MonoBehaviour
     private void OnDestroy()
     {
         // Add unsubscription later when we have a cached event bus
+        events.Unsubscribe<ActorMovedEvent>(OnActorMoved);
+        events.Unsubscribe<UpdateActorGhostEvent>(OnUpdateGhost);
     }
 }

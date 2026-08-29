@@ -247,8 +247,44 @@ public class TargetingActorState : IInputState
             isTargetingValidActor = TargetingUtility.IsTargetInRange(context, targetInfo, out currentErrorMessage);
         }
 
+        UpdateGhostVisuals(context, currentPreviewPath);
+
         // Unified Visual Update Call
         TargetingUtility.UpdateTargetVisuals(context, projectedCenter, isTargetingValidActor, currentPreviewPath, savedTargetId);
+    }
+
+    private void UpdateGhostVisuals(PlayerTurnController context, List<SimVector3> pursuitPath = null)
+    {
+        // 1. Check if this is Phase 2 (means we 99% have MoveStep first)
+        bool hasMove = false;
+        SimVector3 pinnedPosition = default;
+
+        foreach (var step in context.Builder.Steps)
+        {
+            if (step is MoveStep moveStep)
+            {
+                hasMove = true;
+                pinnedPosition = moveStep.Destination;
+                break;
+            }
+        }
+
+        if (hasMove)
+        {
+            // PINNED: The move location is already set. Lock the preview there
+            context.UpdateGhostPreview(true, pinnedPosition);
+        }
+        else if (context.PursuitEnabled && pursuitPath != null && pursuitPath.Count > 0)
+        {
+            // FLUID: Phase 1 Pursuit. Preview is locked to the last valid point on path
+            SimVector3 lastValidPoint = pursuitPath[pursuitPath.Count - 1];
+            context.UpdateGhostPreview(true, lastValidPoint);
+        }
+        else
+        {
+            // GHOST OFF: Phase 1 targeting w/ Pursuit off
+            context.UpdateGhostPreview(false);
+        }
     }
 
     private void DisableTargetVisuals(PlayerTurnController context)
@@ -256,6 +292,7 @@ public class TargetingActorState : IInputState
         context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
         context.Simulation.Events.Publish(new TargetingFocusChangedEvent(null));
         context.Simulation.Events.Publish(new TargetingImpactsChangedEvent(null));
+        context.UpdateGhostPreview(false);
     }
 
     private void TryConfirmCommand(PlayerTurnController context)

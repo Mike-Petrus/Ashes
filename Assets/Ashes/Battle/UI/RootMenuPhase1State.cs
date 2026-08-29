@@ -11,7 +11,7 @@ public class RootMenuPhase1State : IInputState, IMenuState
     public void Enter(PlayerTurnController context)
     {
         context.Simulation.Events.Publish(new PlayerCommandStartedEvent(context.ActiveActorId.Value));
-
+        
         PopulateMenuOptions(context);
 
         string lastSelection = string.IsNullOrEmpty(context.SelectedPhase1Option) ? menuOptions[0] : context.SelectedPhase1Option;
@@ -21,6 +21,8 @@ public class RootMenuPhase1State : IInputState, IMenuState
         {
             CurrentIndex = 0;
         }
+
+        context.UpdateGhostPreview(false);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)

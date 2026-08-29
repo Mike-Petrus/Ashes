@@ -51,6 +51,7 @@ public class AbilitySelectionState : IInputState, IMenuState
         }
 
         BroadcastHoverEvent(context);
+        context.UpdateGhostPreview(false);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)

@@ -13,6 +13,7 @@ public class PartySelectionState : IInputState
         }
 
         context.Simulation.Events.Publish(new PartyMemberHoveredEvent(context.PartyActorIds[currentIndex]));
+        context.UpdateGhostPreview(false);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)

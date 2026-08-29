@@ -2,12 +2,17 @@ using System.Collections.Generic;
 
 public class PositionSystem
 {
+    private BattleEventBus events;
     private ActorRegistry actors;
     private Dictionary<ActorId, SimVector3> reservedSpaces = new();
 
-    public PositionSystem(ActorRegistry actorRegistry)
+    public PositionSystem(ActorRegistry actorRegistry, BattleEventBus eventBus)
     {
         actors = actorRegistry;
+        events = eventBus;
+
+        events.Subscribe<MoveCompletedEvent>(OnMoveCompleted);
+        events.Subscribe<CommandFinishedEvent>(OnCommandFinished);
     }
 
     public void Update(float deltaTime)
@@ -25,6 +30,23 @@ public class PositionSystem
     public void ClearReservation(ActorId actorId)
     {
         reservedSpaces.Remove(actorId);
+    }
+
+    private void OnMoveCompleted(MoveCompletedEvent e)
+    {
+        // The actor has physically arrived. Their physical body now blocks the space, 
+        // so we drop the invisible future reservation.
+        ClearReservation(e.ActorId);
+    }
+
+    private void OnCommandFinished(CommandFinishedEvent e)
+    {
+        // FAILSAFE: If a command finishes, aborts, or fizzles, wipe the actor's reservation.
+        // If the move was successful, it was already cleared by OnMoveCompleted.
+        if (e.Command != null)
+        {
+            ClearReservation(e.Command.ActorId);
+        }
     }
 
     public bool IsSpaceOccupied(SimVector3 targetPosition, float targetRadius, ActorId movingActor)

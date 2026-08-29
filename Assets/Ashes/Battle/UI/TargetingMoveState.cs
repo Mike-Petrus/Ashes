@@ -102,6 +102,12 @@ public class TargetingMoveState : IInputState
         // Validate standard move (generates the strict path)
         isTargetingValidSpace = TargetingUtility.TryValidateStandardMove(context, context.CurrentCursorPosition, out currentPath, out currentErrorMessage);
 
+        if (currentPath != null & currentPath.Count > 0)
+        {
+            SimVector3 lastValidPoint = currentPath[currentPath.Count - 1];
+            context.UpdateGhostPreview(true, lastValidPoint);
+        }
+
         // Unified Hub Call. 
         // Note: Because SelectedAbility is null, the Utility handles this safely and draws a point radius.
         TargetingUtility.UpdateTargetVisuals(context, context.CurrentCursorPosition, isTargetingValidSpace, currentPath, null);
@@ -112,12 +118,11 @@ public class TargetingMoveState : IInputState
         context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
         context.Simulation.Events.Publish(new TargetingFocusChangedEvent(null));
         context.Simulation.Events.Publish(new TargetingImpactsChangedEvent(null));
+        context.UpdateGhostPreview(false);
     }
 
     private void TryConfirmCommand(PlayerTurnController context)
     {
-        DisableTargetVisuals(context);
-
         context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, context.CurrentCursorPosition, currentPath));
 
         // Is Command complete?

@@ -51,6 +51,7 @@ public class ItemSelectionState : IInputState, IMenuState
         {
             CurrentIndex = 0;
         }
+        context.UpdateGhostPreview(false);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)

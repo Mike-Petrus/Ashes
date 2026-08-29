@@ -129,7 +129,7 @@ public class PlayerTurnController
 
     public void TogglePursuit(bool enable)
     {
-        PursuitEnabled = !PursuitEnabled;
+        PursuitEnabled = enable;
         Simulation.Events.Publish(new PursuitToggledEvent(PursuitEnabled));
     }
 
@@ -144,16 +144,26 @@ public class PlayerTurnController
         FreeAimEnabled = enable;
         Simulation.Events.Publish(new FreeAimToggledEvent(FreeAimEnabled));
     }
+
+    public void UpdateGhostPreview(bool isVisible, SimVector3 position = default)
+    {
+        if (ActiveActorId.HasValue)
+        {
+            Simulation.Events.Publish(new UpdateActorGhostEvent(ActiveActorId.Value, isVisible, position));
+        }
+    }
     
     public void ResetController()
     {
-        ActiveActorId = null;
         SelectedAbility = null;
         PreviousStates.Clear();
 
         ToggleFreeAim(false);
         TogglePursuit(false);
+        UpdateGhostPreview(false);
         
-        ChangeState(new IdleState(), false);    
+        ChangeState(new IdleState(), false);
+        
+        ActiveActorId = null;
     }
 }
