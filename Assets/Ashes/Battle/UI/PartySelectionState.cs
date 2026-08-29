@@ -11,6 +11,9 @@ public class PartySelectionState : IInputState
         {
             currentIndex = 0;
         }
+
+        context.Simulation.Events.Publish(new PartyMemberHoveredEvent(context.PartyActorIds[currentIndex]));
+        context.UpdateGhostPreview(false);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -31,7 +34,8 @@ public class PartySelectionState : IInputState
                 {
                     currentIndex = listSize - 1;
                 }
-                // tell UI to update highlight
+
+                context.Simulation.Events.Publish(new PartyMemberHoveredEvent(context.PartyActorIds[currentIndex]));
                 break;
 
             case InputButton.Down:
@@ -41,7 +45,8 @@ public class PartySelectionState : IInputState
                 {
                     currentIndex = 0;
                 }
-                // tell UI to update highlight
+                
+                context.Simulation.Events.Publish(new PartyMemberHoveredEvent(context.PartyActorIds[currentIndex]));
                 break;
 
             case InputButton.Confirm:
@@ -51,15 +56,17 @@ public class PartySelectionState : IInputState
                 break;
 
             case InputButton.Cancel:
+                context.Simulation.Events.Publish(new PartyMemberHoveredEvent(new ActorId(-1)));
                 context.ChangeState(new IdleState(), false);
                 break;
 
             case InputButton.Pursuit:
-                context.PursuitEnabled = !context.PursuitEnabled;   // Safe to toggle
+                context.TogglePursuit(); // Safe to toggle
                 break;   
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime) { }
+    
     public void Exit(PlayerTurnController context) { /* close UI */ }
 }

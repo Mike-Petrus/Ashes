@@ -28,5 +28,10 @@ public class StatusCost : AbilityRequirement
     {
         // Do nothing
         // Although may decide to have an ability consume a status in future...
+
+
+        // TODO: Should this match other Cost types?
+        // Publish Event??? Need ResourceType.Status???
+        // context.Events.Publish(new ResourceConsumedEvent(caster.Id, ResourceType.Status, cost));
     }
 }

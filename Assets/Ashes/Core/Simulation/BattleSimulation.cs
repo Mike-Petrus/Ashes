@@ -45,7 +45,7 @@ public class BattleSimulation
         ActionQueue = new BattleActionQueue(Events);
 
         MovementSystem = new MovementSystem(Events, Pathfinder, ActorStates, Actors);
-        PositionSystem = new PositionSystem(Actors);
+        PositionSystem = new PositionSystem(Actors, Events);
 
         RangeSystem = new RangeSystem(Actors, lineOfSightChecker);
         TargetingSystem = new TargetingSystem(Actors, PositionSystem, lineOfSightChecker);

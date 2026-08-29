@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_comet_01
   Name: Comet
+  Icon: {fileID: 0}
+  Description: 
   Category: Black Magic
+  ImpactType: 1
+  ElementType: 2
   Range: 15
   Radius: 4
   Angle: 0
   RequiresLoS: 0
   Mode: 2
   Alignment: 1
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 25
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 1
     Power: 60

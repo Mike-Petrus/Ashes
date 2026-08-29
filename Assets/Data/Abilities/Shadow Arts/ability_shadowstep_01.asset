@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_shadowstep_01
   Name: Shadowstep
+  Icon: {fileID: 0}
+  Description: 
   Category: Shadow Arts
+  ImpactType: 1
+  ElementType: 1
   Range: 10
   Radius: 0
   Angle: 0
   RequiresLoS: 1
   Mode: 1
   Alignment: 1
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 15
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 5
     Power: 0

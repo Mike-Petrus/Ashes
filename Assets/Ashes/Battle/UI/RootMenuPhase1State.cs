@@ -10,6 +10,8 @@ public class RootMenuPhase1State : IInputState, IMenuState
 
     public void Enter(PlayerTurnController context)
     {
+        context.Simulation.Events.Publish(new PlayerCommandStartedEvent(context.ActiveActorId.Value));
+        
         PopulateMenuOptions(context);
 
         string lastSelection = string.IsNullOrEmpty(context.SelectedPhase1Option) ? menuOptions[0] : context.SelectedPhase1Option;
@@ -19,6 +21,8 @@ public class RootMenuPhase1State : IInputState, IMenuState
         {
             CurrentIndex = 0;
         }
+
+        context.UpdateGhostPreview(false);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -51,13 +55,14 @@ public class RootMenuPhase1State : IInputState, IMenuState
                 break;
 
             case InputButton.Cancel:
+                context.Simulation.Events.Publish(new PlayerCommandEndedEvent(context.ActiveActorId.Value));
                 context.SelectedPhase1Option = null;
                 context.ActiveActorId = null;
                 context.RevertToPreviousState();
                 break;
 
             case InputButton.Pursuit:
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
                 PopulateMenuOptions(context);
                 break;
         }
@@ -149,7 +154,8 @@ public class RootMenuPhase1State : IInputState, IMenuState
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime) { }
+
     public void Exit(PlayerTurnController context)
     {
         menuOptions.Clear();

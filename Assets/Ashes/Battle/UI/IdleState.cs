@@ -14,12 +14,12 @@ public class IdleState : IInputState
                 break;
 
             case InputButton.Pursuit:
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
                 break;
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime)
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime)
     {
         // TODO: Free-look camera
     }

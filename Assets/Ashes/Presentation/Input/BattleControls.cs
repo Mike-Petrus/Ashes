@@ -165,9 +165,36 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
+                    ""name"": ""CameraLook"",
+                    ""type"": ""Value"",
+                    ""id"": ""f0bedc4e-6be2-44a8-8ce0-e6a0e8498f09"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""ZoomIn"",
+                    ""type"": ""Button"",
+                    ""id"": ""93390d30-8abf-49dd-9483-ded9a03961c2"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""FreeAim"",
                     ""type"": ""Button"",
                     ""id"": ""db545b04-a8b6-4669-a866-f0540f3e8433"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ZoomOut"",
+                    ""type"": ""Button"",
+                    ""id"": ""9aadfb36-29f5-4e35-b9c9-d41a77733826"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -343,7 +370,7 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""up"",
                     ""id"": ""a7bd0677-36da-4183-8b80-2f2c906e65c5"",
-                    ""path"": ""<Keyboard>/i"",
+                    ""path"": ""<Keyboard>/t"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -354,7 +381,7 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""down"",
                     ""id"": ""9635390c-c595-4f01-a0a5-f4d4ccf0e18c"",
-                    ""path"": ""<Keyboard>/k"",
+                    ""path"": ""<Keyboard>/g"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -365,7 +392,7 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""left"",
                     ""id"": ""6e975659-f4f4-433a-a650-3abab8314c17"",
-                    ""path"": ""<Keyboard>/j"",
+                    ""path"": ""<Keyboard>/h"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -376,7 +403,7 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""right"",
                     ""id"": ""e61c908b-9426-4fa7-835c-22298c53ae63"",
-                    ""path"": ""<Keyboard>/l"",
+                    ""path"": ""<Keyboard>/f"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -398,7 +425,7 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""up"",
                     ""id"": ""4aa4da37-2224-43f2-a954-49c1c728fe55"",
-                    ""path"": ""<Gamepad>/rightStick/up"",
+                    ""path"": ""<Gamepad>/leftStick/up"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -409,7 +436,7 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""down"",
                     ""id"": ""78cbd378-46e3-4800-9727-ecdfb064d08d"",
-                    ""path"": ""<Gamepad>/rightStick/down"",
+                    ""path"": ""<Gamepad>/leftStick/down"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -420,7 +447,7 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""left"",
                     ""id"": ""c66b746d-a399-4df8-ab7f-69937b6422ad"",
-                    ""path"": ""<Gamepad>/rightStick/left"",
+                    ""path"": ""<Gamepad>/leftStick/left"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -431,11 +458,121 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                 {
                     ""name"": ""right"",
                     ""id"": ""828f5cb2-a746-4eca-aef0-8ddbce0ebfd3"",
-                    ""path"": ""<Gamepad>/rightStick/right"",
+                    ""path"": ""<Gamepad>/leftStick/right"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""CursorMove"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""2D Vector"",
+                    ""id"": ""a402db43-e702-4a85-8f62-3ea25c579872"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""bcf60fce-3d58-439c-92cb-c2c9a6861838"",
+                    ""path"": ""<Keyboard>/i"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""5c927601-6da2-4ee1-8fb4-571e6542b4af"",
+                    ""path"": ""<Keyboard>/k"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""9cbfa42e-950b-46ce-a34d-d86cd4bc04d8"",
+                    ""path"": ""<Keyboard>/j"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""096f2f3f-d797-4083-9431-35c3ef620d9f"",
+                    ""path"": ""<Keyboard>/l"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""2D Vector"",
+                    ""id"": ""86ae0a44-444a-4c5d-9328-9b37eb8832d7"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""97c630ff-1e7c-404a-a80c-c7fc2d2fce4e"",
+                    ""path"": ""<Gamepad>/rightStick/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""3e9806cc-809c-45e7-93da-2ba2f0596041"",
+                    ""path"": ""<Gamepad>/rightStick/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""2c81a53c-6549-4638-8aa2-47584bd9c18c"",
+                    ""path"": ""<Gamepad>/rightStick/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""07a7ea90-49be-4bf0-a545-e38c5cd6e617"",
+                    ""path"": ""<Gamepad>/rightStick/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CameraLook"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
                 },
@@ -460,6 +597,28 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
                     ""action"": ""FreeAim"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""065aba51-23f6-44d9-bedf-a72d56c5b472"",
+                    ""path"": ""<DualShockGamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ZoomIn"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""648b03b8-b0ba-41de-8c83-2756c5b34416"",
+                    ""path"": ""<DualShockGamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ZoomOut"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -476,7 +635,10 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
         m_Battle_Left = m_Battle.FindAction("Left", throwIfNotFound: true);
         m_Battle_Right = m_Battle.FindAction("Right", throwIfNotFound: true);
         m_Battle_CursorMove = m_Battle.FindAction("CursorMove", throwIfNotFound: true);
+        m_Battle_CameraLook = m_Battle.FindAction("CameraLook", throwIfNotFound: true);
+        m_Battle_ZoomIn = m_Battle.FindAction("ZoomIn", throwIfNotFound: true);
         m_Battle_FreeAim = m_Battle.FindAction("FreeAim", throwIfNotFound: true);
+        m_Battle_ZoomOut = m_Battle.FindAction("ZoomOut", throwIfNotFound: true);
     }
 
     ~@BattleControls()
@@ -565,7 +727,10 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Battle_Left;
     private readonly InputAction m_Battle_Right;
     private readonly InputAction m_Battle_CursorMove;
+    private readonly InputAction m_Battle_CameraLook;
+    private readonly InputAction m_Battle_ZoomIn;
     private readonly InputAction m_Battle_FreeAim;
+    private readonly InputAction m_Battle_ZoomOut;
     /// <summary>
     /// Provides access to input actions defined in input action map "Battle".
     /// </summary>
@@ -610,9 +775,21 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @CursorMove => m_Wrapper.m_Battle_CursorMove;
         /// <summary>
+        /// Provides access to the underlying input action "Battle/CameraLook".
+        /// </summary>
+        public InputAction @CameraLook => m_Wrapper.m_Battle_CameraLook;
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/ZoomIn".
+        /// </summary>
+        public InputAction @ZoomIn => m_Wrapper.m_Battle_ZoomIn;
+        /// <summary>
         /// Provides access to the underlying input action "Battle/FreeAim".
         /// </summary>
         public InputAction @FreeAim => m_Wrapper.m_Battle_FreeAim;
+        /// <summary>
+        /// Provides access to the underlying input action "Battle/ZoomOut".
+        /// </summary>
+        public InputAction @ZoomOut => m_Wrapper.m_Battle_ZoomOut;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -663,9 +840,18 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
             @CursorMove.started += instance.OnCursorMove;
             @CursorMove.performed += instance.OnCursorMove;
             @CursorMove.canceled += instance.OnCursorMove;
+            @CameraLook.started += instance.OnCameraLook;
+            @CameraLook.performed += instance.OnCameraLook;
+            @CameraLook.canceled += instance.OnCameraLook;
+            @ZoomIn.started += instance.OnZoomIn;
+            @ZoomIn.performed += instance.OnZoomIn;
+            @ZoomIn.canceled += instance.OnZoomIn;
             @FreeAim.started += instance.OnFreeAim;
             @FreeAim.performed += instance.OnFreeAim;
             @FreeAim.canceled += instance.OnFreeAim;
+            @ZoomOut.started += instance.OnZoomOut;
+            @ZoomOut.performed += instance.OnZoomOut;
+            @ZoomOut.canceled += instance.OnZoomOut;
         }
 
         /// <summary>
@@ -701,9 +887,18 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
             @CursorMove.started -= instance.OnCursorMove;
             @CursorMove.performed -= instance.OnCursorMove;
             @CursorMove.canceled -= instance.OnCursorMove;
+            @CameraLook.started -= instance.OnCameraLook;
+            @CameraLook.performed -= instance.OnCameraLook;
+            @CameraLook.canceled -= instance.OnCameraLook;
+            @ZoomIn.started -= instance.OnZoomIn;
+            @ZoomIn.performed -= instance.OnZoomIn;
+            @ZoomIn.canceled -= instance.OnZoomIn;
             @FreeAim.started -= instance.OnFreeAim;
             @FreeAim.performed -= instance.OnFreeAim;
             @FreeAim.canceled -= instance.OnFreeAim;
+            @ZoomOut.started -= instance.OnZoomOut;
+            @ZoomOut.performed -= instance.OnZoomOut;
+            @ZoomOut.canceled -= instance.OnZoomOut;
         }
 
         /// <summary>
@@ -801,11 +996,32 @@ public partial class @BattleControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnCursorMove(InputAction.CallbackContext context);
         /// <summary>
+        /// Method invoked when associated input action "CameraLook" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCameraLook(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ZoomIn" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnZoomIn(InputAction.CallbackContext context);
+        /// <summary>
         /// Method invoked when associated input action "FreeAim" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnFreeAim(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ZoomOut" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnZoomOut(InputAction.CallbackContext context);
     }
 }

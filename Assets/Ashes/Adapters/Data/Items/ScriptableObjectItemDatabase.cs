@@ -14,11 +14,11 @@ public class ScriptableObjectItemDatabase : MonoBehaviour, IItemDatabase
     [Tooltip("Click the three dots in the top right of this component and select 'Auto-Populate' to fill this list!")]
     public List<ItemCategoryGroup> CategorizedItems = new List<ItemCategoryGroup>();
 
-    private Dictionary<string, ItemTemplate> _itemCache;
+    private Dictionary<string, ItemTemplate> itemCache;
 
     public void Initialize()
     {
-        _itemCache = new Dictionary<string, ItemTemplate>();
+        itemCache = new Dictionary<string, ItemTemplate>();
 
         // Loop through categories, then loop through abilities to build the flat dictionary
         foreach (var group in CategorizedItems)
@@ -27,7 +27,7 @@ public class ScriptableObjectItemDatabase : MonoBehaviour, IItemDatabase
             {
                 if (asset != null && !string.IsNullOrEmpty(asset.ItemId))
                 {
-                    _itemCache[asset.ItemId] = asset.ToDomain();
+                    itemCache[asset.ItemId] = asset.ToDomain();
                 }
             }
         }
@@ -35,7 +35,7 @@ public class ScriptableObjectItemDatabase : MonoBehaviour, IItemDatabase
 
     public ItemTemplate GetItem(string itemId)
     {
-        if (_itemCache != null && _itemCache.TryGetValue(itemId, out var item))
+        if (itemCache != null && itemCache.TryGetValue(itemId, out var item))
         {
             return item;
         }
