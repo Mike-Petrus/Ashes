@@ -7,7 +7,7 @@ public interface IInputState
     void ProcessInput(PlayerTurnController context, InputButton button);
 
     // Continuous analog movement
-    void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime);
+    void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime);
 
     // Called right before transitioning to a different state
     void Exit(PlayerTurnController context);

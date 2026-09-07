@@ -7,5 +7,7 @@ public enum InputButton
     Down,
     Left,
     Right,
-    FreeAim  // R2 / RT
+    ZoomIn,     // R1
+    ZoomOut,    // L1
+    FreeAim     // R2 / RT
 }

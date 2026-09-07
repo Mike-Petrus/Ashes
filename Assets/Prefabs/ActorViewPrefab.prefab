@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5986440359171528103}
   - component: {fileID: 6251322299777154937}
   - component: {fileID: 2176287417331391528}
+  - component: {fileID: 5286605401138803785}
   m_Layer: 0
   m_Name: ActorViewPrefab
   m_TagString: Untagged
@@ -62,6 +63,20 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 0, z: 0}
   m_TimeToStationary: 0.5
+--- !u!114 &5286605401138803785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3337067125838145014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 330f26f7db52a1f469169a04c96ec7f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostViewController
+  VisualRoot: {fileID: 5586830986467056405}
+  GhostMaterial: {fileID: 2100000, guid: 1652268d779341a4889e69ae81be5e89, type: 2}
 --- !u!1 &5586830986467056405
 GameObject:
   m_ObjectHideFlags: 0
@@ -73,6 +88,7 @@ GameObject:
   - component: {fileID: 5753687996010479626}
   - component: {fileID: 8101298335932674498}
   - component: {fileID: 8809144388816921460}
+  - component: {fileID: 8036037593955785799}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -152,3 +168,21 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &8036037593955785799
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5586830986467056405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Outline
+  outlineMode: 0
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 5
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []

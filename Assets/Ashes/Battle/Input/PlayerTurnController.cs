@@ -49,15 +49,12 @@ public class PlayerTurnController
     // --- STATE MACHINE ---
     public void ChangeState(IInputState newState, bool recordPrevious = true)
     {
-        if (CurrentState != null)
+        if (recordPrevious && CurrentState != null)
         {
-            CurrentState.Exit(this);
-            if (recordPrevious)
-            {
-                PreviousStates.Push(CurrentState);
-            }
+            PreviousStates.Push(CurrentState);    
         }
 
+        CurrentState?.Exit(this);
         CurrentState = newState;
         CurrentState.Enter(this);
     }
@@ -66,9 +63,15 @@ public class PlayerTurnController
     {
         if (PreviousStates.Count > 0)
         {
+            var previousState = PreviousStates.Pop();
+
             CurrentState?.Exit(this);
-            CurrentState = PreviousStates.Pop();
+            CurrentState = previousState;
             CurrentState.Enter(this);
+        }
+        else
+        {
+            ChangeState(new IdleState(), false);
         }
     }
 
@@ -78,9 +81,9 @@ public class PlayerTurnController
         CurrentState?.ProcessInput(this, button);
     }
 
-    public void ProcessAnalogInput(float x, float y, float deltaTime)
+    public void ProcessAnalogLeft(float x, float y, float deltaTime)
     {
-        CurrentState?.ProcessAnalogInput(this, x, y, deltaTime);
+        CurrentState?.ProcessAnalogLeft(this, x, y, deltaTime);
     }
 
     public void SubmitCommand()
@@ -110,15 +113,57 @@ public class PlayerTurnController
         var command = Builder.Build();
         Simulation.ActionQueue.Enqueue(command);
 
+        if (ActiveActorId.HasValue)
+        {
+            Simulation.Events.Publish(new PlayerCommandEndedEvent(ActiveActorId.Value));
+        }
+
         ResetController();
+    }
+
+    public void TogglePursuit()
+    {
+        PursuitEnabled = !PursuitEnabled;
+        Simulation.Events.Publish(new PursuitToggledEvent(PursuitEnabled));
+    }
+
+    public void TogglePursuit(bool enable)
+    {
+        PursuitEnabled = enable;
+        Simulation.Events.Publish(new PursuitToggledEvent(PursuitEnabled));
+    }
+
+    public void ToggleFreeAim()
+    {
+        FreeAimEnabled = !FreeAimEnabled;
+        Simulation.Events.Publish(new FreeAimToggledEvent(FreeAimEnabled));
+    }
+
+    public void ToggleFreeAim(bool enable)
+    {
+        FreeAimEnabled = enable;
+        Simulation.Events.Publish(new FreeAimToggledEvent(FreeAimEnabled));
+    }
+
+    public void UpdateGhostPreview(bool isVisible, SimVector3 position = default)
+    {
+        if (ActiveActorId.HasValue)
+        {
+            Simulation.Events.Publish(new UpdateActorGhostEvent(ActiveActorId.Value, isVisible, position));
+        }
     }
     
     public void ResetController()
     {
-        ActiveActorId = null;
         SelectedAbility = null;
         PreviousStates.Clear();
+
+        ToggleFreeAim(false);
+        TogglePursuit(false);
+        UpdateGhostPreview(false);
         
-        ChangeState(new IdleState(), false);    
+        ChangeState(new IdleState(), false);
+        
+        ActiveActorId = null;
     }
 }

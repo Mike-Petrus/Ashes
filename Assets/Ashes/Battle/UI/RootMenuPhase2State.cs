@@ -20,6 +20,8 @@ public class RootMenuPhase2State : IInputState, IMenuState
         {
             CurrentIndex = 0;
         }
+
+        context.UpdateGhostPreview(false);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -63,7 +65,7 @@ public class RootMenuPhase2State : IInputState, IMenuState
 
             case InputButton.Pursuit:
                 // TODO: probably should be disabled at this point, but we'll see in testing
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
                 break;
         }
     }
@@ -171,7 +173,8 @@ public class RootMenuPhase2State : IInputState, IMenuState
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime) { }
+    
     public void Exit(PlayerTurnController context)
     {
         // Update/hide UI

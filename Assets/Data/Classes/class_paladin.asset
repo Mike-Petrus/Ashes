@@ -18,7 +18,7 @@ MonoBehaviour:
   Aether: 12
   Vitality: 18
   Agility: 10
-  Speed: 10
+  Speed: 99
   MoveDistance: 5
   LearnedAbilities:
   - RequiredLevel: 1

@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_protect_01
   Name: Protect
+  Icon: {fileID: 0}
+  Description: 
   Category: White Magic
+  ImpactType: 0
+  ElementType: 6
   Range: 12
   Radius: 0
   Angle: 0
   RequiresLoS: 0
   Mode: 1
   Alignment: 0
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 15
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 2
     Power: 0

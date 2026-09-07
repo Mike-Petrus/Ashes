@@ -3,21 +3,25 @@ using System.Collections.Generic;
 public class TargetingMoveState : IInputState
 {
     // Cached Data
-    private BattleActor activeActor;
     private SimVector3? savedCursorPosition = null;
 
-    private List<SimVector3> currentPath = new();
     private bool isTargetingValidSpace = true;
+    private List<SimVector3> currentPath = new();
     private string currentErrorMessage = "";
 
     public void Enter(PlayerTurnController context)
     {
-        activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
+        if (!savedCursorPosition.HasValue)
+        {
+            var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
+            context.CurrentCursorPosition = activeActor.Position;
+        }
+        else
+        {
+            context.CurrentCursorPosition = savedCursorPosition.Value;
+        }
 
-        context.CurrentCursorPosition = savedCursorPosition ?? activeActor.Position;
-
-        ValidateCurrentPosition(context);
-        UpdateCursorVisuals(context);
+        UpdateTargetVisuals(context);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -32,66 +36,108 @@ public class TargetingMoveState : IInputState
                     return;
                 }
 
-                context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
-                context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, context.CurrentCursorPosition, currentPath));
-
-                // Is Command complete?
-                if (context.Builder.Size >= 2)
-                {
-                    context.SubmitCommand();
-                }
-                else
-                {
-                    context.ChangeState(new RootMenuPhase2State());
-                }
+                TryConfirmCommand(context);
 
                 break;
 
             case InputButton.Cancel:
                 // Hide cursor and rewind
-                context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+                DisableTargetVisuals(context);
                 context.RevertToPreviousState();
 
                 break;
 
             case InputButton.Pursuit:
                 // TODO: probably shouldn't be able to toggle Pursuit in this state, but if we want to, just uncomment
-                // context.PursuitEnabled = !context.PursuitEnabled;
+                // context.TogglePursuit();
                 break;
         }
     }
 
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime)
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime)
     {
         // 1. Slide the cursor
         SimVector3 pos = context.CurrentCursorPosition;
         pos.x += x * context.CursorSpeed * deltaTime;
         pos.z += y * context.CursorSpeed * deltaTime;
-        context.CurrentCursorPosition = pos;
 
+
+        // 2. HARD CLAMP: Tether to Arena Radius + Actor Move Distance          // TODO: DECIDE IF WE WANT HARD CLAMP
+        // if (context.Simulation.Arena != null)
+        // {
+        //     var activeActor = context.Simulation.Actors.GetActor(context.ActiveActorId.Value);
+            
+        //     // Movement tether is max move range from the actor's start, NOT the arena center!
+        //     // But we must ALSO constrain them to the arena.
+        //     float moveDist = activeActor.Stats.MoveDistance;
+            
+        //     // Constrain to Actor's Move Bubble
+        //     float distFromActor = SimVector3.Distance(pos, activeActor.Position);
+        //     if (distFromActor > moveDist)
+        //     {
+        //         SimVector3 dir = (pos - activeActor.Position).Normalized();
+        //         pos = activeActor.Position + (dir * moveDist);
+        //     }
+
+        //     // Constrain to Arena
+        //     float distFromCenter = SimVector3.Distance(pos, context.Simulation.Arena.Center);
+        //     if (distFromCenter > context.Simulation.Arena.Radius)
+        //     {
+        //         SimVector3 dir = (pos - context.Simulation.Arena.Center).Normalized();
+        //         pos = context.Simulation.Arena.Center + (dir * context.Simulation.Arena.Radius);
+        //     }
+        // }
+
+
+
+        context.CurrentCursorPosition = pos;
         // Cache cursor position for rewinding
         savedCursorPosition = context.CurrentCursorPosition;
 
-        // 2. Validate new position
-        ValidateCurrentPosition(context);
-
-        // 3. Broadcast to Unity View
-        UpdateCursorVisuals(context);
+        UpdateTargetVisuals(context);
     }
 
-    private void ValidateCurrentPosition(PlayerTurnController context)
+    private void UpdateTargetVisuals(PlayerTurnController context)
     {
+        // Validate standard move (generates the strict path)
         isTargetingValidSpace = TargetingUtility.TryValidateStandardMove(context, context.CurrentCursorPosition, out currentPath, out currentErrorMessage);
+
+        if (currentPath != null & currentPath.Count > 0)
+        {
+            SimVector3 lastValidPoint = currentPath[currentPath.Count - 1];
+            context.UpdateGhostPreview(true, lastValidPoint);
+        }
+
+        // Unified Hub Call. 
+        // Note: Because SelectedAbility is null, the Utility handles this safely and draws a point radius.
+        TargetingUtility.UpdateTargetVisuals(context, context.CurrentCursorPosition, isTargetingValidSpace, currentPath, null);
     }
 
-    private void UpdateCursorVisuals(PlayerTurnController context)
+    private void DisableTargetVisuals(PlayerTurnController context)
     {
-        TargetingUtility.UpdateCursorVisuals(context, context.CurrentCursorPosition, isTargetingValidSpace, currentPath);
+        context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+        context.Simulation.Events.Publish(new TargetingFocusChangedEvent(null));
+        context.Simulation.Events.Publish(new TargetingImpactsChangedEvent(null));
+        context.UpdateGhostPreview(false);
+    }
+
+    private void TryConfirmCommand(PlayerTurnController context)
+    {
+        context.Builder.AddStep(new MoveStep(context.ActiveActorId.Value, context.CurrentCursorPosition, currentPath));
+
+        // Is Command complete?
+        if (context.Builder.Size >= 2)
+        {
+            context.SubmitCommand();
+        }
+        else
+        {
+            context.ChangeState(new RootMenuPhase2State());
+        }
     }
 
     public void Exit(PlayerTurnController context)
     {
-        // Safety to ensure cursor turns off
-        context.Simulation.Events.Publish(new CursorMovedEvent(new SimVector3(), false));
+        DisableTargetVisuals(context);
     }
 }

@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_sniper_shot_01
   Name: Sniper Shot
+  Icon: {fileID: 0}
+  Description: 
   Category: Marksmanship
+  ImpactType: 1
+  ElementType: 1
   Range: 2
   Radius: 0
   Angle: 0
   RequiresLoS: 1
   Mode: 1
   Alignment: 2
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 20
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 1
     Power: 45

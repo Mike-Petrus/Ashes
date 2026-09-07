@@ -51,6 +51,7 @@ public class ItemSelectionState : IInputState, IMenuState
         {
             CurrentIndex = 0;
         }
+        context.UpdateGhostPreview(false);
     }
 
     public void ProcessInput(PlayerTurnController context, InputButton button)
@@ -130,17 +131,14 @@ public class ItemSelectionState : IInputState, IMenuState
                 break;
 
             case InputButton.Pursuit:
-                context.PursuitEnabled = !context.PursuitEnabled;
+                context.TogglePursuit();
                 break;
                 
             case InputButton.FreeAim:
-                context.FreeAimEnabled = !context.FreeAimEnabled;
+                context.ToggleFreeAim();
                 break;
         }        
     }
-
-    public void ProcessAnalogInput(PlayerTurnController context, float x, float y, float deltaTime) { }
-    public void Exit(PlayerTurnController context) { }
 
     private void TryUseItem(PlayerTurnController context, string itemId, ItemTemplate itemData)
     {
@@ -221,4 +219,10 @@ public class ItemSelectionState : IInputState, IMenuState
             }
         }
     }
+
+    public void ProcessAnalogLeft(PlayerTurnController context, float x, float y, float deltaTime) { }
+
+    public void Exit(PlayerTurnController context) { }
+
+    
 }

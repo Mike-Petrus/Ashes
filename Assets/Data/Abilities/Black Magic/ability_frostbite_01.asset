@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_frostbite_01
   Name: Frostbite
+  Icon: {fileID: 0}
+  Description: 
   Category: Black Magic
+  ImpactType: 1
+  ElementType: 3
   Range: 10
   Radius: 0
   Angle: 0
   RequiresLoS: 1
   Mode: 1
   Alignment: 1
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 8
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 1
     Power: 10

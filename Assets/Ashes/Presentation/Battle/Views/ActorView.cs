@@ -1,0 +1,96 @@
+using UnityEngine;
+using UnityEngine.AI;
+
+public class ActorView : MonoBehaviour
+{
+    private ActorId actorId;
+    private NavMeshObstacle navMeshObstacle;
+    private Outline outlineComponent;
+    private GhostViewController ghostController;
+
+    private BattleEventBus events;
+
+    public ActorId ActorId => actorId;
+
+    public void Initialize(BattleEventBus eventBus, ActorId actorId, SimVector3 initialPosition, float actorRadius = 1.0f)
+    {
+        events = eventBus;
+
+        this.actorId = actorId;
+        transform.position = VectorAdapter.ToUnity(initialPosition);
+
+        navMeshObstacle = GetComponent<NavMeshObstacle>();
+        navMeshObstacle.radius = actorRadius;
+        navMeshObstacle.carving = true;
+
+        // Find the Outline script on the child Cube
+        outlineComponent = GetComponentInChildren<Outline>();
+        if (outlineComponent != null)
+        {
+            // Per instructions: configure mode and disable initially
+            outlineComponent.OutlineMode = Outline.Mode.OutlineAll;
+            outlineComponent.enabled = false;
+        }
+        else
+        {
+            Debug.LogWarning($"[ActorView] No Outline component found on children of {gameObject.name}!");
+        }
+
+        ghostController = GetComponent<GhostViewController>();
+        if (ghostController != null)
+        {
+            ghostController.Initialize();
+        }
+
+        eventBus.Subscribe<ActorMovedEvent>(OnActorMoved);
+        eventBus.Subscribe<UpdateActorGhostEvent>(OnUpdateGhost);
+        // TODO: Subscribe to other events for floating text
+    }
+
+    private void OnActorMoved(ActorMovedEvent e)
+    {
+        if (e.ActorId.Value == actorId.Value)
+        {
+            transform.position = VectorAdapter.ToUnity(e.Position);
+        }
+    }
+
+    private void OnUpdateGhost(UpdateActorGhostEvent e)
+    {
+        // Only update if this event is specifically for THIS actor
+        if (e.ActorId == this.ActorId && ghostController != null)
+        {
+            Vector3 unityPos = new Vector3(e.Position.x, e.Position.y, e.Position.z);
+            ghostController.SetGhostState(e.IsVisible, unityPos);
+        }
+    }
+
+    public void ApplyHighlight(Color highlightColor, float width = 5f)
+    {
+        if (outlineComponent == null) return;
+
+        // Optimization: Only write to the component if properties actually changed
+        // This prevents the Outline script from needlessly recalculating meshes every frame
+        if (!outlineComponent.enabled || outlineComponent.OutlineColor != highlightColor || outlineComponent.OutlineWidth != width)
+        {
+            outlineComponent.OutlineColor = highlightColor;
+            outlineComponent.OutlineWidth = width;
+            outlineComponent.enabled = true;
+        }
+    }
+
+    public void ClearHighlight()
+    {
+        if (outlineComponent != null && outlineComponent.enabled)
+        {
+            outlineComponent.enabled = false;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Add unsubscription later when we have a cached event bus
+        events.Unsubscribe<ActorMovedEvent>(OnActorMoved);
+        events.Unsubscribe<UpdateActorGhostEvent>(OnUpdateGhost);
+    }
+}

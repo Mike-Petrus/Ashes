@@ -14,13 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_shield_bash_01
   Name: Shield Bash
+  Icon: {fileID: 0}
+  Description: 
   Category: Wrath
+  ImpactType: 1
+  ElementType: 1
   Range: 1.5
   Radius: 0
   Angle: 0
   RequiresLoS: 1
   Mode: 1
   Alignment: 2
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements: []
   Effects:

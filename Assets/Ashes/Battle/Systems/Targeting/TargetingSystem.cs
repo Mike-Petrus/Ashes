@@ -17,39 +17,44 @@ public class TargetingSystem
     // TODO: Return valid targets when previewSystem requests them
     public void Update(float deltaTime) { }
 
-    public List<ActorId> GetAffectedTargets(ActorId sourceId, TargetInfo targetInfo, Ability ability)
+    public List<ActorId> GetAffectedTargets(ActorId sourceId, TargetInfo targetInfo, Ability ability, TargetAlignment? overrideAlignment = null)
     {
+        // We determine which alignment to filter by. 
+        // For actual execution, this is ability.Alignment. 
+        // For visualization previews, it is TargetAlignment.Everyone.
+        TargetAlignment filterAlignment = overrideAlignment ?? ability.Alignment;
+
         switch (targetInfo.Mode)
         {
             case TargetingMode.Self:
-                return GetSelfTargets(sourceId, ability);
+                return GetSelfTargets(sourceId, ability, filterAlignment);
 
             case TargetingMode.SingleTarget:
                 return GetSingleTarget(targetInfo, ability);
 
             case TargetingMode.PointAoE:
-                return GetPointAoETargets(sourceId, targetInfo, ability);
+                return GetPointAoETargets(sourceId, targetInfo, ability, filterAlignment);
 
             case TargetingMode.ActorAoE:
-                return GetActorAoETargets(sourceId, targetInfo, ability);
+                return GetActorAoETargets(sourceId, targetInfo, ability, filterAlignment);
 
             case TargetingMode.HybridAoE:
-                return GetHybridAoETargets(sourceId, targetInfo, ability);
+                return GetHybridAoETargets(sourceId, targetInfo, ability, filterAlignment);
 
             case TargetingMode.Directional:
-                return GetDirectionalTargets(sourceId, targetInfo, ability);
+                return GetDirectionalTargets(sourceId, targetInfo, ability, filterAlignment);
 
             default:
                 return new List<ActorId>();
         }
     }
 
-    private List<ActorId> GetSelfTargets(ActorId sourceId, Ability ability)
+    private List<ActorId> GetSelfTargets(ActorId sourceId, Ability ability, TargetAlignment filterAlignment)
     {
         if (ability.Radius > 0)
         {
             var sourceActor = actors.GetActor(sourceId);
-            return FilterByAlignment(sourceId, positions.GetActorsInRadius(sourceActor.Position, ability.Radius), ability.Alignment);
+            return FilterByAlignment(sourceId, positions.GetActorsInRadius(sourceActor.Position, ability.Radius), filterAlignment);
         }
 
         return new List<ActorId> { sourceId };
@@ -66,7 +71,7 @@ public class TargetingSystem
         return new List<ActorId>() ;
     }
 
-    private List<ActorId> GetPointAoETargets(ActorId sourceId, TargetInfo targetInfo, Ability ability)
+    private List<ActorId> GetPointAoETargets(ActorId sourceId, TargetInfo targetInfo, Ability ability, TargetAlignment filterAlignment)
     {
         var caughtActors = positions.GetActorsInRadius(targetInfo.TargetPosition, ability.Radius);
 
@@ -79,10 +84,10 @@ public class TargetingSystem
             });
         }
 
-        return FilterByAlignment(sourceId, caughtActors, ability.Alignment);
+        return FilterByAlignment(sourceId, caughtActors, filterAlignment);
     }
 
-    private List<ActorId> GetActorAoETargets(ActorId sourceId, TargetInfo targetInfo, Ability ability)
+    private List<ActorId> GetActorAoETargets(ActorId sourceId, TargetInfo targetInfo, Ability ability, TargetAlignment filterAlignment)
     {
         if (!targetInfo.TargetActor.HasValue)
         {
@@ -96,22 +101,22 @@ public class TargetingSystem
             return new List<ActorId>();
         }
 
-        return FilterByAlignment(sourceId, positions.GetActorsInRadius(mainTarget.Position, ability.Radius), ability.Alignment);
+        return FilterByAlignment(sourceId, positions.GetActorsInRadius(mainTarget.Position, ability.Radius), filterAlignment);
     }
 
-    private List<ActorId> GetHybridAoETargets(ActorId sourceId, TargetInfo targetInfo, Ability ability)
+    private List<ActorId> GetHybridAoETargets(ActorId sourceId, TargetInfo targetInfo, Ability ability, TargetAlignment filterAlignment)
     {
         if (targetInfo.TargetActor.HasValue)
         {
-            return GetActorAoETargets(sourceId, targetInfo, ability);
+            return GetActorAoETargets(sourceId, targetInfo, ability, filterAlignment);
         }
         else
         {
-            return GetPointAoETargets(sourceId, targetInfo, ability);
+            return GetPointAoETargets(sourceId, targetInfo, ability, filterAlignment);
         }
     }
 
-    private List<ActorId> GetDirectionalTargets(ActorId sourceId, TargetInfo targetInfo, Ability ability)
+    private List<ActorId> GetDirectionalTargets(ActorId sourceId, TargetInfo targetInfo, Ability ability, TargetAlignment filterAlignment)
     {
         // TODO: The math for Line/Cone attacks. 
         // 1. Get Source position.
@@ -153,10 +158,10 @@ public class TargetingSystem
             }
         }
 
-        return FilterByAlignment(sourceId, hitTargets,ability.Alignment);
+        return FilterByAlignment(sourceId, hitTargets, filterAlignment);
     }
 
-    public List<ActorId> FilterByAlignment(ActorId sourceId, List<ActorId> actorIds, TargetAlignment alignment)
+    public List<ActorId> FilterByAlignment(ActorId sourceId, List<ActorId> actorIds, TargetAlignment alignment, bool canTargetDead = false)
     {
         List<ActorId> filteredList = new();
         var sourceActor = actors.GetActor(sourceId);
@@ -164,6 +169,12 @@ public class TargetingSystem
         foreach (var id in actorIds)
         {
             var targetActor = actors.GetActor(id);
+
+            if (!targetActor.IsAlive && !canTargetDead)
+            {
+                continue;
+            }
+            
             bool isAlly = sourceActor.Faction == targetActor.Faction;
             bool isValid = false;
 

@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AbilityTemplateSO
   AbilityId: ability_fire_arrow_01
   Name: Fire Arrow
+  Icon: {fileID: 0}
+  Description: 
   Category: Marksmanship
+  ImpactType: 1
+  ElementType: 2
   Range: 15
   Radius: 0
   Angle: 0
   RequiresLoS: 1
   Mode: 1
   Alignment: 1
+  CanTargetDead: 0
   RefundPercent: 0.25
   Requirements:
   - Type: 0
     Amount: 15
     ItemId: 
+    StatusId: 
   Effects:
   - EffectType: 1
     Power: 25
