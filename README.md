@@ -138,7 +138,9 @@ Commands (at this time) are always 2 steps, and composed of some combination of 
 
 The player constructs the full command, previews its outcome, and then submits it to be packaged by the `BattleCommandBuilder` and added to the `BattleActionQueue` for execution.
 
-<img width="650" alt="Command_Demo" src="https://github.com/user-attachments/assets/d8f40303-e62a-4b51-b0da-b540374ed2b1" />
+| Player Command Entry |
+| :---: |
+| <img width="650" alt="Command_Demo" src="https://github.com/user-attachments/assets/d8f40303-e62a-4b51-b0da-b540374ed2b1" /> |
 
 
 ---
